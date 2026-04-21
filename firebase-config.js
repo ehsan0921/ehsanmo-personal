@@ -1,12 +1,13 @@
 // Firebase Configuration
 // Replace with your Firebase project credentials
 const firebaseConfig = {
-  apiKey: "AIzaSyDyaAtK5YBWpMedGCICayR-VJq2111SpgU",
-  authDomain: "perforated-panel-designer.firebaseapp.com",
-  projectId: "perforated-panel-designer",
-  storageBucket: "perforated-panel-designer.firebasestorage.app",
-  messagingSenderId: "203709637797",
-  appId: "1:203709637797:web:544190529c7c874aaf994c"
+  apiKey: "AIzaSyA__FJwWy6VcRyWS1cO3Jmol6BcJSEiVdA",
+  authDomain: "ehsanmo.firebaseapp.com",
+  projectId: "ehsanmo",
+  storageBucket: "ehsanmo.firebasestorage.app",
+  messagingSenderId: "287723741565",
+  appId: "1:287723741565:web:4be1f44d27dbe60f48ac14",
+  measurementId: "G-347B8XCFLX"
 };
 
 // Initialize Firebase
