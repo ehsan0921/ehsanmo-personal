@@ -8,6 +8,9 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,600;0,9..40,700;1,9..40,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
     <style>
         :root {
             --bg: #070a10;
@@ -188,6 +191,22 @@
             color: var(--accent);
             font-family: "JetBrains Mono", monospace;
         }
+        .download-btn {
+            margin-top: 1rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.45rem 0.75rem;
+            border-radius: 8px;
+            background: rgba(34, 211, 238, 0.12);
+            color: var(--accent);
+            border: 1px solid rgba(34, 211, 238, 0.35);
+            font-size: 0.82rem;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+        }
+        .download-btn:hover { background: rgba(34, 211, 238, 0.2); }
         .linkedin {
             display: inline-flex;
             align-items: center;
@@ -218,9 +237,12 @@
                 <a href="#about">About</a>
                 <a href="#tools">Tools</a>
                 <a href="https://www.linkedin.com/in/ehsan-mokhtary/" target="_blank" rel="noopener noreferrer">LinkedIn</a>
-                <div class="nav-actions">
-                    <a class="btn btn-ghost" href="/Image-Panel-perforated-designer/?auth=login">Login</a>
-                    <a class="btn btn-primary" href="/Image-Panel-perforated-designer/?auth=register">Register</a>
+                <div class="nav-actions" id="landingAuthActions">
+                    <a id="landingLoginBtn" class="btn btn-ghost" href="/Image-Panel-perforated-designer/?auth=login">Login</a>
+                    <a id="landingRegisterBtn" class="btn btn-primary" href="/Image-Panel-perforated-designer/?auth=register">Register</a>
+                    <a id="landingOpenToolBtn" class="btn btn-primary" href="/Image-Panel-perforated-designer/" style="display:none;">Open Tool</a>
+                    <a id="landingAdminBtn" class="btn btn-ghost" href="/admin-main.html" style="display:none;">Admin</a>
+                    <button id="landingLogoutBtn" type="button" class="btn btn-ghost" style="display:none;">Logout</button>
                 </div>
             </nav>
         </header>
@@ -252,6 +274,7 @@
                     <div class="arrow">Open tool →</div>
                 </a>
             </div>
+            <div class="tools-grid" id="productsList" style="margin-top:1rem;"></div>
             <a class="linkedin" href="https://www.linkedin.com/in/ehsan-mokhtary/" target="_blank" rel="noopener noreferrer">
                 Connect on LinkedIn
             </a>
@@ -263,6 +286,99 @@
     </div>
 
     <script>
+    (function () {
+        const SUPERADMIN_EMAIL = 'Ehsan0921@gmail.com';
+        const firebaseConfig = {
+            apiKey: "AIzaSyA__FJwWy6VcRyWS1cO3Jmol6BcJSEiVdA",
+            authDomain: "ehsanmo.firebaseapp.com",
+            projectId: "ehsanmo",
+            storageBucket: "ehsanmo.firebasestorage.app",
+            messagingSenderId: "287723741565",
+            appId: "1:287723741565:web:4be1f44d27dbe60f48ac14",
+            measurementId: "G-347B8XCFLX"
+        };
+
+        const loginBtn = document.getElementById('landingLoginBtn');
+        const registerBtn = document.getElementById('landingRegisterBtn');
+        const openToolBtn = document.getElementById('landingOpenToolBtn');
+        const adminBtn = document.getElementById('landingAdminBtn');
+        const logoutBtn = document.getElementById('landingLogoutBtn');
+        const productsList = document.getElementById('productsList');
+
+        if (typeof firebase === 'undefined') return;
+        try { if (!firebase.apps.length) firebase.initializeApp(firebaseConfig); } catch (e) {}
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        auth.onAuthStateChanged((user) => {
+            const isLoggedIn = !!user;
+            loginBtn.style.display = isLoggedIn ? 'none' : 'inline-flex';
+            registerBtn.style.display = isLoggedIn ? 'none' : 'inline-flex';
+            openToolBtn.style.display = isLoggedIn ? 'inline-flex' : 'none';
+            adminBtn.style.display = (isLoggedIn && user.email && user.email.toLowerCase() === SUPERADMIN_EMAIL.toLowerCase()) ? 'inline-flex' : 'none';
+            logoutBtn.style.display = isLoggedIn ? 'inline-flex' : 'none';
+        });
+
+        logoutBtn.addEventListener('click', async () => {
+            try {
+                await auth.signOut();
+            } catch (e) {}
+        });
+
+        function escapeHtml(v) {
+            return String(v || '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        async function handleProductDownload(id, fileUrl) {
+            try {
+                await db.collection('products').doc(id).update({
+                    downloadCount: firebase.firestore.FieldValue.increment(1),
+                    lastDownloadedAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+            } catch (e) {}
+            window.open(fileUrl, '_blank', 'noopener,noreferrer');
+            loadProducts();
+        }
+
+        async function loadProducts() {
+            if (!productsList) return;
+            productsList.innerHTML = '';
+            try {
+                const snap = await db.collection('products').get();
+                const items = [];
+                snap.forEach((d) => items.push({ id: d.id, ...d.data() }));
+                const active = items
+                    .filter((x) => x.isActive !== false && x.fileUrl)
+                    .sort((a, b) => {
+                        const ta = a.createdAt && a.createdAt.toMillis ? a.createdAt.toMillis() : 0;
+                        const tb = b.createdAt && b.createdAt.toMillis ? b.createdAt.toMillis() : 0;
+                        return tb - ta;
+                    });
+                active.forEach((item) => {
+                    const card = document.createElement('div');
+                    card.className = 'tool-card';
+                    card.innerHTML = `
+                        <h3>${escapeHtml(item.title || 'Untitled product')}</h3>
+                        <p>${escapeHtml(item.description || 'No description')}</p>
+                        <button class="download-btn" type="button">Download${item.fileName ? ` (${escapeHtml(item.fileName)})` : ''}</button>
+                        <div class="arrow">Downloads: ${(item.downloadCount || 0).toLocaleString()}</div>
+                    `;
+                    card.querySelector('.download-btn').addEventListener('click', () => handleProductDownload(item.id, item.fileUrl));
+                    productsList.appendChild(card);
+                });
+            } catch (e) {
+                productsList.innerHTML = '';
+            }
+        }
+
+        loadProducts();
+    })();
+
     (function () {
         const canvas = document.getElementById('bg-canvas');
         const ctx = canvas.getContext('2d');
