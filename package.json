@@ -1,7 +1,7 @@
 {
-  "name": "perforated-panel-designer",
+  "name": "personal-websitetools",
   "version": "1.0.0",
-  "description": "Perforated Panel Designer - Client-side tool",
+  "description": "Personal WebsiteTools — landing page, perforated panel designer, and utilities",
   "scripts": {
     "dev": "wrangler pages dev",
     "deploy": "wrangler pages deploy"
