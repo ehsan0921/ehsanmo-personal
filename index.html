@@ -207,6 +207,49 @@
             text-decoration: none;
         }
         .download-btn:hover { background: rgba(34, 211, 238, 0.2); }
+        .modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(2, 6, 23, 0.75);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 1rem;
+        }
+        .modal.active { display: flex; }
+        .modal-card {
+            width: 100%;
+            max-width: 420px;
+            background: rgba(15, 23, 42, 0.96);
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            padding: 1rem;
+        }
+        .modal-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 0.8rem; }
+        .tabs { display: flex; gap: 0.5rem; margin-bottom: 0.9rem; }
+        .tab-btn {
+            flex: 1;
+            border: 1px solid var(--line);
+            background: transparent;
+            color: var(--muted);
+            padding: 0.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        .tab-btn.active { color: var(--text); border-color: rgba(34, 211, 238, 0.5); background: rgba(34, 211, 238, 0.12); }
+        .field { margin-bottom: 0.75rem; }
+        .field label { display: block; font-size: 0.82rem; color: var(--muted); margin-bottom: 0.3rem; }
+        .field input {
+            width: 100%;
+            border: 1px solid var(--line);
+            background: #0b1220;
+            color: var(--text);
+            border-radius: 8px;
+            padding: 0.55rem 0.65rem;
+        }
+        .auth-row { display: flex; gap: 0.5rem; margin-top: 0.9rem; }
+        .auth-error { color: #fca5a5; min-height: 1.1rem; font-size: 0.82rem; margin-top: 0.4rem; }
         .linkedin {
             display: inline-flex;
             align-items: center;
@@ -238,10 +281,10 @@
                 <a href="#tools">Tools</a>
                 <a href="https://www.linkedin.com/in/ehsan-mokhtary/" target="_blank" rel="noopener noreferrer">LinkedIn</a>
                 <div class="nav-actions" id="landingAuthActions">
-                    <a id="landingLoginBtn" class="btn btn-ghost" href="/Image-Panel-perforated-designer/?auth=login">Login</a>
-                    <a id="landingRegisterBtn" class="btn btn-primary" href="/Image-Panel-perforated-designer/?auth=register">Register</a>
+                    <button id="landingLoginBtn" type="button" class="btn btn-ghost">Login</button>
+                    <button id="landingRegisterBtn" type="button" class="btn btn-primary">Register</button>
                     <a id="landingOpenToolBtn" class="btn btn-primary" href="/Image-Panel-perforated-designer/" style="display:none;">Open Tool</a>
-                    <a id="landingAdminBtn" class="btn btn-ghost" href="/admin-main.html" style="display:none;">Admin</a>
+                    <a id="landingAdminBtn" class="btn btn-ghost" href="/admin-main/" style="display:none;">Admin</a>
                     <button id="landingLogoutBtn" type="button" class="btn btn-ghost" style="display:none;">Logout</button>
                 </div>
             </nav>
@@ -285,6 +328,32 @@
         </footer>
     </div>
 
+    <div id="landingAuthModal" class="modal">
+        <div class="modal-card">
+            <div class="flex items-center justify-between" style="margin-bottom:0.5rem;">
+                <div class="modal-title">Authentication</div>
+                <button id="landingAuthCloseBtn" type="button" class="btn btn-ghost" style="padding:0.25rem 0.55rem;">×</button>
+            </div>
+            <div class="tabs">
+                <button id="landingTabLogin" class="tab-btn active" type="button">Login</button>
+                <button id="landingTabRegister" class="tab-btn" type="button">Register</button>
+            </div>
+            <div class="field">
+                <label for="landingAuthEmail">Email</label>
+                <input id="landingAuthEmail" type="email" autocomplete="email">
+            </div>
+            <div class="field">
+                <label for="landingAuthPassword">Password</label>
+                <input id="landingAuthPassword" type="password" autocomplete="current-password">
+            </div>
+            <div id="landingAuthError" class="auth-error"></div>
+            <div class="auth-row">
+                <button id="landingAuthSubmitBtn" type="button" class="btn btn-primary" style="flex:1;">Login</button>
+                <button id="landingGoogleBtn" type="button" class="btn btn-ghost" style="flex:1;">Google</button>
+            </div>
+        </div>
+    </div>
+
     <script>
     (function () {
         const SUPERADMIN_EMAIL = 'Ehsan0921@gmail.com';
@@ -304,6 +373,16 @@
         const adminBtn = document.getElementById('landingAdminBtn');
         const logoutBtn = document.getElementById('landingLogoutBtn');
         const productsList = document.getElementById('productsList');
+        const authModal = document.getElementById('landingAuthModal');
+        const authCloseBtn = document.getElementById('landingAuthCloseBtn');
+        const authError = document.getElementById('landingAuthError');
+        const authEmail = document.getElementById('landingAuthEmail');
+        const authPassword = document.getElementById('landingAuthPassword');
+        const tabLogin = document.getElementById('landingTabLogin');
+        const tabRegister = document.getElementById('landingTabRegister');
+        const authSubmitBtn = document.getElementById('landingAuthSubmitBtn');
+        const googleBtn = document.getElementById('landingGoogleBtn');
+        let authMode = 'login';
 
         if (typeof firebase === 'undefined') return;
         try { if (!firebase.apps.length) firebase.initializeApp(firebaseConfig); } catch (e) {}
@@ -317,6 +396,58 @@
             openToolBtn.style.display = isLoggedIn ? 'inline-flex' : 'none';
             adminBtn.style.display = (isLoggedIn && user.email && user.email.toLowerCase() === SUPERADMIN_EMAIL.toLowerCase()) ? 'inline-flex' : 'none';
             logoutBtn.style.display = isLoggedIn ? 'inline-flex' : 'none';
+            if (isLoggedIn && authModal.classList.contains('active')) authModal.classList.remove('active');
+        });
+
+        function setAuthMode(mode) {
+            authMode = mode;
+            tabLogin.classList.toggle('active', mode === 'login');
+            tabRegister.classList.toggle('active', mode === 'register');
+            authSubmitBtn.textContent = mode === 'register' ? 'Register' : 'Login';
+            authError.textContent = '';
+        }
+        function openAuth(mode) {
+            setAuthMode(mode || 'login');
+            authModal.classList.add('active');
+        }
+
+        loginBtn.addEventListener('click', () => openAuth('login'));
+        registerBtn.addEventListener('click', () => openAuth('register'));
+        tabLogin.addEventListener('click', () => setAuthMode('login'));
+        tabRegister.addEventListener('click', () => setAuthMode('register'));
+        authCloseBtn.addEventListener('click', () => authModal.classList.remove('active'));
+        authModal.addEventListener('click', (e) => { if (e.target === authModal) authModal.classList.remove('active'); });
+
+        authSubmitBtn.addEventListener('click', async () => {
+            const email = (authEmail.value || '').trim();
+            const password = authPassword.value || '';
+            if (!email || !password) { authError.textContent = 'Email and password are required.'; return; }
+            authSubmitBtn.disabled = true;
+            authError.textContent = '';
+            try {
+                if (authMode === 'register') {
+                    await auth.createUserWithEmailAndPassword(email, password);
+                } else {
+                    await auth.signInWithEmailAndPassword(email, password);
+                }
+            } catch (e) {
+                authError.textContent = e && e.message ? e.message : 'Authentication failed.';
+            } finally {
+                authSubmitBtn.disabled = false;
+            }
+        });
+
+        googleBtn.addEventListener('click', async () => {
+            googleBtn.disabled = true;
+            authError.textContent = '';
+            try {
+                const provider = new firebase.auth.GoogleAuthProvider();
+                await auth.signInWithPopup(provider);
+            } catch (e) {
+                authError.textContent = e && e.message ? e.message : 'Google login failed.';
+            } finally {
+                googleBtn.disabled = false;
+            }
         });
 
         logoutBtn.addEventListener('click', async () => {
