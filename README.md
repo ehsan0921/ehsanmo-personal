@@ -2,6 +2,10 @@
 
 Personal site and utilities by Ehsan Mokhtary: landing page at the root and tools (including the **Perforated Panel Designer** under `/Image-Panel-perforated-designer/`).
 
+**GitHub:** Rename the repository to `Personal-WebsiteTools` (Settings → General → Repository name; spaces are not allowed). Then point your local remote:
+
+`git remote set-url origin https://github.com/ehsan0921/Personal-WebsiteTools.git`
+
 ## Perforated Panel Designer
 
 A client-side web application for designing perforated panels with customizable hole patterns based on image input.
