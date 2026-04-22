@@ -10,12 +10,12 @@
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-storage-compat.js"></script>
     <style>
-        body { background: #0b1220; color: #e2e8f0; }
-        .card { background: rgba(15, 23, 42, 0.9); border: 1px solid rgba(148, 163, 184, 0.2); }
+        body { background: #f8fafc; color: #0f172a; }
+        .card { background: #ffffff; border: 1px solid #e2e8f0; box-shadow: 0 2px 10px rgba(15, 23, 42, 0.04); }
         .overlay {
             position: fixed;
             inset: 0;
-            background: rgba(2, 6, 23, 0.8);
+            background: rgba(15, 23, 42, 0.35);
             display: none;
             align-items: center;
             justify-content: center;
@@ -31,23 +31,23 @@
         }
     </style>
 </head>
-<body class="min-h-screen">
+<body class="min-h-screen bg-slate-50 text-slate-900">
     <div class="max-w-6xl mx-auto p-6">
         <div class="flex items-center justify-between mb-6">
             <h1 class="text-2xl font-bold">Main Website Admin</h1>
             <div class="flex gap-2">
-                <a href="/" class="px-3 py-2 rounded bg-slate-700 hover:bg-slate-600 text-sm">Back Home</a>
+                <a href="/" class="px-3 py-2 rounded bg-slate-200 hover:bg-slate-300 text-sm text-slate-800">Back Home</a>
                 <button id="logoutBtn" class="px-3 py-2 rounded bg-red-600 hover:bg-red-500 text-sm">Logout</button>
             </div>
         </div>
 
-        <div id="notAuthorized" class="hidden card rounded-lg p-4 mb-4 text-red-300">
+        <div id="notAuthorized" class="hidden card rounded-lg p-4 mb-4 text-rose-700">
             Not authorized. Login with superadmin account.
         </div>
 
         <div id="adminContent" class="hidden">
             <div class="card rounded-lg p-4 mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-                <div class="text-sm text-slate-300">Manage products, versions, and downloadable files.</div>
+                <div class="text-sm text-slate-600">Manage products, versions, and downloadable files.</div>
                 <div class="flex flex-wrap gap-2">
                     <button id="openAddProductModalBtn" class="px-4 py-2 rounded bg-cyan-600 hover:bg-cyan-500 text-sm font-semibold">+ Add Product</button>
                     <button id="openUpdateModalBtn" class="px-4 py-2 rounded bg-indigo-600 hover:bg-indigo-500 text-sm font-semibold">Update Product</button>
@@ -60,7 +60,7 @@
                 <div class="overflow-auto">
                     <table class="min-w-full text-sm">
                         <thead>
-                            <tr class="text-left border-b border-slate-700">
+                            <tr class="text-left border-b border-slate-200">
                                 <th class="py-2 pr-4">Title</th>
                                 <th class="py-2 pr-4">Current Version</th>
                                 <th class="py-2 pr-4">Downloads</th>
@@ -72,7 +72,7 @@
                     </table>
                 </div>
                 <div class="mt-4">
-                    <span id="createStatus" class="text-sm text-slate-300"></span>
+                    <span id="createStatus" class="text-sm text-slate-600"></span>
                 </div>
             </div>
         </div>
@@ -82,32 +82,32 @@
         <div class="card rounded-lg p-5 modal-card">
             <div class="flex items-center justify-between mb-4">
                 <h2 class="text-lg font-semibold">Add New Product</h2>
-                <button id="closeAddProductModalBtn" class="px-3 py-1 rounded bg-slate-700 hover:bg-slate-600 text-sm">Close</button>
+                <button id="closeAddProductModalBtn" class="px-3 py-1 rounded bg-slate-200 hover:bg-slate-300 text-sm text-slate-800">Close</button>
             </div>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                     <label class="block text-sm mb-1">Title</label>
-                    <input id="productTitle" type="text" class="w-full px-3 py-2 rounded bg-slate-900 border border-slate-700">
+                    <input id="productTitle" type="text" class="w-full px-3 py-2 rounded bg-white border border-slate-300">
                 </div>
                 <div>
                     <label class="block text-sm mb-1">Button Label (optional)</label>
-                    <input id="productButtonLabel" type="text" placeholder="Download" class="w-full px-3 py-2 rounded bg-slate-900 border border-slate-700">
+                    <input id="productButtonLabel" type="text" placeholder="Download" class="w-full px-3 py-2 rounded bg-white border border-slate-300">
                 </div>
                 <div class="md:col-span-2">
                     <label class="block text-sm mb-1">Description</label>
-                    <textarea id="productDescription" rows="3" class="w-full px-3 py-2 rounded bg-slate-900 border border-slate-700"></textarea>
+                    <textarea id="productDescription" rows="3" class="w-full px-3 py-2 rounded bg-white border border-slate-300"></textarea>
                 </div>
                 <div class="md:col-span-2">
                     <label class="block text-sm mb-1">File to upload</label>
-                    <input id="productFile" type="file" class="w-full px-3 py-2 rounded bg-slate-900 border border-slate-700">
+                    <input id="productFile" type="file" class="w-full px-3 py-2 rounded bg-white border border-slate-300">
                 </div>
                 <div>
                     <label class="block text-sm mb-1">Initial Version</label>
-                    <input id="productVersion" type="text" value="v1.0.0" class="w-full px-3 py-2 rounded bg-slate-900 border border-slate-700">
+                    <input id="productVersion" type="text" value="v1.0.0" class="w-full px-3 py-2 rounded bg-white border border-slate-300">
                 </div>
                 <div>
                     <label class="block text-sm mb-1">Version Notes (optional)</label>
-                    <input id="productVersionNotes" type="text" placeholder="Initial release" class="w-full px-3 py-2 rounded bg-slate-900 border border-slate-700">
+                    <input id="productVersionNotes" type="text" placeholder="Initial release" class="w-full px-3 py-2 rounded bg-white border border-slate-300">
                 </div>
                 <div class="flex items-center gap-2">
                     <input id="productActive" type="checkbox" checked>
@@ -124,24 +124,24 @@
         <div class="card rounded-lg p-5 modal-card">
             <div class="flex items-center justify-between mb-4">
                 <h2 class="text-lg font-semibold">Add Product Update</h2>
-                <button id="closeUpdateModalBtn" class="px-3 py-1 rounded bg-slate-700 hover:bg-slate-600 text-sm">Close</button>
+                <button id="closeUpdateModalBtn" class="px-3 py-1 rounded bg-slate-200 hover:bg-slate-300 text-sm text-slate-800">Close</button>
             </div>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                     <label class="block text-sm mb-1">Product</label>
-                    <select id="updateProductId" class="w-full px-3 py-2 rounded bg-slate-900 border border-slate-700"></select>
+                    <select id="updateProductId" class="w-full px-3 py-2 rounded bg-white border border-slate-300"></select>
                 </div>
                 <div>
                     <label class="block text-sm mb-1">New Version</label>
-                    <input id="updateVersion" type="text" value="v1.0.1" class="w-full px-3 py-2 rounded bg-slate-900 border border-slate-700">
+                    <input id="updateVersion" type="text" value="v1.0.1" class="w-full px-3 py-2 rounded bg-white border border-slate-300">
                 </div>
                 <div class="md:col-span-2">
                     <label class="block text-sm mb-1">Update Notes (optional)</label>
-                    <input id="updateNotes" type="text" placeholder="Bug fixes / improvements" class="w-full px-3 py-2 rounded bg-slate-900 border border-slate-700">
+                    <input id="updateNotes" type="text" placeholder="Bug fixes / improvements" class="w-full px-3 py-2 rounded bg-white border border-slate-300">
                 </div>
                 <div class="md:col-span-2">
                     <label class="block text-sm mb-1">Update File</label>
-                    <input id="updateFile" type="file" class="w-full px-3 py-2 rounded bg-slate-900 border border-slate-700">
+                    <input id="updateFile" type="file" class="w-full px-3 py-2 rounded bg-white border border-slate-300">
                 </div>
                 <div class="flex items-center gap-2">
                     <input id="removeOlderVersions" type="checkbox">
@@ -150,7 +150,7 @@
             </div>
             <div class="mt-4 flex items-center gap-3">
                 <button id="addUpdateBtn" class="px-4 py-2 rounded bg-indigo-600 hover:bg-indigo-500 text-sm font-semibold">Upload Update</button>
-                <span id="updateStatus" class="text-sm text-slate-300"></span>
+                <span id="updateStatus" class="text-sm text-slate-600"></span>
             </div>
         </div>
     </div>
@@ -252,19 +252,19 @@
 
             items.forEach((item) => {
                 const tr = document.createElement('tr');
-                tr.className = 'border-b border-slate-800';
+                tr.className = 'border-b border-slate-200';
                 const currentVersion = item.currentVersion || null;
                 tr.innerHTML = `
                     <td class="py-2 pr-4">${esc(item.title)}</td>
                     <td class="py-2 pr-4">
                         ${currentVersion ? `${esc(currentVersion.version || '')} (${esc(currentVersion.fileName || '')})` : esc(item.fileName || '')}
-                        <div class="text-xs text-slate-400">Versions: ${Array.isArray(item.versions) ? item.versions.length : (currentVersion ? 1 : 0)}</div>
+                        <div class="text-xs text-slate-500">Versions: ${Array.isArray(item.versions) ? item.versions.length : (currentVersion ? 1 : 0)}</div>
                     </td>
                     <td class="py-2 pr-4">${(item.downloadCount || 0).toLocaleString()}</td>
                     <td class="py-2 pr-4">${item.isActive === false ? 'No' : 'Yes'}</td>
                     <td class="py-2 pr-4">
                         <button data-id="${item.id}" class="open-update px-2 py-1 bg-indigo-700 rounded text-xs mr-2">Update</button>
-                        <button data-id="${item.id}" data-active="${item.isActive === false ? '0' : '1'}" class="toggle px-2 py-1 bg-slate-700 rounded text-xs mr-2">${item.isActive === false ? 'Activate' : 'Deactivate'}</button>
+                        <button data-id="${item.id}" data-active="${item.isActive === false ? '0' : '1'}" class="toggle px-2 py-1 bg-slate-200 hover:bg-slate-300 text-slate-800 rounded text-xs mr-2">${item.isActive === false ? 'Activate' : 'Deactivate'}</button>
                         <button data-id="${item.id}" class="delete px-2 py-1 bg-red-700 rounded text-xs">Delete Product</button>
                     </td>
                 `;

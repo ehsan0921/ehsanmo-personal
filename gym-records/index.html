@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Gym Records Tracker</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
+</head>
+<body class="min-h-screen bg-slate-50 text-slate-900">
+    <div class="mx-auto max-w-6xl px-4 py-6">
+        <header class="mb-6 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+            <div class="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                    <h1 class="text-2xl font-bold">Gym Records Tracker</h1>
+                    <p class="text-sm text-slate-600">Track movements, sets, reps, kg, time, goals, and progress over dates.</p>
+                </div>
+                <div class="flex gap-2">
+                    <a href="/" class="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm hover:bg-slate-100">Home</a>
+                    <button id="logoutBtn" class="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm hover:bg-slate-100">Logout</button>
+                </div>
+            </div>
+        </header>
+
+        <div id="authRequired" class="hidden rounded-2xl border border-amber-300 bg-amber-50 p-6">
+            <h2 class="text-lg font-semibold text-amber-800">Login required</h2>
+            <p class="mt-2 text-sm text-amber-700">This tool is only accessible for registered users.</p>
+            <a href="/" class="mt-3 inline-block rounded-lg bg-amber-600 px-3 py-2 text-sm font-semibold text-white hover:bg-amber-500">Go to Login/Register</a>
+        </div>
+
+        <main id="app" class="hidden space-y-6">
+            <section class="grid grid-cols-1 gap-4 md:grid-cols-4">
+                <div class="rounded-xl border border-slate-200 bg-white p-4">
+                    <div class="text-xs uppercase tracking-wide text-slate-500">Session Volume</div>
+                    <div id="statSessionVolume" class="mt-2 text-2xl font-bold">0 kg</div>
+                </div>
+                <div class="rounded-xl border border-slate-200 bg-white p-4">
+                    <div class="text-xs uppercase tracking-wide text-slate-500">Duration</div>
+                    <div id="statDuration" class="mt-2 text-2xl font-bold">0 min</div>
+                </div>
+                <div class="rounded-xl border border-slate-200 bg-white p-4">
+                    <div class="text-xs uppercase tracking-wide text-slate-500">Body Weight</div>
+                    <div id="statCurrentWeight" class="mt-2 text-2xl font-bold">-</div>
+                </div>
+                <div class="rounded-xl border border-slate-200 bg-white p-4">
+                    <div class="text-xs uppercase tracking-wide text-slate-500">Goal Progress</div>
+                    <div id="statGoal" class="mt-2 text-2xl font-bold">-</div>
+                </div>
+            </section>
+
+            <section class="grid grid-cols-1 gap-6 lg:grid-cols-3">
+                <div class="rounded-xl border border-slate-200 bg-white p-4 lg:col-span-2">
+                    <div class="mb-3 flex items-center justify-between">
+                        <h2 class="text-lg font-semibold">Workout Log</h2>
+                        <button id="addSetBtn" class="rounded-lg bg-cyan-600 px-3 py-2 text-sm font-semibold text-white hover:bg-cyan-500">+ Add Set</button>
+                    </div>
+
+                    <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                        <label class="text-sm text-slate-600">Date
+                            <input id="workoutDate" type="date" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2">
+                        </label>
+                        <label class="text-sm text-slate-600">Group (optional)
+                            <select id="groupSelect" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2"></select>
+                        </label>
+                        <label class="text-sm text-slate-600">Start time
+                            <input id="startTime" type="time" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2">
+                        </label>
+                        <label class="text-sm text-slate-600">End time
+                            <input id="endTime" type="time" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2">
+                        </label>
+                    </div>
+
+                    <div class="mt-4 overflow-auto">
+                        <table class="min-w-full text-sm">
+                            <thead>
+                                <tr class="border-b border-slate-200 text-left">
+                                    <th class="py-2 pr-3">Movement</th>
+                                    <th class="py-2 pr-3">Sets</th>
+                                    <th class="py-2 pr-3">Kg</th>
+                                    <th class="py-2 pr-3">Reps</th>
+                                    <th class="py-2 pr-3">Volume</th>
+                                    <th class="py-2 pr-3">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="setsTable"></tbody>
+                        </table>
+                    </div>
+
+                    <div class="mt-4 flex flex-wrap items-center gap-2">
+                        <button id="saveWorkoutBtn" class="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-500">Save Workout</button>
+                        <button id="shareDayBtn" class="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm hover:bg-slate-100">Share Day</button>
+                        <button id="shareRangeBtn" class="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm hover:bg-slate-100">Share Date Range</button>
+                        <span id="workoutStatus" class="text-sm text-slate-600"></span>
+                    </div>
+                    <div class="mt-3">
+                        <label class="block text-xs font-semibold uppercase tracking-wide text-slate-500">Latest Share Link</label>
+                        <div class="mt-1 flex gap-2">
+                            <input id="shareLinkOutput" type="text" readonly class="w-full rounded-lg border border-slate-300 bg-slate-50 px-3 py-2 text-sm text-slate-700" placeholder="Share link will appear here">
+                            <button id="copyShareLinkBtn" class="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm hover:bg-slate-100">Copy</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="space-y-6">
+                    <div class="rounded-xl border border-slate-200 bg-white p-4">
+                        <h2 class="text-lg font-semibold">Weight Tracker</h2>
+                        <div class="mt-3 space-y-2">
+                            <label class="block text-sm text-slate-600">Date
+                                <input id="weightDate" type="date" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2">
+                            </label>
+                            <label class="block text-sm text-slate-600">Weight (kg)
+                                <input id="weightValue" type="number" step="0.1" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2">
+                            </label>
+                            <button id="saveWeightBtn" class="w-full rounded-lg bg-indigo-600 px-3 py-2 text-sm font-semibold text-white hover:bg-indigo-500">Save Weight</button>
+                            <div id="weightStatus" class="text-xs text-slate-600"></div>
+                        </div>
+                    </div>
+
+                    <div class="rounded-xl border border-slate-200 bg-white p-4">
+                        <h2 class="text-lg font-semibold">Goals</h2>
+                        <div class="mt-3 space-y-2">
+                            <label class="block text-sm text-slate-600">Weekly volume goal (kg)
+                                <input id="goalVolume" type="number" step="1" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2">
+                            </label>
+                            <label class="block text-sm text-slate-600">Target body weight (kg)
+                                <input id="goalWeight" type="number" step="0.1" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2">
+                            </label>
+                            <button id="saveGoalsBtn" class="w-full rounded-lg bg-slate-900 px-3 py-2 text-sm font-semibold text-white hover:bg-slate-700">Save Goals</button>
+                            <div id="goalsStatus" class="text-xs text-slate-600"></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="grid grid-cols-1 gap-6 lg:grid-cols-2">
+                <div class="rounded-xl border border-slate-200 bg-white p-4">
+                    <div class="flex items-center justify-between">
+                        <h2 class="text-lg font-semibold">Recent Workouts</h2>
+                        <button id="reloadRecentBtn" class="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm hover:bg-slate-100">Refresh</button>
+                    </div>
+                    <ul id="recentWorkouts" class="mt-3 space-y-2 text-sm"></ul>
+                </div>
+
+            </section>
+
+            <section class="grid grid-cols-1 gap-6 lg:grid-cols-2">
+                <div class="rounded-xl border border-slate-200 bg-white p-4">
+                    <h2 class="text-lg font-semibold">Reports</h2>
+                    <div class="mt-3 grid grid-cols-2 gap-2">
+                        <label class="text-sm text-slate-600">From
+                            <input id="reportFrom" type="date" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2">
+                        </label>
+                        <label class="text-sm text-slate-600">To
+                            <input id="reportTo" type="date" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2">
+                        </label>
+                    </div>
+                    <button id="loadReportBtn" class="mt-3 rounded-lg bg-cyan-600 px-4 py-2 text-sm font-semibold text-white hover:bg-cyan-500">Load Report</button>
+                    <div id="reportBox" class="mt-3 rounded-lg bg-slate-50 p-3 text-sm text-slate-700"></div>
+                </div>
+
+                <div class="rounded-xl border border-slate-200 bg-white p-4">
+                    <h2 class="text-lg font-semibold">Group / Party Set</h2>
+                    <div class="mt-3 space-y-2">
+                        <label class="block text-sm text-slate-600">Create group name
+                            <input id="newGroupName" type="text" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2">
+                        </label>
+                        <button id="createGroupBtn" class="rounded-lg bg-violet-600 px-3 py-2 text-sm font-semibold text-white hover:bg-violet-500">Create Group</button>
+                        <label class="block text-sm text-slate-600">Join group ID
+                            <input id="joinGroupId" type="text" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2">
+                        </label>
+                        <button id="joinGroupBtn" class="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm hover:bg-slate-100">Join Group</button>
+                        <div id="groupStatus" class="text-xs text-slate-600"></div>
+                    </div>
+                    <div class="mt-4">
+                        <h3 class="font-semibold">Recent group records</h3>
+                        <ul id="groupFeed" class="mt-2 space-y-2 text-sm text-slate-700"></ul>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script>
+    (function () {
+        const firebaseConfig = {
+            apiKey: "AIzaSyA__FJwWy6VcRyWS1cO3Jmol6BcJSEiVdA",
+            authDomain: "ehsanmo.firebaseapp.com",
+            projectId: "ehsanmo",
+            storageBucket: "ehsanmo.firebasestorage.app",
+            messagingSenderId: "287723741565",
+            appId: "1:287723741565:web:4be1f44d27dbe60f48ac14",
+            measurementId: "G-347B8XCFLX"
+        };
+        if (typeof firebase === "undefined") return;
+        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        const authRequired = document.getElementById("authRequired");
+        const app = document.getElementById("app");
+        const logoutBtn = document.getElementById("logoutBtn");
+        const setsTable = document.getElementById("setsTable");
+        const addSetBtn = document.getElementById("addSetBtn");
+        const saveWorkoutBtn = document.getElementById("saveWorkoutBtn");
+        const shareDayBtn = document.getElementById("shareDayBtn");
+        const shareRangeBtn = document.getElementById("shareRangeBtn");
+        const workoutStatus = document.getElementById("workoutStatus");
+        const groupSelect = document.getElementById("groupSelect");
+        const shareLinkOutput = document.getElementById("shareLinkOutput");
+        const copyShareLinkBtn = document.getElementById("copyShareLinkBtn");
+        const recentWorkouts = document.getElementById("recentWorkouts");
+        const reloadRecentBtn = document.getElementById("reloadRecentBtn");
+
+        let currentUser = null;
+        let sets = [];
+        let groups = [];
+
+        function todayISO() {
+            const d = new Date();
+            const m = String(d.getMonth() + 1).padStart(2, "0");
+            const day = String(d.getDate()).padStart(2, "0");
+            return d.getFullYear() + "-" + m + "-" + day;
+        }
+
+        function calcVolume(row) {
+            const s = Number(row.sets || 0);
+            const kg = Number(row.kg || 0);
+            const r = Number(row.reps || 0);
+            return s * kg * r;
+        }
+
+        function renderSets() {
+            setsTable.innerHTML = "";
+            if (!sets.length) {
+                sets.push({ movement: "", sets: 1, kg: 0, reps: 1 });
+            }
+            sets.forEach((row, idx) => {
+                const tr = document.createElement("tr");
+                tr.className = "border-b border-slate-100";
+                const volume = calcVolume(row);
+                tr.innerHTML = `
+                    <td class="py-2 pr-2"><input data-k="movement" data-i="${idx}" value="${row.movement || ""}" class="w-full rounded border border-slate-300 px-2 py-1"></td>
+                    <td class="py-2 pr-2"><input data-k="sets" data-i="${idx}" type="number" min="1" value="${row.sets}" class="w-20 rounded border border-slate-300 px-2 py-1"></td>
+                    <td class="py-2 pr-2"><input data-k="kg" data-i="${idx}" type="number" min="0" step="0.5" value="${row.kg}" class="w-24 rounded border border-slate-300 px-2 py-1"></td>
+                    <td class="py-2 pr-2"><input data-k="reps" data-i="${idx}" type="number" min="1" value="${row.reps}" class="w-20 rounded border border-slate-300 px-2 py-1"></td>
+                    <td class="py-2 pr-2 font-semibold">${volume.toFixed(1)} kg</td>
+                    <td class="py-2 pr-2"><button data-del="${idx}" class="rounded bg-rose-100 px-2 py-1 text-xs text-rose-700 hover:bg-rose-200">Delete</button></td>
+                `;
+                setsTable.appendChild(tr);
+            });
+
+            setsTable.querySelectorAll("input[data-k]").forEach((el) => {
+                el.addEventListener("input", () => {
+                    const i = Number(el.getAttribute("data-i"));
+                    const key = el.getAttribute("data-k");
+                    const val = key === "movement" ? el.value : Number(el.value || 0);
+                    sets[i][key] = val;
+                    updateStats();
+                    renderSets();
+                });
+            });
+            setsTable.querySelectorAll("button[data-del]").forEach((btn) => {
+                btn.addEventListener("click", () => {
+                    const i = Number(btn.getAttribute("data-del"));
+                    sets.splice(i, 1);
+                    renderSets();
+                    updateStats();
+                });
+            });
+        }
+
+        function updateStats() {
+            const total = sets.reduce((acc, row) => acc + calcVolume(row), 0);
+            document.getElementById("statSessionVolume").textContent = total.toFixed(1) + " kg";
+            const start = document.getElementById("startTime").value;
+            const end = document.getElementById("endTime").value;
+            if (start && end) {
+                const a = new Date("2000-01-01T" + start + ":00");
+                const b = new Date("2000-01-01T" + end + ":00");
+                const mins = Math.max(0, Math.round((b - a) / 60000));
+                document.getElementById("statDuration").textContent = mins + " min";
+            } else {
+                document.getElementById("statDuration").textContent = "0 min";
+            }
+        }
+
+        async function loadGoalsAndWeight(uid) {
+            const goalDoc = await db.collection("users").doc(uid).collection("meta").doc("goals").get();
+            if (goalDoc.exists) {
+                const g = goalDoc.data() || {};
+                document.getElementById("goalVolume").value = g.weeklyVolumeGoal || "";
+                document.getElementById("goalWeight").value = g.targetWeight || "";
+            }
+
+            const weightSnap = await db.collection("users").doc(uid).collection("weights").orderBy("date", "desc").limit(1).get();
+            if (!weightSnap.empty) {
+                const w = weightSnap.docs[0].data();
+                document.getElementById("statCurrentWeight").textContent = Number(w.weight).toFixed(1) + " kg";
+            } else {
+                document.getElementById("statCurrentWeight").textContent = "-";
+            }
+        }
+
+        async function loadGroups(uid) {
+            const snap = await db.collection("groups").where("memberUids", "array-contains", uid).get();
+            groups = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+            groupSelect.innerHTML = '<option value="">No group</option>';
+            groups.forEach((g) => {
+                const opt = document.createElement("option");
+                opt.value = g.id;
+                opt.textContent = g.name || g.id;
+                groupSelect.appendChild(opt);
+            });
+            await loadGroupFeed(uid);
+        }
+
+        async function loadGroupFeed(uid) {
+            const feed = document.getElementById("groupFeed");
+            feed.innerHTML = "";
+            const groupIds = groups.map((g) => g.id);
+            if (!groupIds.length) return;
+
+            const logs = [];
+            for (const gid of groupIds.slice(0, 3)) {
+                const logSnap = await db.collection("groups").doc(gid).collection("logs").orderBy("createdAt", "desc").limit(5).get();
+                logSnap.forEach((d) => logs.push({ id: d.id, groupId: gid, ...d.data() }));
+            }
+            logs.sort((a, b) => {
+                const ta = a.createdAt && a.createdAt.toMillis ? a.createdAt.toMillis() : 0;
+                const tb = b.createdAt && b.createdAt.toMillis ? b.createdAt.toMillis() : 0;
+                return tb - ta;
+            });
+            logs.slice(0, 8).forEach((log) => {
+                const li = document.createElement("li");
+                li.className = "rounded-lg border border-slate-200 bg-slate-50 px-3 py-2";
+                li.textContent = (log.userEmail || "member") + " · " + (log.date || "-") + " · " + Number(log.totalVolume || 0).toFixed(1) + " kg";
+                feed.appendChild(li);
+            });
+        }
+
+        async function saveWorkout() {
+            if (!currentUser) return;
+            const date = document.getElementById("workoutDate").value || todayISO();
+            const startTime = document.getElementById("startTime").value || "";
+            const endTime = document.getElementById("endTime").value || "";
+            const groupId = groupSelect.value || "";
+            const cleanSets = sets.filter((s) => (s.movement || "").trim()).map((s) => ({
+                movement: (s.movement || "").trim(),
+                sets: Number(s.sets || 0),
+                kg: Number(s.kg || 0),
+                reps: Number(s.reps || 0),
+                volume: calcVolume(s)
+            }));
+            const totalVolume = cleanSets.reduce((a, b) => a + b.volume, 0);
+
+            if (!cleanSets.length) {
+                workoutStatus.textContent = "Add at least one movement.";
+                return;
+            }
+
+            workoutStatus.textContent = "Saving...";
+            const data = {
+                date,
+                startTime,
+                endTime,
+                sets: cleanSets,
+                totalVolume,
+                uid: currentUser.uid,
+                userEmail: currentUser.email || "",
+                groupId,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            };
+            await db.collection("users").doc(currentUser.uid).collection("workouts").add(data);
+
+            if (groupId) {
+                await db.collection("groups").doc(groupId).collection("logs").add(data);
+            }
+
+            workoutStatus.textContent = "Workout saved.";
+            updateStats();
+            await loadReport();
+            await loadRecentWorkouts();
+        }
+
+        async function loadReport() {
+            if (!currentUser) return;
+            const from = document.getElementById("reportFrom").value || todayISO();
+            const to = document.getElementById("reportTo").value || todayISO();
+            const fromStamp = from + "T00:00:00";
+            const toStamp = to + "T23:59:59";
+            const snap = await db.collection("users").doc(currentUser.uid).collection("workouts").where("date", ">=", from).where("date", "<=", to).get();
+            let sessions = 0;
+            let volume = 0;
+            snap.forEach((d) => {
+                sessions += 1;
+                volume += Number((d.data() || {}).totalVolume || 0);
+            });
+            const avg = sessions ? volume / sessions : 0;
+            const box = document.getElementById("reportBox");
+            box.innerHTML = "Sessions: <b>" + sessions + "</b><br>Total Volume: <b>" + volume.toFixed(1) + " kg</b><br>Avg / Session: <b>" + avg.toFixed(1) + " kg</b>";
+
+            const goalDoc = await db.collection("users").doc(currentUser.uid).collection("meta").doc("goals").get();
+            const goal = goalDoc.exists ? Number((goalDoc.data() || {}).weeklyVolumeGoal || 0) : 0;
+            if (goal > 0) {
+                const pct = Math.min(999, (volume / goal) * 100);
+                document.getElementById("statGoal").textContent = pct.toFixed(1) + "%";
+            } else {
+                document.getElementById("statGoal").textContent = "-";
+            }
+            void fromStamp;
+            void toStamp;
+        }
+
+        async function saveWeight() {
+            if (!currentUser) return;
+            const date = document.getElementById("weightDate").value || todayISO();
+            const weight = Number(document.getElementById("weightValue").value || 0);
+            if (!weight) return;
+            await db.collection("users").doc(currentUser.uid).collection("weights").add({
+                date,
+                weight,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            document.getElementById("weightStatus").textContent = "Weight saved.";
+            document.getElementById("statCurrentWeight").textContent = weight.toFixed(1) + " kg";
+        }
+
+        async function saveGoals() {
+            if (!currentUser) return;
+            const weeklyVolumeGoal = Number(document.getElementById("goalVolume").value || 0);
+            const targetWeight = Number(document.getElementById("goalWeight").value || 0);
+            await db.collection("users").doc(currentUser.uid).collection("meta").doc("goals").set({
+                weeklyVolumeGoal,
+                targetWeight,
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            }, { merge: true });
+            document.getElementById("goalsStatus").textContent = "Goals saved.";
+        }
+
+        async function shareReport(type) {
+            if (!currentUser) return;
+            const from = type === "day" ? (document.getElementById("workoutDate").value || todayISO()) : (document.getElementById("reportFrom").value || todayISO());
+            const to = type === "day" ? from : (document.getElementById("reportTo").value || todayISO());
+            const snap = await db.collection("users").doc(currentUser.uid).collection("workouts").where("date", ">=", from).where("date", "<=", to).get();
+            const rows = [];
+            let totalVolume = 0;
+            snap.forEach((d) => {
+                const w = d.data() || {};
+                totalVolume += Number(w.totalVolume || 0);
+                rows.push({ date: w.date || "", totalVolume: Number(w.totalVolume || 0), sets: w.sets || [], userEmail: currentUser.email || "" });
+            });
+            const ref = await db.collection("gymShares").add({
+                ownerUid: currentUser.uid,
+                type,
+                fromDate: from,
+                toDate: to,
+                totalVolume,
+                rows,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            const url = location.origin + "/gym-records/?share=" + encodeURIComponent(ref.id);
+            workoutStatus.textContent = "Share link ready.";
+            if (shareLinkOutput) shareLinkOutput.value = url;
+            try {
+                await navigator.clipboard.writeText(url);
+                workoutStatus.textContent = "Share link copied to clipboard.";
+            } catch (e) {
+                workoutStatus.textContent = "Share link: " + url;
+            }
+        }
+
+        async function loadRecentWorkouts() {
+            if (!currentUser || !recentWorkouts) return;
+            recentWorkouts.innerHTML = "";
+            const snap = await db.collection("users")
+                .doc(currentUser.uid)
+                .collection("workouts")
+                .orderBy("createdAt", "desc")
+                .limit(8)
+                .get();
+            if (snap.empty) {
+                const li = document.createElement("li");
+                li.className = "rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-slate-500";
+                li.textContent = "No workouts yet.";
+                recentWorkouts.appendChild(li);
+                return;
+            }
+            snap.forEach((doc) => {
+                const w = doc.data() || {};
+                const li = document.createElement("li");
+                li.className = "rounded-lg border border-slate-200 bg-slate-50 px-3 py-2";
+                li.innerHTML =
+                    "<div class=\"flex items-center justify-between gap-2\">" +
+                    "<span class=\"font-semibold text-slate-800\">" + (w.date || "-") + "</span>" +
+                    "<span class=\"text-xs text-slate-500\">" + Number(w.totalVolume || 0).toFixed(1) + " kg</span>" +
+                    "</div>" +
+                    "<div class=\"mt-1 text-xs text-slate-600\">Sets: " + (Array.isArray(w.sets) ? w.sets.length : 0) + " · " + (w.startTime || "--:--") + " to " + (w.endTime || "--:--") + "</div>";
+                recentWorkouts.appendChild(li);
+            });
+        }
+
+        async function maybeLoadSharedView() {
+            const qs = new URLSearchParams(location.search);
+            const shareId = qs.get("share");
+            if (!shareId) return false;
+
+            document.querySelector("header p").textContent = "Read-only shared report";
+            app.classList.remove("hidden");
+            authRequired.classList.add("hidden");
+            document.getElementById("logoutBtn").style.display = "none";
+
+            const doc = await db.collection("gymShares").doc(shareId).get();
+            if (!doc.exists) {
+                document.getElementById("reportBox").textContent = "Shared report not found.";
+                return true;
+            }
+            const d = doc.data() || {};
+            const total = Number(d.totalVolume || 0);
+            document.getElementById("reportBox").innerHTML = "Type: <b>" + (d.type || "-") + "</b><br>Date: <b>" + (d.fromDate || "-") + "</b> to <b>" + (d.toDate || "-") + "</b><br>Total Volume: <b>" + total.toFixed(1) + " kg</b>";
+
+            sets = [];
+            const rows = Array.isArray(d.rows) ? d.rows : [];
+            rows.forEach((r) => {
+                const rowSets = Array.isArray(r.sets) ? r.sets : [];
+                rowSets.forEach((s) => sets.push({
+                    movement: s.movement || "",
+                    sets: Number(s.sets || 0),
+                    kg: Number(s.kg || 0),
+                    reps: Number(s.reps || 0)
+                }));
+            });
+            renderSets();
+
+            const disableIds = ["addSetBtn","saveWorkoutBtn","shareDayBtn","shareRangeBtn","saveWeightBtn","saveGoalsBtn","createGroupBtn","joinGroupBtn"];
+            disableIds.forEach((id) => {
+                const el = document.getElementById(id);
+                if (el) el.disabled = true;
+            });
+            return true;
+        }
+
+        async function createGroup() {
+            if (!currentUser) return;
+            const name = (document.getElementById("newGroupName").value || "").trim();
+            if (!name) return;
+            const ref = await db.collection("groups").add({
+                name,
+                ownerUid: currentUser.uid,
+                ownerEmail: currentUser.email || "",
+                memberUids: [currentUser.uid],
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            document.getElementById("groupStatus").textContent = "Group created. ID: " + ref.id;
+            await loadGroups(currentUser.uid);
+        }
+
+        async function joinGroup() {
+            if (!currentUser) return;
+            const gid = (document.getElementById("joinGroupId").value || "").trim();
+            if (!gid) return;
+            await db.collection("groups").doc(gid).set({
+                memberUids: firebase.firestore.FieldValue.arrayUnion(currentUser.uid)
+            }, { merge: true });
+            document.getElementById("groupStatus").textContent = "Joined group.";
+            await loadGroups(currentUser.uid);
+        }
+
+        addSetBtn.addEventListener("click", () => {
+            sets.push({ movement: "", sets: 1, kg: 0, reps: 1 });
+            renderSets();
+            updateStats();
+        });
+        document.getElementById("startTime").addEventListener("input", updateStats);
+        document.getElementById("endTime").addEventListener("input", updateStats);
+        saveWorkoutBtn.addEventListener("click", saveWorkout);
+        document.getElementById("loadReportBtn").addEventListener("click", loadReport);
+        document.getElementById("saveWeightBtn").addEventListener("click", saveWeight);
+        document.getElementById("saveGoalsBtn").addEventListener("click", saveGoals);
+        shareDayBtn.addEventListener("click", () => shareReport("day"));
+        shareRangeBtn.addEventListener("click", () => shareReport("range"));
+        if (copyShareLinkBtn) {
+            copyShareLinkBtn.addEventListener("click", async () => {
+                const v = (shareLinkOutput && shareLinkOutput.value) ? shareLinkOutput.value : "";
+                if (!v) return;
+                try {
+                    await navigator.clipboard.writeText(v);
+                    workoutStatus.textContent = "Share link copied to clipboard.";
+                } catch (e) {
+                    workoutStatus.textContent = "Could not copy. Copy manually.";
+                }
+            });
+        }
+        if (reloadRecentBtn) reloadRecentBtn.addEventListener("click", loadRecentWorkouts);
+        document.getElementById("createGroupBtn").addEventListener("click", createGroup);
+        document.getElementById("joinGroupBtn").addEventListener("click", joinGroup);
+        logoutBtn.addEventListener("click", async () => { try { await auth.signOut(); } catch (e) {} location.href = "/"; });
+
+        document.getElementById("workoutDate").value = todayISO();
+        document.getElementById("reportFrom").value = todayISO();
+        document.getElementById("reportTo").value = todayISO();
+        document.getElementById("weightDate").value = todayISO();
+        renderSets();
+        updateStats();
+
+        maybeLoadSharedView().then((sharedLoaded) => {
+            if (sharedLoaded) return;
+            auth.onAuthStateChanged(async (user) => {
+                currentUser = user || null;
+                if (!user) {
+                    app.classList.add("hidden");
+                    authRequired.classList.remove("hidden");
+                    return;
+                }
+                authRequired.classList.add("hidden");
+                app.classList.remove("hidden");
+                await loadGoalsAndWeight(user.uid);
+                await loadGroups(user.uid);
+                await loadReport();
+                await loadRecentWorkouts();
+            });
+        });
+    })();
+    </script>
+</body>
+</html>
