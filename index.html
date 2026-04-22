@@ -7,29 +7,13 @@
     <meta name="description" content="Computational design, Grasshopper 3D, BIM automation, and web tools by Ehsan Mokhtary.">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,600;0,9..40,700;1,9..40,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
     <style>
-        :root {
-            --bg: #070a10;
-            --surface: rgba(15, 23, 42, 0.65);
-            --text: #e2e8f0;
-            --muted: #94a3b8;
-            --accent: #22d3ee;
-            --accent-dim: rgba(34, 211, 238, 0.15);
-            --line: rgba(148, 163, 184, 0.12);
-        }
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        html { scroll-behavior: smooth; }
-        body {
-            font-family: "DM Sans", system-ui, sans-serif;
-            background: var(--bg);
-            color: var(--text);
-            min-height: 100vh;
-            overflow-x: hidden;
-        }
+        body { font-family: "DM Sans", system-ui, sans-serif; }
         #bg-canvas {
             position: fixed;
             inset: 0;
@@ -38,318 +22,126 @@
             z-index: 0;
             pointer-events: none;
         }
-        .wrap {
-            position: relative;
-            z-index: 1;
-            max-width: 1100px;
-            margin: 0 auto;
-            padding: 0 1.5rem 4rem;
-        }
-        header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 1.25rem 0;
-            flex-wrap: wrap;
-            gap: 1rem;
-        }
-        .logo {
-            font-family: "JetBrains Mono", monospace;
-            font-size: 0.85rem;
-            font-weight: 500;
-            letter-spacing: 0.06em;
-            color: var(--accent);
-        }
-        nav {
-            display: flex;
-            align-items: center;
-            gap: 1.5rem;
-            flex-wrap: wrap;
-        }
-        nav a {
-            color: var(--muted);
-            text-decoration: none;
-            font-size: 0.95rem;
-            transition: color 0.2s;
-        }
-        nav a:hover { color: var(--text); }
-        .nav-actions {
-            display: flex;
-            gap: 0.5rem;
-        }
-        .btn {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            padding: 0.5rem 1rem;
-            border-radius: 8px;
-            font-size: 0.875rem;
-            font-weight: 600;
-            text-decoration: none;
-            transition: background 0.2s, border-color 0.2s, color 0.2s;
-            border: 1px solid transparent;
-        }
-        .btn-ghost {
-            color: var(--muted);
-            border-color: var(--line);
-            background: transparent;
-        }
-        .btn-ghost:hover { color: var(--text); border-color: var(--muted); }
-        .btn-primary {
-            background: var(--accent-dim);
-            color: var(--accent);
-            border-color: rgba(34, 211, 238, 0.35);
-        }
-        .btn-primary:hover {
-            background: rgba(34, 211, 238, 0.25);
-        }
-        .hero {
-            padding: 4rem 0 3rem;
-            text-align: center;
-        }
-        .hero h1 {
-            font-size: clamp(2rem, 5vw, 3rem);
-            font-weight: 700;
-            line-height: 1.15;
-            margin-bottom: 1rem;
-            letter-spacing: -0.02em;
-        }
-        .hero h1 span {
-            background: linear-gradient(135deg, #22d3ee, #a78bfa);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-        .hero p.lead {
-            font-size: 1.125rem;
-            color: var(--muted);
-            max-width: 36rem;
-            margin: 0 auto 2rem;
-            line-height: 1.6;
-        }
-        .tags {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 0.5rem;
-        }
-        .tag {
-            font-family: "JetBrains Mono", monospace;
-            font-size: 0.7rem;
-            padding: 0.35rem 0.65rem;
-            border-radius: 6px;
-            background: var(--surface);
-            border: 1px solid var(--line);
-            color: var(--muted);
-        }
-        section {
-            margin-top: 3.5rem;
-        }
-        section h2 {
-            font-size: 1.25rem;
-            font-weight: 600;
-            margin-bottom: 1rem;
-            color: var(--text);
-        }
-        section p {
-            color: var(--muted);
-            line-height: 1.7;
-            max-width: 42rem;
-        }
-        .tools-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 1rem;
-            margin-top: 1.25rem;
-        }
-        .tool-card {
-            display: block;
-            padding: 1.5rem;
-            border-radius: 12px;
-            background: var(--surface);
-            border: 1px solid var(--line);
-            text-decoration: none;
-            color: inherit;
-            transition: border-color 0.2s, transform 0.2s;
-        }
-        .tool-card:hover {
-            border-color: rgba(34, 211, 238, 0.4);
-            transform: translateY(-2px);
-        }
-        .tool-card h3 {
-            font-size: 1.05rem;
-            margin-bottom: 0.5rem;
-            color: var(--text);
-        }
-        .tool-card p {
-            font-size: 0.9rem;
-            margin: 0;
-        }
-        .tool-card .arrow {
-            margin-top: 1rem;
-            font-size: 0.8rem;
-            color: var(--accent);
-            font-family: "JetBrains Mono", monospace;
-        }
-        .download-btn {
-            margin-top: 1rem;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            padding: 0.45rem 0.75rem;
-            border-radius: 8px;
-            background: rgba(34, 211, 238, 0.12);
-            color: var(--accent);
-            border: 1px solid rgba(34, 211, 238, 0.35);
-            font-size: 0.82rem;
-            font-weight: 600;
-            cursor: pointer;
-            text-decoration: none;
-        }
-        .download-btn:hover { background: rgba(34, 211, 238, 0.2); }
-        .modal {
-            position: fixed;
-            inset: 0;
-            background: rgba(2, 6, 23, 0.75);
-            display: none;
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
-            padding: 1rem;
-        }
-        .modal.active { display: flex; }
-        .modal-card {
-            width: 100%;
-            max-width: 420px;
-            background: rgba(15, 23, 42, 0.96);
-            border: 1px solid var(--line);
-            border-radius: 12px;
-            padding: 1rem;
-        }
-        .modal-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 0.8rem; }
-        .tabs { display: flex; gap: 0.5rem; margin-bottom: 0.9rem; }
-        .tab-btn {
-            flex: 1;
-            border: 1px solid var(--line);
-            background: transparent;
-            color: var(--muted);
-            padding: 0.5rem;
-            border-radius: 8px;
-            cursor: pointer;
-        }
-        .tab-btn.active { color: var(--text); border-color: rgba(34, 211, 238, 0.5); background: rgba(34, 211, 238, 0.12); }
-        .field { margin-bottom: 0.75rem; }
-        .field label { display: block; font-size: 0.82rem; color: var(--muted); margin-bottom: 0.3rem; }
-        .field input {
-            width: 100%;
-            border: 1px solid var(--line);
-            background: #0b1220;
-            color: var(--text);
-            border-radius: 8px;
-            padding: 0.55rem 0.65rem;
-        }
-        .auth-row { display: flex; gap: 0.5rem; margin-top: 0.9rem; }
-        .auth-error { color: #fca5a5; min-height: 1.1rem; font-size: 0.82rem; margin-top: 0.4rem; }
-        .linkedin {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            margin-top: 1rem;
-            color: var(--accent);
-            text-decoration: none;
-            font-weight: 600;
-            font-size: 0.95rem;
-        }
-        .linkedin:hover { text-decoration: underline; }
-        footer {
-            margin-top: 4rem;
-            padding-top: 2rem;
-            border-top: 1px solid var(--line);
-            text-align: center;
-            font-size: 0.85rem;
-            color: var(--muted);
+        .page-layer { position: relative; z-index: 1; }
+        .glass {
+            background: rgba(255, 255, 255, 0.78);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(148, 163, 184, 0.28);
         }
     </style>
 </head>
-<body>
+<body class="min-h-screen overflow-x-hidden bg-slate-50 text-slate-800">
     <canvas id="bg-canvas" aria-hidden="true"></canvas>
-    <div class="wrap">
-        <header>
-            <div class="logo">EHSAN MOKHTARY</div>
-            <nav>
-                <a href="#about">About</a>
-                <a href="#tools">Tools</a>
-                <a href="https://www.linkedin.com/in/ehsan-mokhtary/" target="_blank" rel="noopener noreferrer">LinkedIn</a>
-                <div class="nav-actions" id="landingAuthActions">
-                    <button id="landingLoginBtn" type="button" class="btn btn-ghost">Login</button>
-                    <button id="landingRegisterBtn" type="button" class="btn btn-primary">Register</button>
-                    <a id="landingOpenToolBtn" class="btn btn-primary" href="/Image-Panel-perforated-designer/" style="display:none;">Open Tool</a>
-                    <a id="landingAdminBtn" class="btn btn-ghost" href="/admin-main/" style="display:none;">Admin</a>
-                    <button id="landingLogoutBtn" type="button" class="btn btn-ghost" style="display:none;">Logout</button>
-                </div>
-            </nav>
+
+    <div class="page-layer mx-auto max-w-6xl px-4 pb-16 sm:px-6 lg:px-8">
+        <header class="sticky top-0 z-20 mt-3 rounded-2xl glass">
+            <div class="flex flex-wrap items-center justify-between gap-3 px-4 py-3">
+                <div class="font-mono text-xs font-semibold tracking-[0.16em] text-cyan-700">EHSAN MOKHTARY</div>
+                <nav class="flex flex-wrap items-center gap-2 text-sm">
+                    <a href="#about" class="rounded-lg px-3 py-2 text-slate-600 hover:bg-white hover:text-slate-900">About</a>
+                    <a href="#tools" class="rounded-lg px-3 py-2 text-slate-600 hover:bg-white hover:text-slate-900">Tools</a>
+
+                    <details class="relative">
+                        <summary class="list-none cursor-pointer rounded-lg px-3 py-2 text-slate-600 hover:bg-white hover:text-slate-900">Menu</summary>
+                        <div class="absolute right-0 mt-1 w-72 rounded-xl border border-slate-200 bg-white p-2 shadow-xl">
+                            <a href="/Image-Panel-perforated-designer/" class="block rounded-lg px-3 py-2 text-sm text-slate-700 hover:bg-slate-50">Perforated Panel Designer</a>
+                            <div class="px-3 pb-1 pt-2 text-[11px] font-semibold uppercase tracking-wide text-slate-400">Products</div>
+                            <div id="toolsMenuProducts" class="space-y-1"></div>
+                        </div>
+                    </details>
+
+                    <a href="https://www.linkedin.com/in/ehsan-mokhtary/" target="_blank" rel="noopener noreferrer" class="rounded-lg px-3 py-2 text-slate-600 hover:bg-white hover:text-slate-900">LinkedIn</a>
+                    <div id="landingAuthActions" class="ml-1 flex flex-wrap items-center gap-2">
+                        <button id="landingLoginBtn" type="button" class="rounded-lg border border-slate-300 bg-white px-3 py-2 text-slate-700 hover:bg-slate-100">Login</button>
+                        <button id="landingRegisterBtn" type="button" class="rounded-lg bg-cyan-600 px-3 py-2 text-white hover:bg-cyan-500">Register</button>
+                        <a id="landingOpenToolBtn" href="/Image-Panel-perforated-designer/" class="hidden rounded-lg bg-cyan-600 px-3 py-2 text-white hover:bg-cyan-500">Open Tool</a>
+                        <a id="landingAdminBtn" href="/admin-main/" class="hidden rounded-lg border border-slate-300 bg-white px-3 py-2 text-slate-700 hover:bg-slate-100">Admin</a>
+                        <button id="landingLogoutBtn" type="button" class="hidden rounded-lg border border-slate-300 bg-white px-3 py-2 text-slate-700 hover:bg-slate-100">Logout</button>
+                    </div>
+                </nav>
+            </div>
         </header>
 
-        <div class="hero">
-            <h1><span>Computational design</span><br>BIM · Grasshopper · Automation</h1>
-            <p class="lead">Building bridges between parametric modeling, code, and building information workflows. Explore tools and connect on LinkedIn.</p>
-            <div class="tags">
-                <span class="tag">Grasshopper 3D</span>
-                <span class="tag">Rhino</span>
-                <span class="tag">BIM</span>
-                <span class="tag">Python / C#</span>
-                <span class="tag">Web automation</span>
-            </div>
-        </div>
+        <main>
+            <section class="pt-14 text-center">
+                <div class="mx-auto max-w-4xl rounded-3xl glass px-6 py-10 sm:px-10">
+                    <h1 class="text-4xl font-bold tracking-tight text-slate-900 sm:text-5xl">
+                        Computational Design for
+                        <span class="bg-gradient-to-r from-cyan-600 to-indigo-600 bg-clip-text text-transparent">BIM, Grasshopper, and Automation</span>
+                    </h1>
+                    <p class="mx-auto mt-5 max-w-2xl text-base text-slate-600 sm:text-lg">
+                        High-tech workflows for algorithmic geometry, BIM production, and tool building.
+                        Explore the platform and downloadable products below.
+                    </p>
+                    <div class="mt-6 flex flex-wrap items-center justify-center gap-2 text-xs font-medium text-slate-600">
+                        <span class="rounded-full border border-slate-200 bg-white px-3 py-1">Grasshopper 3D</span>
+                        <span class="rounded-full border border-slate-200 bg-white px-3 py-1">Rhino</span>
+                        <span class="rounded-full border border-slate-200 bg-white px-3 py-1">BIM</span>
+                        <span class="rounded-full border border-slate-200 bg-white px-3 py-1">Python / C#</span>
+                        <span class="rounded-full border border-slate-200 bg-white px-3 py-1">Web Automation</span>
+                    </div>
+                </div>
+            </section>
 
-        <section id="about">
-            <h2>About</h2>
-            <p>I focus on high-tech workflows: algorithmic geometry, automation for design and documentation, and tools that save time on repetitive BIM tasks. This site is my home base—more utilities and experiments will land here over time.</p>
-        </section>
+            <section id="about" class="mt-12">
+                <div class="rounded-2xl glass p-6 sm:p-8">
+                    <h2 class="text-2xl font-semibold text-slate-900">About</h2>
+                    <p class="mt-3 max-w-3xl text-slate-600">
+                        I build efficient design-to-documentation systems for architecture and engineering teams.
+                        This website is the central place for practical tools, product releases, and ongoing experiments.
+                    </p>
+                </div>
+            </section>
 
-        <section id="tools">
-            <h2>Tools</h2>
-            <p style="margin-bottom: 0.5rem;">Interactive web apps and experiments.</p>
-            <div class="tools-grid">
-                <a class="tool-card" href="/Image-Panel-perforated-designer/">
-                    <h3>Perforated panel designer</h3>
-                    <p>Upload an image, define panels and perforation, export PNG, CAD, and more.</p>
-                    <div class="arrow">Open tool →</div>
-                </a>
-            </div>
-            <div class="tools-grid" id="productsList" style="margin-top:1rem;"></div>
-            <a class="linkedin" href="https://www.linkedin.com/in/ehsan-mokhtary/" target="_blank" rel="noopener noreferrer">
-                Connect on LinkedIn
-            </a>
-        </section>
+            <section id="tools" class="mt-8">
+                <div class="rounded-2xl glass p-6 sm:p-8">
+                    <div class="flex items-center justify-between gap-3">
+                        <h2 class="text-2xl font-semibold text-slate-900">Tools & Products</h2>
+                        <a href="https://www.linkedin.com/in/ehsan-mokhtary/" target="_blank" rel="noopener noreferrer" class="text-sm font-semibold text-cyan-700 hover:text-cyan-600">Connect on LinkedIn</a>
+                    </div>
 
-        <footer>
+                    <div class="mt-5 grid grid-cols-1 gap-4 md:grid-cols-2">
+                        <a href="/Image-Panel-perforated-designer/" class="rounded-xl border border-slate-200 bg-white p-5 transition hover:-translate-y-0.5 hover:border-cyan-300 hover:shadow-md">
+                            <h3 class="text-lg font-semibold text-slate-900">Perforated Panel Designer</h3>
+                            <p class="mt-2 text-sm text-slate-600">Upload image, generate panel perforation, export PNG/CAD and settings.</p>
+                            <div class="mt-4 text-sm font-semibold text-cyan-700">Open tool →</div>
+                        </a>
+                    </div>
+
+                    <div id="productsList" class="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2"></div>
+                </div>
+            </section>
+        </main>
+
+        <footer class="mt-10 border-t border-slate-200 py-6 text-center text-sm text-slate-500">
             © Ehsan Mokhtary · ehsanmo.me
         </footer>
     </div>
 
-    <div id="landingAuthModal" class="modal">
-        <div class="modal-card">
-            <div class="flex items-center justify-between" style="margin-bottom:0.5rem;">
-                <div class="modal-title">Authentication</div>
-                <button id="landingAuthCloseBtn" type="button" class="btn btn-ghost" style="padding:0.25rem 0.55rem;">×</button>
+    <div id="landingAuthModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/60 p-4">
+        <div class="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-5 shadow-2xl">
+            <div class="mb-3 flex items-center justify-between">
+                <div class="text-lg font-semibold text-slate-900">Authentication</div>
+                <button id="landingAuthCloseBtn" type="button" class="rounded-md border border-slate-300 px-2 py-1 text-slate-600 hover:bg-slate-100">×</button>
             </div>
-            <div class="tabs">
-                <button id="landingTabLogin" class="tab-btn active" type="button">Login</button>
-                <button id="landingTabRegister" class="tab-btn" type="button">Register</button>
+            <div class="mb-4 grid grid-cols-2 gap-2">
+                <button id="landingTabLogin" class="rounded-lg border border-cyan-600 bg-cyan-50 px-3 py-2 text-sm font-semibold text-cyan-700" type="button">Login</button>
+                <button id="landingTabRegister" class="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-600" type="button">Register</button>
             </div>
-            <div class="field">
-                <label for="landingAuthEmail">Email</label>
-                <input id="landingAuthEmail" type="email" autocomplete="email">
-            </div>
-            <div class="field">
-                <label for="landingAuthPassword">Password</label>
-                <input id="landingAuthPassword" type="password" autocomplete="current-password">
-            </div>
-            <div id="landingAuthError" class="auth-error"></div>
-            <div class="auth-row">
-                <button id="landingAuthSubmitBtn" type="button" class="btn btn-primary" style="flex:1;">Login</button>
-                <button id="landingGoogleBtn" type="button" class="btn btn-ghost" style="flex:1;">Google</button>
+            <div class="space-y-3">
+                <div>
+                    <label for="landingAuthEmail" class="mb-1 block text-sm text-slate-600">Email</label>
+                    <input id="landingAuthEmail" type="email" autocomplete="email" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-slate-800 outline-none ring-cyan-500 focus:ring">
+                </div>
+                <div>
+                    <label for="landingAuthPassword" class="mb-1 block text-sm text-slate-600">Password</label>
+                    <input id="landingAuthPassword" type="password" autocomplete="current-password" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-slate-800 outline-none ring-cyan-500 focus:ring">
+                </div>
+                <div id="landingAuthError" class="min-h-[1.1rem] text-sm text-rose-600"></div>
+                <div class="grid grid-cols-2 gap-2">
+                    <button id="landingAuthSubmitBtn" type="button" class="rounded-lg bg-cyan-600 px-3 py-2 text-sm font-semibold text-white hover:bg-cyan-500">Login</button>
+                    <button id="landingGoogleBtn" type="button" class="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100">Google</button>
+                </div>
             </div>
         </div>
     </div>
@@ -382,6 +174,7 @@
         const tabRegister = document.getElementById('landingTabRegister');
         const authSubmitBtn = document.getElementById('landingAuthSubmitBtn');
         const googleBtn = document.getElementById('landingGoogleBtn');
+        const toolsMenuProducts = document.getElementById('toolsMenuProducts');
         let authMode = 'login';
 
         if (typeof firebase === 'undefined') return;
@@ -396,27 +189,45 @@
             openToolBtn.style.display = isLoggedIn ? 'inline-flex' : 'none';
             adminBtn.style.display = (isLoggedIn && user.email && user.email.toLowerCase() === SUPERADMIN_EMAIL.toLowerCase()) ? 'inline-flex' : 'none';
             logoutBtn.style.display = isLoggedIn ? 'inline-flex' : 'none';
-            if (isLoggedIn && authModal.classList.contains('active')) authModal.classList.remove('active');
+            if (isLoggedIn && !authModal.classList.contains('hidden')) {
+                authModal.classList.add('hidden');
+                authModal.classList.remove('flex');
+            }
         });
 
         function setAuthMode(mode) {
             authMode = mode;
             tabLogin.classList.toggle('active', mode === 'login');
             tabRegister.classList.toggle('active', mode === 'register');
+            tabLogin.className = mode === 'login'
+                ? 'rounded-lg border border-cyan-600 bg-cyan-50 px-3 py-2 text-sm font-semibold text-cyan-700'
+                : 'rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-600';
+            tabRegister.className = mode === 'register'
+                ? 'rounded-lg border border-cyan-600 bg-cyan-50 px-3 py-2 text-sm font-semibold text-cyan-700'
+                : 'rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-600';
             authSubmitBtn.textContent = mode === 'register' ? 'Register' : 'Login';
             authError.textContent = '';
         }
         function openAuth(mode) {
             setAuthMode(mode || 'login');
-            authModal.classList.add('active');
+            authModal.classList.remove('hidden');
+            authModal.classList.add('flex');
         }
 
         loginBtn.addEventListener('click', () => openAuth('login'));
         registerBtn.addEventListener('click', () => openAuth('register'));
         tabLogin.addEventListener('click', () => setAuthMode('login'));
         tabRegister.addEventListener('click', () => setAuthMode('register'));
-        authCloseBtn.addEventListener('click', () => authModal.classList.remove('active'));
-        authModal.addEventListener('click', (e) => { if (e.target === authModal) authModal.classList.remove('active'); });
+        authCloseBtn.addEventListener('click', () => {
+            authModal.classList.add('hidden');
+            authModal.classList.remove('flex');
+        });
+        authModal.addEventListener('click', (e) => {
+            if (e.target === authModal) {
+                authModal.classList.add('hidden');
+                authModal.classList.remove('flex');
+            }
+        });
 
         authSubmitBtn.addEventListener('click', async () => {
             const email = (authEmail.value || '').trim();
@@ -479,6 +290,7 @@
         async function loadProducts() {
             if (!productsList) return;
             productsList.innerHTML = '';
+            if (toolsMenuProducts) toolsMenuProducts.innerHTML = '';
             try {
                 const snap = await db.collection('products').get();
                 const items = [];
@@ -491,19 +303,36 @@
                         return tb - ta;
                     });
                 active.forEach((item) => {
+                    const currentVersion = item.currentVersion || null;
+                    const dlUrl = currentVersion && currentVersion.fileUrl ? currentVersion.fileUrl : item.fileUrl;
+                    const dlName = currentVersion && currentVersion.fileName ? currentVersion.fileName : item.fileName;
+                    const dlVersion = currentVersion && currentVersion.version ? currentVersion.version : '';
+                    const btnLabel = item.buttonLabel || 'Download';
+                    if (!dlUrl) return;
                     const card = document.createElement('div');
-                    card.className = 'tool-card';
+                    card.className = 'rounded-xl border border-slate-200 bg-white p-5 transition hover:-translate-y-0.5 hover:border-cyan-300 hover:shadow-md';
                     card.innerHTML = `
-                        <h3>${escapeHtml(item.title || 'Untitled product')}</h3>
-                        <p>${escapeHtml(item.description || 'No description')}</p>
-                        <button class="download-btn" type="button">Download${item.fileName ? ` (${escapeHtml(item.fileName)})` : ''}</button>
-                        <div class="arrow">Downloads: ${(item.downloadCount || 0).toLocaleString()}</div>
+                        <h3 class="text-lg font-semibold text-slate-900">${escapeHtml(item.title || 'Untitled product')}</h3>
+                        <p class="mt-2 text-sm text-slate-600">${escapeHtml(item.description || 'No description')}</p>
+                        <button class="download-btn mt-4 rounded-lg bg-cyan-600 px-3 py-2 text-sm font-semibold text-white hover:bg-cyan-500" type="button">${escapeHtml(btnLabel)}${dlName ? ` (${escapeHtml(dlName)})` : ''}${dlVersion ? ` · ${escapeHtml(dlVersion)}` : ''}</button>
+                        <div class="mt-3 text-sm text-slate-500">Downloads: ${(item.downloadCount || 0).toLocaleString()}</div>
                     `;
-                    card.querySelector('.download-btn').addEventListener('click', () => handleProductDownload(item.id, item.fileUrl));
+                    card.querySelector('.download-btn').addEventListener('click', () => handleProductDownload(item.id, dlUrl));
                     productsList.appendChild(card);
+
+                    if (toolsMenuProducts) {
+                        const productLink = document.createElement('a');
+                        productLink.href = dlUrl;
+                        productLink.target = '_blank';
+                        productLink.rel = 'noopener noreferrer';
+                        productLink.className = 'block rounded-lg px-3 py-2 text-sm text-slate-700 hover:bg-slate-50';
+                        productLink.textContent = item.title || 'Untitled product';
+                        toolsMenuProducts.appendChild(productLink);
+                    }
                 });
             } catch (e) {
                 productsList.innerHTML = '';
+                if (toolsMenuProducts) toolsMenuProducts.innerHTML = '';
             }
         }
 
@@ -545,7 +374,7 @@
         function step() {
             const cw = window.innerWidth;
             const ch = window.innerHeight;
-            ctx.fillStyle = '#070a10';
+            ctx.fillStyle = '#f8fafc';
             ctx.fillRect(0, 0, cw, ch);
 
             for (let i = 0; i < particles.length; i++) {
@@ -565,7 +394,7 @@
                     const dist = Math.hypot(dx, dy);
                     if (dist < maxDist) {
                         const alpha = (1 - dist / maxDist) * 0.35;
-                        ctx.strokeStyle = 'rgba(34, 211, 238, ' + alpha + ')';
+                        ctx.strokeStyle = 'rgba(14, 165, 233, ' + alpha + ')';
                         ctx.lineWidth = 0.6;
                         ctx.beginPath();
                         ctx.moveTo(a.x, a.y);
@@ -575,7 +404,7 @@
                 }
             }
 
-            ctx.fillStyle = 'rgba(148, 163, 184, 0.55)';
+            ctx.fillStyle = 'rgba(71, 85, 105, 0.45)';
             for (const p of particles) {
                 ctx.beginPath();
                 ctx.arc(p.x, p.y, 1.6, 0, Math.PI * 2);

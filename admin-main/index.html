@@ -12,6 +12,23 @@
     <style>
         body { background: #0b1220; color: #e2e8f0; }
         .card { background: rgba(15, 23, 42, 0.9); border: 1px solid rgba(148, 163, 184, 0.2); }
+        .overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(2, 6, 23, 0.8);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 60;
+            padding: 1rem;
+        }
+        .overlay.active { display: flex; }
+        .modal-card {
+            width: 100%;
+            max-width: 780px;
+            max-height: calc(100vh - 2rem);
+            overflow: auto;
+        }
     </style>
 </head>
 <body class="min-h-screen">
@@ -29,34 +46,12 @@
         </div>
 
         <div id="adminContent" class="hidden">
-            <div class="card rounded-lg p-5 mb-6">
-                <h2 class="text-lg font-semibold mb-4">Add New Product</h2>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-sm mb-1">Title</label>
-                        <input id="productTitle" type="text" class="w-full px-3 py-2 rounded bg-slate-900 border border-slate-700">
-                    </div>
-                    <div>
-                        <label class="block text-sm mb-1">Button Label (optional)</label>
-                        <input id="productButtonLabel" type="text" placeholder="Download" class="w-full px-3 py-2 rounded bg-slate-900 border border-slate-700">
-                    </div>
-                    <div class="md:col-span-2">
-                        <label class="block text-sm mb-1">Description</label>
-                        <textarea id="productDescription" rows="3" class="w-full px-3 py-2 rounded bg-slate-900 border border-slate-700"></textarea>
-                    </div>
-                    <div class="md:col-span-2">
-                        <label class="block text-sm mb-1">File to upload</label>
-                        <input id="productFile" type="file" class="w-full px-3 py-2 rounded bg-slate-900 border border-slate-700">
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <input id="productActive" type="checkbox" checked>
-                        <label class="text-sm" for="productActive">Active</label>
-                    </div>
-                </div>
-                <div class="mt-4 flex items-center gap-3">
-                    <button id="createProductBtn" class="px-4 py-2 rounded bg-cyan-600 hover:bg-cyan-500 text-sm font-semibold">Create Product</button>
+            <div class="card rounded-lg p-4 mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+                <div class="text-sm text-slate-300">Manage products, versions, and downloadable files.</div>
+                <div class="flex flex-wrap gap-2">
+                    <button id="openAddProductModalBtn" class="px-4 py-2 rounded bg-cyan-600 hover:bg-cyan-500 text-sm font-semibold">+ Add Product</button>
+                    <button id="openUpdateModalBtn" class="px-4 py-2 rounded bg-indigo-600 hover:bg-indigo-500 text-sm font-semibold">Update Product</button>
                     <button id="testAccessBtn" class="px-4 py-2 rounded bg-emerald-600 hover:bg-emerald-500 text-sm font-semibold">Test Firebase Access</button>
-                    <span id="createStatus" class="text-sm text-slate-300"></span>
                 </div>
             </div>
 
@@ -67,7 +62,7 @@
                         <thead>
                             <tr class="text-left border-b border-slate-700">
                                 <th class="py-2 pr-4">Title</th>
-                                <th class="py-2 pr-4">File</th>
+                                <th class="py-2 pr-4">Current Version</th>
                                 <th class="py-2 pr-4">Downloads</th>
                                 <th class="py-2 pr-4">Active</th>
                                 <th class="py-2 pr-4">Actions</th>
@@ -76,6 +71,86 @@
                         <tbody id="productsTableBody"></tbody>
                     </table>
                 </div>
+                <div class="mt-4">
+                    <span id="createStatus" class="text-sm text-slate-300"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="addProductModal" class="overlay">
+        <div class="card rounded-lg p-5 modal-card">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-lg font-semibold">Add New Product</h2>
+                <button id="closeAddProductModalBtn" class="px-3 py-1 rounded bg-slate-700 hover:bg-slate-600 text-sm">Close</button>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm mb-1">Title</label>
+                    <input id="productTitle" type="text" class="w-full px-3 py-2 rounded bg-slate-900 border border-slate-700">
+                </div>
+                <div>
+                    <label class="block text-sm mb-1">Button Label (optional)</label>
+                    <input id="productButtonLabel" type="text" placeholder="Download" class="w-full px-3 py-2 rounded bg-slate-900 border border-slate-700">
+                </div>
+                <div class="md:col-span-2">
+                    <label class="block text-sm mb-1">Description</label>
+                    <textarea id="productDescription" rows="3" class="w-full px-3 py-2 rounded bg-slate-900 border border-slate-700"></textarea>
+                </div>
+                <div class="md:col-span-2">
+                    <label class="block text-sm mb-1">File to upload</label>
+                    <input id="productFile" type="file" class="w-full px-3 py-2 rounded bg-slate-900 border border-slate-700">
+                </div>
+                <div>
+                    <label class="block text-sm mb-1">Initial Version</label>
+                    <input id="productVersion" type="text" value="v1.0.0" class="w-full px-3 py-2 rounded bg-slate-900 border border-slate-700">
+                </div>
+                <div>
+                    <label class="block text-sm mb-1">Version Notes (optional)</label>
+                    <input id="productVersionNotes" type="text" placeholder="Initial release" class="w-full px-3 py-2 rounded bg-slate-900 border border-slate-700">
+                </div>
+                <div class="flex items-center gap-2">
+                    <input id="productActive" type="checkbox" checked>
+                    <label class="text-sm" for="productActive">Active</label>
+                </div>
+            </div>
+            <div class="mt-4 flex items-center gap-3">
+                <button id="createProductBtn" class="px-4 py-2 rounded bg-cyan-600 hover:bg-cyan-500 text-sm font-semibold">Create Product</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="updateProductModal" class="overlay">
+        <div class="card rounded-lg p-5 modal-card">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-lg font-semibold">Add Product Update</h2>
+                <button id="closeUpdateModalBtn" class="px-3 py-1 rounded bg-slate-700 hover:bg-slate-600 text-sm">Close</button>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm mb-1">Product</label>
+                    <select id="updateProductId" class="w-full px-3 py-2 rounded bg-slate-900 border border-slate-700"></select>
+                </div>
+                <div>
+                    <label class="block text-sm mb-1">New Version</label>
+                    <input id="updateVersion" type="text" value="v1.0.1" class="w-full px-3 py-2 rounded bg-slate-900 border border-slate-700">
+                </div>
+                <div class="md:col-span-2">
+                    <label class="block text-sm mb-1">Update Notes (optional)</label>
+                    <input id="updateNotes" type="text" placeholder="Bug fixes / improvements" class="w-full px-3 py-2 rounded bg-slate-900 border border-slate-700">
+                </div>
+                <div class="md:col-span-2">
+                    <label class="block text-sm mb-1">Update File</label>
+                    <input id="updateFile" type="file" class="w-full px-3 py-2 rounded bg-slate-900 border border-slate-700">
+                </div>
+                <div class="flex items-center gap-2">
+                    <input id="removeOlderVersions" type="checkbox">
+                    <label class="text-sm" for="removeOlderVersions">Remove older versions from storage after update</label>
+                </div>
+            </div>
+            <div class="mt-4 flex items-center gap-3">
+                <button id="addUpdateBtn" class="px-4 py-2 rounded bg-indigo-600 hover:bg-indigo-500 text-sm font-semibold">Upload Update</button>
+                <span id="updateStatus" class="text-sm text-slate-300"></span>
             </div>
         </div>
     </div>
@@ -104,9 +179,54 @@
         const createBtn = document.getElementById('createProductBtn');
         const testBtn = document.getElementById('testAccessBtn');
         const createStatus = document.getElementById('createStatus');
+        const addUpdateBtn = document.getElementById('addUpdateBtn');
+        const updateStatus = document.getElementById('updateStatus');
+        const updateProductIdSelect = document.getElementById('updateProductId');
+        const addProductModal = document.getElementById('addProductModal');
+        const updateProductModal = document.getElementById('updateProductModal');
+        const openAddProductModalBtn = document.getElementById('openAddProductModalBtn');
+        const closeAddProductModalBtn = document.getElementById('closeAddProductModalBtn');
+        const openUpdateModalBtn = document.getElementById('openUpdateModalBtn');
+        const closeUpdateModalBtn = document.getElementById('closeUpdateModalBtn');
+
+        function openModal(el) {
+            if (!el) return;
+            el.classList.add('active');
+        }
+
+        function closeModal(el) {
+            if (!el) return;
+            el.classList.remove('active');
+        }
+
+        if (openAddProductModalBtn) openAddProductModalBtn.addEventListener('click', () => openModal(addProductModal));
+        if (closeAddProductModalBtn) closeAddProductModalBtn.addEventListener('click', () => closeModal(addProductModal));
+        if (openUpdateModalBtn) openUpdateModalBtn.addEventListener('click', () => openModal(updateProductModal));
+        if (closeUpdateModalBtn) closeUpdateModalBtn.addEventListener('click', () => closeModal(updateProductModal));
+        [addProductModal, updateProductModal].forEach((modal) => {
+            if (!modal) return;
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) closeModal(modal);
+            });
+        });
 
         function esc(v) {
             return String(v || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+        }
+
+        function slugify(text) {
+            return String(text || '')
+                .toLowerCase()
+                .trim()
+                .replace(/[^a-z0-9]+/g, '-')
+                .replace(/^-+|-+$/g, '') || ('product-' + Date.now());
+        }
+
+        async function safeDeleteStoragePath(path) {
+            if (!path) return;
+            try {
+                await storage.ref().child(path).delete();
+            } catch (e) {}
         }
 
         async function loadProducts() {
@@ -119,20 +239,44 @@
                 const tb = b.createdAt && b.createdAt.toMillis ? b.createdAt.toMillis() : 0;
                 return tb - ta;
             });
+            // Fill update product selector
+            if (updateProductIdSelect) {
+                updateProductIdSelect.innerHTML = '';
+                items.forEach((item) => {
+                    const opt = document.createElement('option');
+                    opt.value = item.id;
+                    opt.textContent = item.title || item.id;
+                    updateProductIdSelect.appendChild(opt);
+                });
+            }
+
             items.forEach((item) => {
                 const tr = document.createElement('tr');
                 tr.className = 'border-b border-slate-800';
+                const currentVersion = item.currentVersion || null;
                 tr.innerHTML = `
                     <td class="py-2 pr-4">${esc(item.title)}</td>
-                    <td class="py-2 pr-4">${esc(item.fileName || '')}</td>
+                    <td class="py-2 pr-4">
+                        ${currentVersion ? `${esc(currentVersion.version || '')} (${esc(currentVersion.fileName || '')})` : esc(item.fileName || '')}
+                        <div class="text-xs text-slate-400">Versions: ${Array.isArray(item.versions) ? item.versions.length : (currentVersion ? 1 : 0)}</div>
+                    </td>
                     <td class="py-2 pr-4">${(item.downloadCount || 0).toLocaleString()}</td>
                     <td class="py-2 pr-4">${item.isActive === false ? 'No' : 'Yes'}</td>
                     <td class="py-2 pr-4">
+                        <button data-id="${item.id}" class="open-update px-2 py-1 bg-indigo-700 rounded text-xs mr-2">Update</button>
                         <button data-id="${item.id}" data-active="${item.isActive === false ? '0' : '1'}" class="toggle px-2 py-1 bg-slate-700 rounded text-xs mr-2">${item.isActive === false ? 'Activate' : 'Deactivate'}</button>
-                        <button data-id="${item.id}" class="delete px-2 py-1 bg-red-700 rounded text-xs">Delete</button>
+                        <button data-id="${item.id}" class="delete px-2 py-1 bg-red-700 rounded text-xs">Delete Product</button>
                     </td>
                 `;
                 tbody.appendChild(tr);
+            });
+
+            tbody.querySelectorAll('button.open-update').forEach((btn) => {
+                btn.addEventListener('click', () => {
+                    const id = btn.getAttribute('data-id');
+                    if (updateProductIdSelect) updateProductIdSelect.value = id;
+                    openModal(updateProductModal);
+                });
             });
 
             tbody.querySelectorAll('button.toggle').forEach((btn) => {
@@ -147,7 +291,17 @@
             tbody.querySelectorAll('button.delete').forEach((btn) => {
                 btn.addEventListener('click', async () => {
                     const id = btn.getAttribute('data-id');
-                    if (!confirm('Delete this product?')) return;
+                    if (!confirm('Delete this product completely (web + storage)?')) return;
+                    const doc = await db.collection('products').doc(id).get();
+                    const data = doc.exists ? doc.data() : null;
+                    const versions = (data && Array.isArray(data.versions)) ? data.versions : [];
+                    if (versions.length) {
+                        for (const v of versions) {
+                            await safeDeleteStoragePath(v.storagePath);
+                        }
+                    } else if (data && data.storagePath) {
+                        await safeDeleteStoragePath(data.storagePath);
+                    }
                     await db.collection('products').doc(id).delete();
                     await loadProducts();
                 });
@@ -161,6 +315,8 @@
             const active = document.getElementById('productActive').checked;
             const fileInput = document.getElementById('productFile');
             const file = fileInput.files[0];
+            const version = (document.getElementById('productVersion').value || 'v1.0.0').trim();
+            const versionNotes = (document.getElementById('productVersionNotes').value || '').trim();
 
             if (!title || !file) {
                 createStatus.textContent = 'Title and file are required.';
@@ -170,18 +326,30 @@
             createStatus.textContent = 'Uploading...';
             try {
                 const safeName = Date.now() + '_' + file.name.replace(/\s+/g, '_');
-                const ref = storage.ref().child('products/' + safeName);
+                const slug = slugify(title);
+                const ref = storage.ref().child(`EhsanMopersonal-website/products/${slug}/${version}/${safeName}`);
                 await ref.put(file);
                 const fileUrl = await ref.getDownloadURL();
+                const verObj = {
+                    version,
+                    notes: versionNotes,
+                    fileName: file.name,
+                    fileUrl,
+                    storagePath: ref.fullPath,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                };
 
                 await db.collection('products').add({
                     title,
                     description: desc,
                     buttonLabel,
                     isActive: active,
-                    fileName: file.name,
-                    fileUrl,
-                    storagePath: ref.fullPath,
+                    slug,
+                    currentVersion: verObj,
+                    versions: [verObj],
+                    fileName: file.name, // legacy fallback
+                    fileUrl, // legacy fallback
+                    storagePath: ref.fullPath, // legacy fallback
                     downloadCount: 0,
                     createdAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
@@ -190,12 +358,78 @@
                 document.getElementById('productDescription').value = '';
                 document.getElementById('productButtonLabel').value = '';
                 document.getElementById('productFile').value = '';
+                document.getElementById('productVersion').value = 'v1.0.0';
+                document.getElementById('productVersionNotes').value = '';
                 document.getElementById('productActive').checked = true;
+                closeModal(addProductModal);
                 await loadProducts();
             } catch (e) {
                 createStatus.textContent = 'Failed: ' + (e.message || 'unknown error');
             } finally {
                 createBtn.disabled = false;
+            }
+        });
+
+        addUpdateBtn.addEventListener('click', async () => {
+            const productId = updateProductIdSelect.value;
+            const version = (document.getElementById('updateVersion').value || '').trim();
+            const notes = (document.getElementById('updateNotes').value || '').trim();
+            const file = document.getElementById('updateFile').files[0];
+            const removeOlder = document.getElementById('removeOlderVersions').checked;
+
+            if (!productId || !version || !file) {
+                updateStatus.textContent = 'Product, version, and file are required.';
+                return;
+            }
+
+            addUpdateBtn.disabled = true;
+            updateStatus.textContent = 'Uploading update...';
+            try {
+                const productRef = db.collection('products').doc(productId);
+                const productSnap = await productRef.get();
+                if (!productSnap.exists) throw new Error('Product not found.');
+                const p = productSnap.data();
+                const slug = p.slug || slugify(p.title || productId);
+                const safeName = Date.now() + '_' + file.name.replace(/\s+/g, '_');
+                const fileRef = storage.ref().child(`EhsanMopersonal-website/products/${slug}/${version}/${safeName}`);
+                await fileRef.put(file);
+                const fileUrl = await fileRef.getDownloadURL();
+                const verObj = {
+                    version,
+                    notes,
+                    fileName: file.name,
+                    fileUrl,
+                    storagePath: fileRef.fullPath,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                };
+
+                const prevVersions = Array.isArray(p.versions) ? p.versions : (p.currentVersion ? [p.currentVersion] : []);
+                if (removeOlder) {
+                    for (const v of prevVersions) await safeDeleteStoragePath(v.storagePath);
+                }
+                const nextVersions = removeOlder ? [verObj] : [...prevVersions, verObj];
+
+                await productRef.update({
+                    slug,
+                    currentVersion: verObj,
+                    versions: nextVersions,
+                    fileName: file.name,
+                    fileUrl,
+                    storagePath: fileRef.fullPath,
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+
+                updateStatus.textContent = 'Update uploaded.';
+                document.getElementById('updateVersion').value = 'v1.0.1';
+                document.getElementById('updateNotes').value = '';
+                document.getElementById('updateFile').value = '';
+                document.getElementById('removeOlderVersions').checked = false;
+                closeModal(updateProductModal);
+                await loadProducts();
+            } catch (e) {
+                updateStatus.textContent = 'Failed: ' + (e.message || 'unknown error');
+            } finally {
+                addUpdateBtn.disabled = false;
             }
         });
 
@@ -210,13 +444,35 @@
                 }
 
                 // Firestore read test
-                await db.collection('products').limit(1).get();
+                try {
+                    await db.collection('products').limit(1).get();
+                } catch (e) {
+                    throw new Error('Firestore permission failed (products read).');
+                }
+
+                // Firestore write test (single temp doc)
+                const testDocRef = db.collection('products').doc('perm_test_' + Date.now());
+                try {
+                    await testDocRef.set({
+                        title: 'perm-test',
+                        isActive: false,
+                        downloadCount: 0,
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                    await testDocRef.delete();
+                } catch (e) {
+                    throw new Error('Firestore permission failed (products write/delete).');
+                }
 
                 // Storage write/delete test in products path
                 const testPath = 'products/test_' + Date.now() + '.txt';
                 const testRef = storage.ref().child(testPath);
-                await testRef.put(new Blob(['firebase access test'], { type: 'text/plain' }));
-                await testRef.delete();
+                try {
+                    await testRef.put(new Blob(['firebase access test'], { type: 'text/plain' }));
+                    await testRef.delete();
+                } catch (e) {
+                    throw new Error('Storage permission failed (products write/delete).');
+                }
 
                 createStatus.textContent = 'Test passed: Auth, Firestore, and Storage permissions are OK.';
             } catch (e) {
