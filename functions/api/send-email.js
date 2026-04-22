@@ -8,6 +8,10 @@ function base64ToArrayBuffer(base64) {
     return bytes;
 }
 
+function isValidEmail(email) {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(email || '').trim());
+}
+
 export async function onRequestPost(context) {
     const { request, env } = context;
     const apiKey = (env.MAILGUN_API_KEY || '').trim();
@@ -22,22 +26,50 @@ export async function onRequestPost(context) {
         return Response.json({ error: `Server misconfiguration: MAILGUN_FROM_EMAIL '${fromEmail}' appears invalid.` }, { status: 500 });
     }
 
+    if (!/^[a-z0-9.-]+\.[a-z]{2,}$/i.test(domain)) {
+        return Response.json({ error: 'Server misconfiguration: MAILGUN_DOMAIN appears invalid.' }, { status: 500 });
+    }
+
     let body;
     try {
         body = await request.json();
     } catch (e) {
         return Response.json({ error: 'Invalid JSON body' }, { status: 400 });
     }
-    const { to, subject, html, imageBase64, settingsText, projectName } = body;
-    if (!to || !subject || !html) {
+    const { to, subject, html, imageBase64, settingsText, projectName } = body || {};
+    if (!to || !subject || !html || typeof to !== 'string' || typeof subject !== 'string' || typeof html !== 'string') {
         return Response.json({ error: 'Missing required fields: to, subject, html' }, { status: 400 });
+    }
+
+    const recipients = to
+        .split(',')
+        .map((x) => x.trim())
+        .filter(Boolean);
+    if (!recipients.length || recipients.length > 5) {
+        return Response.json({ error: 'Recipient list must contain between 1 and 5 emails.' }, { status: 400 });
+    }
+    if (recipients.some((email) => !isValidEmail(email))) {
+        return Response.json({ error: 'One or more recipient emails are invalid.' }, { status: 400 });
+    }
+
+    const safeSubject = subject.trim();
+    if (safeSubject.length < 2 || safeSubject.length > 160) {
+        return Response.json({ error: 'Subject length must be between 2 and 160 characters.' }, { status: 400 });
+    }
+    if (html.length > 300000) {
+        return Response.json({ error: 'HTML content too large.' }, { status: 413 });
+    }
+    if (settingsText && String(settingsText).length > 300000) {
+        return Response.json({ error: 'Settings attachment text too large.' }, { status: 413 });
+    }
+    if (imageBase64 && String(imageBase64).length > 14 * 1024 * 1024) {
+        return Response.json({ error: 'Image attachment too large.' }, { status: 413 });
     }
 
     const form = new FormData();
     form.append('from', fromEmail);
-    // Handle multiple recipients (Mailgun supports comma-separated string)
-    form.append('to', to);
-    form.append('subject', subject);
+    form.append('to', recipients.join(','));
+    form.append('subject', safeSubject);
     form.append('html', html);
 
     if (imageBase64) {
