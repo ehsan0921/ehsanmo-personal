@@ -8,6 +8,10 @@
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
+    <style>
+        details > summary { list-style: none; }
+        details > summary::-webkit-details-marker { display: none; }
+    </style>
 </head>
 <body class="min-h-screen bg-slate-50 text-slate-900">
     <div class="mx-auto max-w-7xl px-4 py-5">
@@ -162,6 +166,16 @@
         </main>
     </div>
 
+    <div id="exerciseHistoryModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/40 p-4">
+        <div class="max-h-[85vh] w-full max-w-lg overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl">
+            <div class="flex items-center justify-between border-b border-slate-200 px-4 py-3">
+                <h3 id="exerciseHistoryTitle" class="text-lg font-semibold">History</h3>
+                <button type="button" id="closeExerciseHistoryBtn" class="rounded-lg border border-slate-300 px-2 py-1 text-sm hover:bg-slate-100">Close</button>
+            </div>
+            <div id="exerciseHistoryBody" class="max-h-[60vh] overflow-y-auto p-4 text-sm text-slate-700"></div>
+        </div>
+    </div>
+
     <div id="groupsModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/40 p-4">
         <div class="w-full max-w-2xl rounded-xl border border-slate-200 bg-white p-4 shadow-xl">
             <div class="mb-3 flex items-center justify-between">
@@ -225,6 +239,9 @@
         let exercises = [];
         let groups = [];
         let selectedGroupId = "";
+        let userExerciseNames = [];
+        let openSuggestExId = null;
+        let isReadOnlyShare = false;
 
         function todayISO() {
             const d = new Date();
@@ -235,6 +252,55 @@
 
         function uid() {
             return Math.random().toString(36).slice(2, 10);
+        }
+
+        function escapeHtml(str) {
+            return String(str || "")
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;");
+        }
+
+        function escAttrVal(str) {
+            return String(str || "")
+                .replace(/&/g, "&amp;")
+                .replace(/"/g, "&quot;");
+        }
+
+        async function loadUserExerciseNames(uidVal) {
+            userExerciseNames = [];
+            try {
+                const doc = await db.collection("users").doc(uidVal).collection("meta").doc("exerciseList").get();
+                if (doc.exists) {
+                    const n = (doc.data() || {}).names;
+                    userExerciseNames = Array.isArray(n) ? n.filter(Boolean) : [];
+                    userExerciseNames.sort((a, b) => String(a).localeCompare(String(b)));
+                }
+            } catch (e) {}
+        }
+
+        async function registerExerciseName(name) {
+            const n = String(name || "").trim();
+            if (!n || !currentUser) return;
+            if (userExerciseNames.indexOf(n) === -1) {
+                userExerciseNames.push(n);
+                userExerciseNames.sort((a, b) => a.localeCompare(b));
+            }
+            try {
+                await db.collection("users").doc(currentUser.uid).collection("meta").doc("exerciseList").set({
+                    names: firebase.firestore.FieldValue.arrayUnion(n),
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                }, { merge: true });
+            } catch (e) {}
+        }
+
+        function filterExerciseSuggestions(query) {
+            const q = String(query || "").trim().toLowerCase();
+            if (!q) return userExerciseNames.slice(0, 12);
+            return userExerciseNames
+                .filter((n) => String(n).toLowerCase().indexOf(q) >= 0)
+                .slice(0, 12);
         }
 
         function calcRowVolume(row) {
@@ -251,18 +317,49 @@
             updateStats();
         }
 
+        function showSuggestList(exId, inputEl) {
+            const ul = document.getElementById("sug-" + exId);
+            if (!ul) return;
+            const list = filterExerciseSuggestions(inputEl.value);
+            if (!list.length) {
+                ul.classList.add("hidden");
+                ul.innerHTML = "";
+                return;
+            }
+            ul.innerHTML = list.map((name) =>
+                "<li><button type=\"button\" class=\"suggest-item w-full px-3 py-2 text-left text-sm hover:bg-cyan-50\" data-pick-name=\"" + encodeURIComponent(name) + "\">" + escapeHtml(name) + "</button></li>"
+            ).join("");
+            ul.classList.remove("hidden");
+            openSuggestExId = exId;
+        }
+
         function renderExercises() {
             exerciseBlocks.innerHTML = "";
             if (!exercises.length) addExercise();
             exercises.forEach((exercise) => {
                 const card = document.createElement("div");
-                card.className = "rounded-lg border border-slate-200 bg-slate-50 p-3";
+                card.className = "exercise-card rounded-lg border border-slate-200 bg-slate-50 p-3";
                 const exVolume = exercise.rows.reduce((a, r) => a + calcRowVolume(r), 0);
+                const mv = escAttrVal(exercise.movement);
+                const nameHeader = isReadOnlyShare
+                    ? `<div class="mb-2 font-semibold text-slate-800">${escapeHtml(exercise.movement) || "Exercise"}</div>`
+                    : `<div class="mb-2 flex items-start gap-2">
+                        <div class="relative min-w-0 flex-1">
+                            <input data-ex-id="${exercise.id}" data-role="movement" value="${mv}" placeholder="Exercise name (e.g. Bench Press)" autocomplete="off" class="ex-movement-input w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm" spellcheck="false">
+                            <ul id="sug-${exercise.id}" class="ex-suggest absolute left-0 right-0 z-20 mt-0.5 max-h-40 list-none overflow-y-auto rounded-lg border border-slate-200 bg-white py-0.5 shadow-lg hidden"></ul>
+                        </div>
+                        <details class="relative ex-menu z-10 shrink-0" data-ex-menu="${exercise.id}">
+                            <summary class="list-none cursor-pointer select-none rounded-lg border border-slate-300 bg-white px-2 py-2 text-slate-600 hover:bg-slate-50" style="list-style: none" title="Options">&#8942;</summary>
+                            <div class="absolute right-0 mt-1 w-56 rounded-lg border border-slate-200 bg-white py-1 shadow-lg">
+                                <button type="button" data-ex-act="share" data-exid="${exercise.id}" class="w-full px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-100">Share this exercise records</button>
+                                <button type="button" data-ex-act="history" data-exid="${exercise.id}" class="w-full px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-100">History</button>
+                                <button type="button" data-ex-act="edit" data-exid="${exercise.id}" class="w-full px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-100">Edit</button>
+                                <button type="button" data-ex-act="delete" data-exid="${exercise.id}" class="w-full px-3 py-2 text-left text-sm text-rose-700 hover:bg-rose-50">Delete</button>
+                            </div>
+                        </details>
+                    </div>`;
                 card.innerHTML = `
-                    <div class="mb-2 flex items-center justify-between gap-2">
-                        <input data-ex-id="${exercise.id}" data-role="movement" value="${exercise.movement}" placeholder="Exercise name (e.g. Bench Press)" class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm">
-                        <button data-ex-del="${exercise.id}" class="rounded bg-rose-100 px-2 py-1 text-xs text-rose-700 hover:bg-rose-200">Delete</button>
-                    </div>
+                    ${nameHeader}
                     <div class="overflow-auto">
                         <table class="min-w-full text-sm">
                             <thead>
@@ -296,11 +393,23 @@
             });
 
             exerciseBlocks.querySelectorAll("input[data-role='movement']").forEach((el) => {
+                const exId = el.getAttribute("data-ex-id");
                 el.addEventListener("input", () => {
-                    const ex = exercises.find((x) => x.id === el.getAttribute("data-ex-id"));
+                    const ex = exercises.find((x) => x.id === exId);
                     if (ex) ex.movement = el.value;
+                    showSuggestList(exId, el);
+                });
+                el.addEventListener("focus", () => showSuggestList(exId, el));
+                el.addEventListener("blur", () => {
+                    setTimeout(() => {
+                        const ul = document.getElementById("sug-" + exId);
+                        if (ul) { ul.classList.add("hidden"); }
+                        const ex = exercises.find((x) => x.id === exId);
+                        if (ex && ex.movement.trim()) registerExerciseName(ex.movement);
+                    }, 200);
                 });
             });
+
             exerciseBlocks.querySelectorAll("input[data-ex-row]").forEach((el) => {
                 el.addEventListener("input", () => {
                     const [exId, rowId, key] = el.getAttribute("data-ex-row").split("|");
@@ -333,11 +442,37 @@
                     updateStats();
                 });
             });
-            exerciseBlocks.querySelectorAll("button[data-ex-del]").forEach((btn) => {
-                btn.addEventListener("click", () => {
-                    exercises = exercises.filter((x) => x.id !== btn.getAttribute("data-ex-del"));
-                    renderExercises();
-                    updateStats();
+            exerciseBlocks.querySelectorAll("button[data-ex-act]").forEach((btn) => {
+                btn.addEventListener("click", (e) => {
+                    e.stopPropagation();
+                    const act = btn.getAttribute("data-ex-act");
+                    const exid = btn.getAttribute("data-exid");
+                    const ex = exercises.find((x) => x.id === exid);
+                    if (!ex) return;
+                    const d = exerciseBlocks.querySelector('details[data-ex-menu="' + exid + '"]');
+                    if (d) d.removeAttribute("open");
+                    if (act === "share") shareExerciseRecords(ex.movement);
+                    else if (act === "history") showExerciseHistory(ex.movement);
+                    else if (act === "edit") {
+                        if (!ex.movement || !ex.movement.trim()) {
+                            workoutStatus.textContent = "Enter an exercise name first.";
+                            return;
+                        }
+                        if (!confirm("Edit this exercise name?")) return;
+                        const newName = prompt("New exercise name:", ex.movement);
+                        if (newName == null) return;
+                        const nt = newName.trim();
+                        if (!nt) return;
+                        ex.movement = nt;
+                        registerExerciseName(nt);
+                        renderExercises();
+                    } else if (act === "delete") {
+                        if (!confirm("Delete this whole exercise and all its rows?")) return;
+                        exercises = exercises.filter((x) => x.id !== exid);
+                        if (!exercises.length) addExercise();
+                        else renderExercises();
+                        updateStats();
+                    }
                 });
             });
         }
@@ -401,6 +536,98 @@
             await loadGroupFeed();
         }
 
+        async function shareExerciseRecords(movementRaw) {
+            if (!currentUser) return;
+            const movement = String(movementRaw || "").trim();
+            if (!movement) {
+                workoutStatus.textContent = "Enter an exercise name first.";
+                return;
+            }
+            workoutStatus.textContent = "Building share…";
+            try {
+                const snap = await db.collection("users").doc(currentUser.uid).collection("workouts").orderBy("createdAt", "desc").limit(300).get();
+                const rows = [];
+                let total = 0;
+                const nameLower = movement.toLowerCase();
+                snap.forEach((d) => {
+                    const w = d.data() || {};
+                    const sub = (w.sets || []).filter((s) => String(s.movement || "").toLowerCase() === nameLower);
+                    if (!sub.length) return;
+                    const ev = sub.reduce((a, s) => a + Number(s.volume || 0), 0);
+                    total += ev;
+                    rows.push({ date: w.date || "", totalVolume: ev, sets: sub, userEmail: currentUser.email || "" });
+                });
+                const ref = await db.collection("gymShares").add({
+                    ownerUid: currentUser.uid,
+                    type: "exercise",
+                    exerciseName: movement,
+                    fromDate: "",
+                    toDate: "",
+                    totalVolume: total,
+                    rows,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                const url = location.origin + "/gym-records/?share=" + encodeURIComponent(ref.id);
+                shareLinkOutput.value = url;
+                try {
+                    await navigator.clipboard.writeText(url);
+                    workoutStatus.textContent = "Exercise share link copied.";
+                } catch (e) {
+                    workoutStatus.textContent = "Share link is in the field below.";
+                }
+            } catch (e) {
+                workoutStatus.textContent = (e && e.message) ? e.message : "Share failed.";
+            }
+        }
+
+        function openExerciseHistoryModal() {
+            const m = document.getElementById("exerciseHistoryModal");
+            m.classList.remove("hidden");
+            m.classList.add("flex");
+        }
+        function closeExerciseHistoryModal() {
+            const m = document.getElementById("exerciseHistoryModal");
+            m.classList.add("hidden");
+            m.classList.remove("flex");
+        }
+
+        async function showExerciseHistory(movementRaw) {
+            if (!currentUser) return;
+            const movement = String(movementRaw || "").trim();
+            if (!movement) {
+                workoutStatus.textContent = "Enter an exercise name first.";
+                return;
+            }
+            document.getElementById("exerciseHistoryTitle").textContent = "History: " + movement;
+            const body = document.getElementById("exerciseHistoryBody");
+            body.innerHTML = "<p class=\"text-slate-500\">Loading…</p>";
+            openExerciseHistoryModal();
+            try {
+                const snap = await db.collection("users").doc(currentUser.uid).collection("workouts").orderBy("createdAt", "desc").limit(200).get();
+                const nameLower = movement.toLowerCase();
+                const lines = [];
+                snap.forEach((d) => {
+                    const w = d.data() || {};
+                    const sub = (w.sets || []).filter((s) => String(s.movement || "").toLowerCase() === nameLower);
+                    if (!sub.length) return;
+                    const vol = sub.reduce((a, s) => a + Number(s.volume || 0), 0);
+                    lines.push({ date: w.date, vol, rows: sub.length, start: w.startTime, end: w.endTime });
+                });
+                if (!lines.length) {
+                    body.innerHTML = "<p class=\"text-slate-500\">No past records for this exercise yet.</p>";
+                    return;
+                }
+                const parts = lines.map((L) =>
+                    "<div class=\"rounded border border-slate-200 bg-slate-50 px-3 py-2\">" +
+                    "<div class=\"font-semibold\">" + escapeHtml(L.date) + "</div>" +
+                    "<div class=\"text-xs text-slate-600\">" + L.rows + " row(s) — " + L.vol.toFixed(1) + " kg · " + (L.start || "—") + " – " + (L.end || "—") + "</div></div>"
+                );
+                body.innerHTML = "<div class=\"space-y-2\">" + parts.join("") + "</div>";
+            } catch (e) {
+                body.innerHTML = "<p class=\"text-rose-600\">Could not load history.</p>";
+            }
+        }
+
         async function loadGroupFeed() {
             groupFeed.innerHTML = "";
             const ids = groups.map((g) => g.id);
@@ -455,6 +682,8 @@
             workoutStatus.textContent = "Saving...";
             await db.collection("users").doc(currentUser.uid).collection("workouts").add(data);
             if (selectedGroupId) await db.collection("groups").doc(selectedGroupId).collection("logs").add(data);
+            const uniqueMovements = [...new Set(sets.map((s) => s.movement))];
+            await Promise.all(uniqueMovements.map((n) => registerExerciseName(n)));
             workoutStatus.textContent = "Workout saved.";
             await loadReport();
             await loadRecentWorkouts();
@@ -553,16 +782,25 @@
         async function maybeLoadSharedView() {
             const shareId = new URLSearchParams(location.search).get("share");
             if (!shareId) return false;
+            isReadOnlyShare = true;
             app.classList.remove("hidden");
             authRequired.classList.add("hidden");
-            document.getElementById("logoutBtn").style.display = "none";
+            const lb = document.getElementById("logoutBtn");
+            const lbm = document.getElementById("logoutBtnMobile");
+            if (lb) lb.style.display = "none";
+            if (lbm) lbm.style.display = "none";
+            const hb = document.getElementById("hamburgerBtn");
+            if (hb) hb.style.display = "none";
             const doc = await db.collection("gymShares").doc(shareId).get();
             if (!doc.exists) {
                 document.getElementById("reportBox").textContent = "Shared report not found.";
                 return true;
             }
             const data = doc.data() || {};
-            document.getElementById("reportBox").innerHTML = "Type: <b>" + (data.type || "-") + "</b><br>Date: <b>" + (data.fromDate || "-") + "</b> to <b>" + (data.toDate || "-") + "</b><br>Total Volume: <b>" + Number(data.totalVolume || 0).toFixed(1) + " kg</b>";
+            const isEx = (data.type || "") === "exercise";
+            document.getElementById("reportBox").innerHTML = isEx
+                ? ("Exercise: <b>" + escapeHtml(data.exerciseName || "-") + "</b><br>Total Volume: <b>" + Number(data.totalVolume || 0).toFixed(1) + " kg</b>")
+                : ("Type: <b>" + (data.type || "-") + "</b><br>Date: <b>" + (data.fromDate || "-") + "</b> to <b>" + (data.toDate || "-") + "</b><br>Total Volume: <b>" + Number(data.totalVolume || 0).toFixed(1) + " kg</b>");
             const flat = [];
             (data.rows || []).forEach((row) => (row.sets || []).forEach((s) => flat.push({ movement: s.movement || "", kg: Number(s.kg || 0), reps: Number(s.reps || 0) })));
             const byMovement = {};
@@ -573,7 +811,7 @@
             exercises = Object.keys(byMovement).map((m) => ({ id: uid(), movement: m, rows: byMovement[m] }));
             renderExercises();
             updateStats();
-            ["addExerciseBtn","saveWorkoutBtn","shareDayBtn","shareRangeBtn","saveWeightBtn","saveGoalsBtn","createGroupBtn","joinGroupBtn"].forEach((id) => {
+            ["addExerciseBtn","saveWorkoutBtn","shareDayBtn","shareRangeBtn","saveWeightBtn","saveGoalsBtn","createGroupBtn","joinGroupBtn","openGroupsModalBtn","openGroupsModalBtnMobile"].forEach((id) => {
                 const el = document.getElementById(id);
                 if (el) el.disabled = true;
             });
@@ -609,6 +847,26 @@
         }
 
         function initMenus() {
+            if (!exerciseBlocks._gymSuggestDelegation) {
+                exerciseBlocks._gymSuggestDelegation = true;
+                exerciseBlocks.addEventListener("mousedown", (e) => {
+                    const btn = e.target.closest(".suggest-item");
+                    if (!btn) return;
+                    e.preventDefault();
+                    let name = "";
+                    try { name = decodeURIComponent(btn.getAttribute("data-pick-name") || ""); } catch (err) { name = ""; }
+                    const card = btn.closest(".exercise-card");
+                    const input = card && card.querySelector(".ex-movement-input");
+                    const exId = input && input.getAttribute("data-ex-id");
+                    const ex = exId && exercises.find((x) => x.id === exId);
+                    if (ex) ex.movement = name;
+                    if (input) input.value = name;
+                    if (exId) {
+                        const ul = document.getElementById("sug-" + exId);
+                        if (ul) ul.classList.add("hidden");
+                    }
+                });
+            }
             const mobileMenu = document.getElementById("mobileMenu");
             document.getElementById("hamburgerBtn").addEventListener("click", () => mobileMenu.classList.toggle("hidden"));
             const openGroups = () => {
@@ -627,7 +885,20 @@
                     groupsModal.classList.remove("flex");
                 }
             });
+            const exerciseHistoryModal = document.getElementById("exerciseHistoryModal");
+            const closeHistBtn = document.getElementById("closeExerciseHistoryBtn");
+            if (closeHistBtn) closeHistBtn.addEventListener("click", closeExerciseHistoryModal);
+            if (exerciseHistoryModal) {
+                exerciseHistoryModal.addEventListener("click", (e) => {
+                    if (e.target === exerciseHistoryModal) closeExerciseHistoryModal();
+                });
+            }
         }
+
+        document.addEventListener("click", (e) => {
+            if (e.target.closest && (e.target.closest(".ex-suggest") || e.target.closest(".ex-movement-input"))) return;
+            document.querySelectorAll(".ex-suggest").forEach((u) => u.classList.add("hidden"));
+        });
 
         function logout() {
             auth.signOut().finally(() => { location.href = "/"; });
@@ -676,6 +947,7 @@
                 }
                 authRequired.classList.add("hidden");
                 app.classList.remove("hidden");
+                await loadUserExerciseNames(user.uid);
                 await loadGoalsAndWeight(user.uid);
                 await loadGroups(user.uid);
                 await loadReport();
