@@ -4,7 +4,7 @@
   "description": "Personal WebsiteTools — landing page, perforated panel designer, and utilities",
   "scripts": {
     "dev": "wrangler pages dev",
-    "deploy": "wrangler pages deploy"
+    "deploy": "wrangler pages deploy . --project-name=ehsanmo-personal"
   },
   "devDependencies": {
     "wrangler": "^3.0.0"

@@ -50,6 +50,7 @@
         </div>
 
         <main id="app" class="hidden space-y-6">
+        <div id="logView" class="space-y-6">
             <section id="dashboard" class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-5">
                 <div class="rounded-xl border border-slate-200 bg-white p-4">
                     <div class="text-xs uppercase tracking-wide text-slate-500">Session Volume</div>
@@ -73,38 +74,40 @@
                 </div>
             </section>
 
+            <div id="draftResumeBanner" class="hidden rounded-xl border border-amber-200 bg-amber-50 p-4">
+                <div class="flex flex-wrap items-center justify-between gap-2">
+                    <p class="text-sm text-amber-900">You have a saved <strong>draft</strong> workout. Resume to continue, or start new and the draft will stay until you save over it.</p>
+                    <div class="flex flex-wrap gap-2">
+                        <button type="button" id="resumeDraftBtn" class="rounded-lg bg-amber-600 px-3 py-2 text-sm font-semibold text-white hover:bg-amber-500">Resume draft</button>
+                        <button type="button" id="dismissDraftBtn" class="rounded-lg border border-amber-300 bg-white px-3 py-2 text-sm hover:bg-amber-100">Hide</button>
+                    </div>
+                </div>
+            </div>
+
             <section id="workoutLog" class="grid grid-cols-1 gap-6 xl:grid-cols-3">
                 <div class="rounded-xl border border-slate-200 bg-white p-4 xl:col-span-2">
                     <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
-                        <h2 class="text-lg font-semibold">Workout Log</h2>
-                        <button id="addExerciseBtn" class="rounded-lg bg-cyan-600 px-3 py-2 text-sm font-semibold text-white hover:bg-cyan-500">+ Add Exercise</button>
+                        <h2 class="text-lg font-semibold">Workout log</h2>
+                        <button type="button" id="startNewWorkoutBtn" class="rounded-lg bg-cyan-600 px-3 py-2 text-sm font-semibold text-white hover:bg-cyan-500">Start new workout</button>
                     </div>
-
-                    <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
-                        <label class="text-sm text-slate-600">Date
-                            <input id="workoutDate" type="date" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2">
-                        </label>
-                        <label class="text-sm text-slate-600">Start time
-                            <input id="startTime" type="time" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2">
-                        </label>
-                        <label class="text-sm text-slate-600">End time
-                            <input id="endTime" type="time" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2">
-                        </label>
+                    <p class="text-sm text-slate-600">All saved sessions (newest first). Start a new workout to open the timer and log exercises.</p>
+                    <div class="mt-3 max-h-[22rem] overflow-y-auto rounded-lg border border-slate-200">
+                        <ul id="allWorkoutsList" class="divide-y divide-slate-100 text-sm"></ul>
                     </div>
-
-                    <div id="exerciseBlocks" class="mt-4 space-y-3"></div>
-
-                    <div class="mt-4 flex flex-wrap items-center gap-2">
-                        <button id="saveWorkoutBtn" class="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-500">Save Workout</button>
-                        <button id="shareDayBtn" class="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm hover:bg-slate-100">Share Day</button>
-                        <button id="shareRangeBtn" class="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm hover:bg-slate-100">Share Date Range</button>
-                        <span id="workoutStatus" class="text-sm text-slate-600"></span>
+                    <div class="mt-4 flex flex-wrap items-center gap-2 border-t border-slate-100 pt-3">
+                        <span class="text-sm font-medium text-slate-700">Share</span>
+                        <label class="text-sm text-slate-600">Day
+                            <input id="shareDayDate" type="date" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 sm:w-auto">
+                        </label>
+                        <button type="button" id="shareDayBtn" class="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm hover:bg-slate-100">Share day</button>
+                        <button type="button" id="shareRangeBtn" class="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm hover:bg-slate-100">Share date range</button>
                     </div>
+                    <p id="logWorkoutStatus" class="mt-2 text-sm text-slate-600"></p>
                     <div class="mt-3">
-                        <label class="block text-xs font-semibold uppercase tracking-wide text-slate-500">Latest Share Link</label>
+                        <label class="block text-xs font-semibold uppercase tracking-wide text-slate-500">Latest share link</label>
                         <div class="mt-1 flex gap-2">
                             <input id="shareLinkOutput" type="text" readonly class="w-full rounded-lg border border-slate-300 bg-slate-50 px-3 py-2 text-sm text-slate-700" placeholder="Share link will appear here">
-                            <button id="copyShareLinkBtn" class="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm hover:bg-slate-100">Copy</button>
+                            <button type="button" id="copyShareLinkBtn" class="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm hover:bg-slate-100">Copy</button>
                         </div>
                     </div>
                 </div>
@@ -140,30 +143,84 @@
                 </div>
             </section>
 
-            <section class="grid grid-cols-1 gap-6 lg:grid-cols-2">
-                <div class="rounded-xl border border-slate-200 bg-white p-4">
-                    <div class="flex items-center justify-between">
-                        <h2 class="text-lg font-semibold">Recent Workouts</h2>
-                        <button id="reloadRecentBtn" class="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm hover:bg-slate-100">Refresh</button>
-                    </div>
-                    <ul id="recentWorkouts" class="mt-3 space-y-2 text-sm"></ul>
-                </div>
-
-                <div id="reports" class="rounded-xl border border-slate-200 bg-white p-4">
+            <section id="reports" class="rounded-xl border border-slate-200 bg-white p-4">
+                <div class="flex items-center justify-between">
                     <h2 class="text-lg font-semibold">Reports</h2>
-                    <div class="mt-3 grid grid-cols-2 gap-2">
-                        <label class="text-sm text-slate-600">From
-                            <input id="reportFrom" type="date" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2">
-                        </label>
-                        <label class="text-sm text-slate-600">To
-                            <input id="reportTo" type="date" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2">
-                        </label>
-                    </div>
-                    <button id="loadReportBtn" class="mt-3 rounded-lg bg-cyan-600 px-4 py-2 text-sm font-semibold text-white hover:bg-cyan-500">Load Report</button>
-                    <div id="reportBox" class="mt-3 rounded-lg bg-slate-50 p-3 text-sm text-slate-700"></div>
+                    <button type="button" id="reloadListBtn" class="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm hover:bg-slate-100">Refresh log &amp; report</button>
                 </div>
+                <div class="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
+                    <label class="text-sm text-slate-600">From
+                        <input id="reportFrom" type="date" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2">
+                    </label>
+                    <label class="text-sm text-slate-600">To
+                        <input id="reportTo" type="date" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2">
+                    </label>
+                </div>
+                <button type="button" id="loadReportBtn" class="mt-3 rounded-lg bg-cyan-600 px-4 py-2 text-sm font-semibold text-white hover:bg-cyan-500">Load report</button>
+                <div id="reportBox" class="mt-3 rounded-lg bg-slate-50 p-3 text-sm text-slate-700"></div>
             </section>
+        </div>
+
+        <div id="sessionView" class="hidden space-y-4">
+            <div id="sharedReportBanner" class="hidden rounded-xl border border-slate-200 bg-white p-4 text-sm text-slate-800"></div>
+            <div id="sessionTimerRow" class="flex flex-wrap items-end justify-between gap-4 rounded-xl border border-cyan-200 bg-cyan-50/50 p-4">
+                <div>
+                    <div class="text-xs font-semibold uppercase tracking-wide text-cyan-800">Session timer</div>
+                    <div id="liveTimerDisplay" class="mt-1 font-mono text-3xl font-bold text-cyan-900 tabular-nums">00:00:00</div>
+                </div>
+                <div class="grid grid-cols-2 gap-3 text-sm sm:flex sm:flex-nowrap sm:items-center">
+                    <div>
+                        <div class="text-xs uppercase text-slate-500">This session volume</div>
+                        <div id="statSessionVolumeSession" class="text-lg font-bold">0 kg</div>
+                    </div>
+                    <div>
+                        <div class="text-xs uppercase text-slate-500">By clock</div>
+                        <div id="statDurationSession" class="text-lg font-bold">0 min</div>
+                    </div>
+                </div>
+            </div>
+            <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                <label class="text-sm text-slate-600">Date
+                    <input id="workoutDate" type="date" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2">
+                </label>
+                <label class="text-sm text-slate-600">Start time
+                    <input id="startTime" type="time" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2">
+                </label>
+                <label class="text-sm text-slate-600">End time
+                    <input id="endTime" type="time" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2" placeholder="Set when you finish (or on Finish)">
+                </label>
+            </div>
+            <div class="flex flex-wrap items-center gap-2">
+                <span class="text-sm text-slate-600">Exercises</span>
+                <button type="button" id="addExerciseBtn" class="rounded-lg border border-cyan-600 bg-white px-3 py-1.5 text-sm font-medium text-cyan-800 hover:bg-cyan-50">+ Add exercise</button>
+            </div>
+            <div id="exerciseBlocks" class="space-y-3"></div>
+            <div id="sessionActionBar" class="mt-2 flex flex-wrap items-center gap-2 border-t border-slate-200 pt-4">
+                <button type="button" id="finishWorkoutBtn" class="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-500">Finish</button>
+                <button type="button" id="saveDraftBtn" class="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm hover:bg-slate-100">Save as draft &amp; exit</button>
+                <button type="button" id="saveTemplateBtn" class="rounded-lg border border-violet-300 bg-violet-50 px-4 py-2 text-sm text-violet-800 hover:bg-violet-100">Save as template</button>
+                <span id="workoutStatus" class="text-sm text-slate-600"></span>
+            </div>
+        </div>
         </main>
+    </div>
+
+    <div id="startWorkoutModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/40 p-4">
+        <div class="w-full max-w-md rounded-xl border border-slate-200 bg-white p-4 shadow-xl">
+            <h3 class="text-lg font-semibold">Start workout</h3>
+            <p class="mt-2 text-sm text-slate-600">Pick a template or a blank log. The session timer starts when you open the workout.</p>
+            <div class="mt-4">
+                <button type="button" id="startBlankWorkoutBtn" class="w-full rounded-lg border border-cyan-600 bg-cyan-50 px-4 py-2.5 text-sm font-semibold text-cyan-900 hover:bg-cyan-100">Blank workout</button>
+            </div>
+            <div class="mt-4">
+                <h4 class="text-sm font-semibold text-slate-700">From template</h4>
+                <p id="templateListEmpty" class="mt-2 text-sm text-slate-500">No templates yet. Save one during a session.</p>
+                <ul id="templateList" class="mt-2 max-h-40 space-y-1 overflow-y-auto text-sm"></ul>
+            </div>
+            <div class="mt-4 flex justify-end">
+                <button type="button" id="closeStartWorkoutModalBtn" class="rounded-lg border border-slate-300 px-3 py-2 text-sm hover:bg-slate-100">Cancel</button>
+            </div>
+        </div>
     </div>
 
     <div id="exerciseHistoryModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/40 p-4">
@@ -227,13 +284,21 @@
 
         const authRequired = document.getElementById("authRequired");
         const app = document.getElementById("app");
+        const logView = document.getElementById("logView");
+        const sessionView = document.getElementById("sessionView");
         const exerciseBlocks = document.getElementById("exerciseBlocks");
         const workoutStatus = document.getElementById("workoutStatus");
+        const logWorkoutStatus = document.getElementById("logWorkoutStatus");
         const shareLinkOutput = document.getElementById("shareLinkOutput");
-        const recentWorkouts = document.getElementById("recentWorkouts");
+        const allWorkoutsList = document.getElementById("allWorkoutsList");
+        const draftResumeBanner = document.getElementById("draftResumeBanner");
+        const startWorkoutModal = document.getElementById("startWorkoutModal");
         const myGroupsList = document.getElementById("myGroupsList");
         const groupFeed = document.getElementById("groupFeed");
         const groupsModal = document.getElementById("groupsModal");
+        const templateList = document.getElementById("templateList");
+        const templateListEmpty = document.getElementById("templateListEmpty");
+        const sharedReportBanner = document.getElementById("sharedReportBanner");
 
         let currentUser = null;
         let exercises = [];
@@ -242,6 +307,191 @@
         let userExerciseNames = [];
         let openSuggestExId = null;
         let isReadOnlyShare = false;
+        let activeSession = false;
+        let liveTimerId = null;
+        let sessionStartEpochMs = 0;
+        let hasDraftInCloud = false;
+        let draftBannerHidden = false;
+
+        function setGymMessage(msg) {
+            if (workoutStatus) workoutStatus.textContent = activeSession ? (msg || "") : "";
+            if (logWorkoutStatus) logWorkoutStatus.textContent = activeSession ? "" : (msg || "");
+        }
+
+        function timeNowHHMM() {
+            const d = new Date();
+            return String(d.getHours()).padStart(2, "0") + ":" + String(d.getMinutes()).padStart(2, "0");
+        }
+
+        function onBeforeLeave(e) {
+            if (activeSession) {
+                e.preventDefault();
+                e.returnValue = "";
+            }
+        }
+        window.addEventListener("beforeunload", onBeforeLeave);
+
+        function stopLiveTimer() {
+            if (liveTimerId) {
+                clearInterval(liveTimerId);
+                liveTimerId = null;
+            }
+        }
+
+        function startLiveTimer() {
+            stopLiveTimer();
+            if (!sessionStartEpochMs) sessionStartEpochMs = Date.now();
+            const el = document.getElementById("liveTimerDisplay");
+            const tick = () => {
+                const sec = Math.floor((Date.now() - sessionStartEpochMs) / 1000);
+                if (!el) return;
+                const h = String(Math.floor(sec / 3600)).padStart(2, "0");
+                const m = String(Math.floor((sec % 3600) / 60)).padStart(2, "0");
+                const s = String(sec % 60).padStart(2, "0");
+                el.textContent = h + ":" + m + ":" + s;
+            };
+            tick();
+            liveTimerId = setInterval(tick, 1000);
+        }
+
+        function showLog() {
+            activeSession = false;
+            stopLiveTimer();
+            if (logView) logView.classList.remove("hidden");
+            if (sessionView) sessionView.classList.add("hidden");
+            if (sharedReportBanner) { sharedReportBanner.classList.add("hidden"); sharedReportBanner.innerHTML = ""; }
+        }
+
+        function showSession() {
+            activeSession = true;
+            if (logView) logView.classList.add("hidden");
+            if (sessionView) sessionView.classList.remove("hidden");
+        }
+
+        function buildExercisesFromPlain(list) {
+            if (!list || !list.length) {
+                return [{ id: uid(), movement: "", rows: [{ id: uid(), kg: 0, reps: 1 }] }];
+            }
+            return list.map((ex) => ({
+                id: uid(),
+                movement: String(ex.movement || "").trim(),
+                rows: (ex.rows && ex.rows.length
+                    ? ex.rows
+                    : [{ kg: 0, reps: 1 }]).map((r) => ({ id: uid(), kg: Number(r.kg || 0), reps: Number(r.reps || 1) }))
+            }));
+        }
+
+        function getSessionSnapshotForDraft() {
+            return {
+                workoutDate: document.getElementById("workoutDate") ? document.getElementById("workoutDate").value : todayISO(),
+                startTime: document.getElementById("startTime") ? document.getElementById("startTime").value : "",
+                endTime: document.getElementById("endTime") ? document.getElementById("endTime").value : "",
+                sessionStartEpochMs: sessionStartEpochMs || 0,
+                exercises: exercises.map((ex) => ({
+                    movement: ex.movement,
+                    rows: ex.rows.map((r) => ({ kg: r.kg, reps: r.reps }))
+                }))
+            };
+        }
+
+        function openStartWorkoutModal() {
+            startWorkoutModal.classList.remove("hidden");
+            startWorkoutModal.classList.add("flex");
+            loadWorkoutTemplatesForModal();
+        }
+        function closeStartWorkoutModal() {
+            startWorkoutModal.classList.add("hidden");
+            startWorkoutModal.classList.remove("flex");
+        }
+
+        async function loadWorkoutTemplatesForModal() {
+            if (!currentUser) return;
+            if (templateList) templateList.innerHTML = "";
+            try {
+                const snap = await db.collection("users").doc(currentUser.uid).collection("workoutTemplates").limit(50).get();
+                const list = snap.docs.map((d) => ({ id: d.id, ...(d.data() || {}) }));
+                list.sort((a, b) => (b.createdAt && b.createdAt.toMillis ? b.createdAt.toMillis() : 0) - (a.createdAt && a.createdAt.toMillis ? a.createdAt.toMillis() : 0));
+                if (templateListEmpty) templateListEmpty.classList.toggle("hidden", list.length > 0);
+                if (!list.length) return;
+                list.forEach((T) => {
+                    const b = document.createElement("button");
+                    b.type = "button";
+                    b.className = "w-full rounded-lg border border-slate-200 px-3 py-2 text-left text-sm hover:bg-slate-50";
+                    b.setAttribute("data-tid", T.id);
+                    b.textContent = T.name || "Template";
+                    b.addEventListener("click", async () => {
+                        closeStartWorkoutModal();
+                        if (!T.id) return;
+                        const docu = await db.collection("users").doc(currentUser.uid).collection("workoutTemplates").doc(T.id).get();
+                        if (!docu.exists) {
+                            setGymMessage("Template not found.");
+                            return;
+                        }
+                        const t = docu.data() || {};
+                        enterSessionWithExercises(buildExercisesFromPlain(t.exercisesData || t.exercises || []));
+                    });
+                    const li = document.createElement("li");
+                    li.appendChild(b);
+                    if (templateList) templateList.appendChild(li);
+                });
+            } catch (e) {
+                if (templateListEmpty) templateListEmpty.classList.remove("hidden");
+            }
+        }
+
+        function enterSessionWithExercises(ex) {
+            exercises = ex;
+            if (!exercises.length) {
+                addExercise();
+            } else {
+                renderExercises();
+                updateStats();
+            }
+            const wd = document.getElementById("workoutDate");
+            const st = document.getElementById("startTime");
+            if (wd) wd.value = todayISO();
+            if (st) st.value = timeNowHHMM();
+            const en = document.getElementById("endTime");
+            if (en) en.value = "";
+            sessionStartEpochMs = Date.now();
+            showSession();
+            const tr = document.getElementById("sessionTimerRow");
+            if (tr) tr.classList.remove("hidden");
+            const ab = document.getElementById("sessionActionBar");
+            if (ab) ab.classList.remove("hidden");
+            if (sharedReportBanner) { sharedReportBanner.classList.add("hidden"); sharedReportBanner.innerHTML = ""; }
+            startLiveTimer();
+            setGymMessage("Session started. Finish saves to your log, or save as draft to leave.");
+        }
+
+        function enterSessionFromDraft(data) {
+            if (!data) return;
+            exercises = buildExercisesFromPlain(data.exercises || []);
+            if (data.workoutDate && document.getElementById("workoutDate")) document.getElementById("workoutDate").value = data.workoutDate;
+            if (data.startTime) document.getElementById("startTime").value = data.startTime;
+            if (data.endTime) document.getElementById("endTime").value = data.endTime;
+            sessionStartEpochMs = Date.now();
+            if (!exercises.length) addExercise();
+            else {
+                renderExercises();
+                updateStats();
+            }
+            const tr2 = document.getElementById("sessionTimerRow");
+            if (tr2) tr2.classList.remove("hidden");
+            const ab2 = document.getElementById("sessionActionBar");
+            if (ab2) ab2.classList.remove("hidden");
+            showSession();
+            startLiveTimer();
+            setGymMessage("Resumed from draft.");
+        }
+
+        function exitAfterSession() {
+            exercises = [];
+            if (exerciseBlocks) exerciseBlocks.innerHTML = "";
+            stopLiveTimer();
+            showLog();
+            setGymMessage("");
+        }
 
         function todayISO() {
             const d = new Date();
@@ -455,7 +705,7 @@
                     else if (act === "history") showExerciseHistory(ex.movement);
                     else if (act === "edit") {
                         if (!ex.movement || !ex.movement.trim()) {
-                            workoutStatus.textContent = "Enter an exercise name first.";
+                            setGymMessage("Enter an exercise name first.");
                             return;
                         }
                         if (!confirm("Edit this exercise name?")) return;
@@ -478,16 +728,26 @@
         }
 
         function updateStats() {
-            document.getElementById("statSessionVolume").textContent = totalVolume().toFixed(1) + " kg";
-            const start = document.getElementById("startTime").value;
-            const end = document.getElementById("endTime").value;
+            const vol = totalVolume().toFixed(1) + " kg";
+            document.getElementById("statSessionVolume").textContent = vol;
+            const sVolS = document.getElementById("statSessionVolumeSession");
+            if (sVolS) sVolS.textContent = vol;
+            const start = (document.getElementById("startTime") && document.getElementById("startTime").value) || "";
+            const end = (document.getElementById("endTime") && document.getElementById("endTime").value) || "";
+            let durMin = 0;
             if (start && end) {
                 const a = new Date("2000-01-01T" + start + ":00");
                 const b = new Date("2000-01-01T" + end + ":00");
-                document.getElementById("statDuration").textContent = Math.max(0, Math.round((b - a) / 60000)) + " min";
-            } else {
-                document.getElementById("statDuration").textContent = "0 min";
+                durMin = Math.max(0, Math.round((b - a) / 60000));
             }
+            const durText = durMin + " min";
+            if (activeSession) {
+                document.getElementById("statDuration").textContent = durText;
+            } else {
+                document.getElementById("statDuration").textContent = "—";
+            }
+            const sDurS = document.getElementById("statDurationSession");
+            if (sDurS) sDurS.textContent = start && end ? durText : "0 min";
         }
 
         async function loadGoalsAndWeight(uidVal) {
@@ -540,10 +800,10 @@
             if (!currentUser) return;
             const movement = String(movementRaw || "").trim();
             if (!movement) {
-                workoutStatus.textContent = "Enter an exercise name first.";
+                setGymMessage("Enter an exercise name first.");
                 return;
             }
-            workoutStatus.textContent = "Building share…";
+            setGymMessage("Building share…");
             try {
                 const snap = await db.collection("users").doc(currentUser.uid).collection("workouts").orderBy("createdAt", "desc").limit(300).get();
                 const rows = [];
@@ -571,12 +831,12 @@
                 shareLinkOutput.value = url;
                 try {
                     await navigator.clipboard.writeText(url);
-                    workoutStatus.textContent = "Exercise share link copied.";
+                    setGymMessage("Exercise share link copied.");
                 } catch (e) {
-                    workoutStatus.textContent = "Share link is in the field below.";
+                    setGymMessage("Share link is in the field below.");
                 }
             } catch (e) {
-                workoutStatus.textContent = (e && e.message) ? e.message : "Share failed.";
+                setGymMessage((e && e.message) ? e.message : "Share failed.");
             }
         }
 
@@ -595,7 +855,7 @@
             if (!currentUser) return;
             const movement = String(movementRaw || "").trim();
             if (!movement) {
-                workoutStatus.textContent = "Enter an exercise name first.";
+                setGymMessage("Enter an exercise name first.");
                 return;
             }
             document.getElementById("exerciseHistoryTitle").textContent = "History: " + movement;
@@ -661,17 +921,22 @@
             return sets;
         }
 
-        async function saveWorkout() {
+        async function saveWorkoutToFirestore() {
             if (!currentUser) return;
             const sets = flattenRowsForSave();
             if (!sets.length) {
-                workoutStatus.textContent = "Add at least one exercise row.";
-                return;
+                setGymMessage("Add at least one exercise row.");
+                return false;
+            }
+            let endVal = (document.getElementById("endTime") && document.getElementById("endTime").value) || "";
+            if (!endVal) {
+                endVal = timeNowHHMM();
+                if (document.getElementById("endTime")) document.getElementById("endTime").value = endVal;
             }
             const data = {
                 date: document.getElementById("workoutDate").value || todayISO(),
                 startTime: document.getElementById("startTime").value || "",
-                endTime: document.getElementById("endTime").value || "",
+                endTime: endVal,
                 sets,
                 totalVolume: sets.reduce((a, b) => a + Number(b.volume || 0), 0),
                 uid: currentUser.uid,
@@ -679,14 +944,77 @@
                 groupId: selectedGroupId || "",
                 createdAt: firebase.firestore.FieldValue.serverTimestamp()
             };
-            workoutStatus.textContent = "Saving...";
+            setGymMessage("Saving…");
             await db.collection("users").doc(currentUser.uid).collection("workouts").add(data);
             if (selectedGroupId) await db.collection("groups").doc(selectedGroupId).collection("logs").add(data);
             const uniqueMovements = [...new Set(sets.map((s) => s.movement))];
             await Promise.all(uniqueMovements.map((n) => registerExerciseName(n)));
-            workoutStatus.textContent = "Workout saved.";
+            setGymMessage("Workout saved.");
+            try {
+                await db.collection("users").doc(currentUser.uid).collection("meta").doc("workoutDraft").delete();
+            } catch (e) {}
+            hasDraftInCloud = false;
+            return true;
+        }
+
+        async function finishWorkout() {
+            if (!currentUser) return;
+            const ok = await saveWorkoutToFirestore();
+            if (!ok) return;
+            updateStats();
             await loadReport();
-            await loadRecentWorkouts();
+            await loadAllWorkouts();
+            exitAfterSession();
+            if (draftResumeBanner) draftResumeBanner.classList.add("hidden");
+            if (logWorkoutStatus) logWorkoutStatus.textContent = "Workout saved to your log.";
+        }
+
+        async function saveAsDraft() {
+            if (!currentUser) return;
+            setGymMessage("Saving draft…");
+            try {
+                const snap = getSessionSnapshotForDraft();
+                await db.collection("users").doc(currentUser.uid).collection("meta").doc("workoutDraft").set({
+                    ...snap,
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                }, { merge: true });
+                hasDraftInCloud = true;
+            } catch (e) {
+                setGymMessage("Could not save draft.");
+                return;
+            }
+            draftBannerHidden = false;
+            setGymMessage("Draft saved.");
+            exitAfterSession();
+            if (logWorkoutStatus) logWorkoutStatus.textContent = "Draft saved. Use Resume on the yellow banner to continue, or start a new workout when ready.";
+            if (draftResumeBanner) draftResumeBanner.classList.remove("hidden");
+            await checkDraftBanner();
+        }
+
+        async function saveAsTemplate() {
+            if (!currentUser) return;
+            const name = prompt("Name this template (e.g. Push day):", "");
+            if (name == null) return;
+            const nt = String(name).trim();
+            if (!nt) {
+                setGymMessage("Template name required.");
+                return;
+            }
+            const exercisesData = exercises.map((ex) => ({
+                movement: ex.movement,
+                rows: ex.rows.map((r) => ({ kg: r.kg, reps: r.reps }))
+            }));
+            try {
+                await db.collection("users").doc(currentUser.uid).collection("workoutTemplates").add({
+                    name: nt,
+                    exercisesData: exercisesData,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+            } catch (e) {
+                setGymMessage("Could not save template.");
+                return;
+            }
+            setGymMessage("Template saved for next time.");
         }
 
         async function loadReport() {
@@ -733,7 +1061,9 @@
 
         async function shareReport(type) {
             if (!currentUser) return;
-            const from = type === "day" ? (document.getElementById("workoutDate").value || todayISO()) : (document.getElementById("reportFrom").value || todayISO());
+            const from = type === "day"
+                ? (document.getElementById("shareDayDate") && document.getElementById("shareDayDate").value || todayISO())
+                : (document.getElementById("reportFrom").value || todayISO());
             const to = type === "day" ? from : (document.getElementById("reportTo").value || todayISO());
             const snap = await db.collection("users").doc(currentUser.uid).collection("workouts").where("date", ">=", from).where("date", "<=", to).get();
             const rows = [];
@@ -756,26 +1086,34 @@
             shareLinkOutput.value = url;
             try {
                 await navigator.clipboard.writeText(url);
-                workoutStatus.textContent = "Share link copied.";
+                if (logWorkoutStatus) logWorkoutStatus.textContent = "Share link copied.";
             } catch (e) {
-                workoutStatus.textContent = "Share link ready.";
+                if (logWorkoutStatus) logWorkoutStatus.textContent = "Share link ready.";
             }
         }
 
-        async function loadRecentWorkouts() {
+        async function checkDraftBanner() {
+            if (!currentUser || !draftResumeBanner) return;
+            const doc = await db.collection("users").doc(currentUser.uid).collection("meta").doc("workoutDraft").get();
+            hasDraftInCloud = doc.exists;
+            draftResumeBanner.classList.toggle("hidden", !hasDraftInCloud || draftBannerHidden);
+        }
+
+        async function loadAllWorkouts() {
             if (!currentUser) return;
-            recentWorkouts.innerHTML = "";
-            const snap = await db.collection("users").doc(currentUser.uid).collection("workouts").orderBy("createdAt", "desc").limit(8).get();
+            allWorkoutsList.innerHTML = "<li class=\"px-3 py-4 text-sm text-slate-500\">Loading…</li>";
+            const snap = await db.collection("users").doc(currentUser.uid).collection("workouts").orderBy("createdAt", "desc").limit(200).get();
             if (snap.empty) {
-                recentWorkouts.innerHTML = '<li class="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-slate-500">No workouts yet.</li>';
+                allWorkoutsList.innerHTML = "<li class=\"px-3 py-4 text-sm text-slate-500\">No workouts yet. Use <strong>Start new workout</strong> to begin.</li>";
                 return;
             }
+            allWorkoutsList.innerHTML = "";
             snap.forEach((doc) => {
                 const w = doc.data() || {};
                 const li = document.createElement("li");
-                li.className = "rounded-lg border border-slate-200 bg-slate-50 px-3 py-2";
-                li.innerHTML = `<div class="flex items-center justify-between"><span class="font-semibold">${w.date || "-"}</span><span class="text-xs text-slate-500">${Number(w.totalVolume || 0).toFixed(1)} kg</span></div><div class="mt-1 text-xs text-slate-600">${Array.isArray(w.sets) ? w.sets.length : 0} rows · ${w.startTime || "--:--"} to ${w.endTime || "--:--"}</div>`;
-                recentWorkouts.appendChild(li);
+                li.className = "px-3 py-2.5";
+                li.innerHTML = "<div class=\"flex flex-wrap items-baseline justify-between gap-1\"><span class=\"font-semibold text-slate-800\">" + (w.date || "-") + "</span><span class=\"text-sm font-medium text-cyan-700\">" + Number(w.totalVolume || 0).toFixed(1) + " kg</span></div><div class=\"text-xs text-slate-500\">" + (Array.isArray(w.sets) ? w.sets.length : 0) + " rows &middot; " + (w.startTime || "—") + " – " + (w.endTime || "—") + "</div>";
+                allWorkoutsList.appendChild(li);
             });
         }
 
@@ -785,6 +1123,10 @@
             isReadOnlyShare = true;
             app.classList.remove("hidden");
             authRequired.classList.add("hidden");
+            if (logView) logView.classList.add("hidden");
+            if (sessionView) {
+                sessionView.classList.remove("hidden");
+            }
             const lb = document.getElementById("logoutBtn");
             const lbm = document.getElementById("logoutBtnMobile");
             if (lb) lb.style.display = "none";
@@ -793,14 +1135,22 @@
             if (hb) hb.style.display = "none";
             const doc = await db.collection("gymShares").doc(shareId).get();
             if (!doc.exists) {
-                document.getElementById("reportBox").textContent = "Shared report not found.";
+                if (sharedReportBanner) {
+                    sharedReportBanner.classList.remove("hidden");
+                    sharedReportBanner.textContent = "Shared report not found.";
+                }
                 return true;
             }
             const data = doc.data() || {};
             const isEx = (data.type || "") === "exercise";
-            document.getElementById("reportBox").innerHTML = isEx
+            const repHtml = isEx
                 ? ("Exercise: <b>" + escapeHtml(data.exerciseName || "-") + "</b><br>Total Volume: <b>" + Number(data.totalVolume || 0).toFixed(1) + " kg</b>")
                 : ("Type: <b>" + (data.type || "-") + "</b><br>Date: <b>" + (data.fromDate || "-") + "</b> to <b>" + (data.toDate || "-") + "</b><br>Total Volume: <b>" + Number(data.totalVolume || 0).toFixed(1) + " kg</b>");
+            if (sharedReportBanner) {
+                sharedReportBanner.classList.remove("hidden");
+                sharedReportBanner.innerHTML = repHtml;
+            }
+            if (document.getElementById("reportBox")) document.getElementById("reportBox").innerHTML = repHtml;
             const flat = [];
             (data.rows || []).forEach((row) => (row.sets || []).forEach((s) => flat.push({ movement: s.movement || "", kg: Number(s.kg || 0), reps: Number(s.reps || 0) })));
             const byMovement = {};
@@ -811,7 +1161,15 @@
             exercises = Object.keys(byMovement).map((m) => ({ id: uid(), movement: m, rows: byMovement[m] }));
             renderExercises();
             updateStats();
-            ["addExerciseBtn","saveWorkoutBtn","shareDayBtn","shareRangeBtn","saveWeightBtn","saveGoalsBtn","createGroupBtn","joinGroupBtn","openGroupsModalBtn","openGroupsModalBtnMobile"].forEach((id) => {
+            if (document.getElementById("sessionTimerRow")) document.getElementById("sessionTimerRow").classList.add("hidden");
+            if (document.getElementById("sessionActionBar")) document.getElementById("sessionActionBar").classList.add("hidden");
+            const disableIds = [
+                "addExerciseBtn", "finishWorkoutBtn", "saveDraftBtn", "saveTemplateBtn", "startNewWorkoutBtn",
+                "shareDayBtn", "shareRangeBtn", "copyShareLinkBtn", "saveWeightBtn", "saveGoalsBtn",
+                "createGroupBtn", "joinGroupBtn", "openGroupsModalBtn", "openGroupsModalBtnMobile", "loadReportBtn",
+                "reloadListBtn", "startBlankWorkoutBtn", "closeStartWorkoutModalBtn"
+            ];
+            disableIds.forEach((id) => {
                 const el = document.getElementById(id);
                 if (el) el.disabled = true;
             });
@@ -905,9 +1263,48 @@
         }
 
         document.getElementById("addExerciseBtn").addEventListener("click", addExercise);
-        document.getElementById("startTime").addEventListener("input", updateStats);
-        document.getElementById("endTime").addEventListener("input", updateStats);
-        document.getElementById("saveWorkoutBtn").addEventListener("click", saveWorkout);
+        const stEl = document.getElementById("startTime");
+        const enEl = document.getElementById("endTime");
+        if (stEl) stEl.addEventListener("input", updateStats);
+        if (enEl) enEl.addEventListener("input", updateStats);
+        const wdEl = document.getElementById("workoutDate");
+        if (wdEl) wdEl.addEventListener("input", updateStats);
+        document.getElementById("finishWorkoutBtn").addEventListener("click", finishWorkout);
+        document.getElementById("saveDraftBtn").addEventListener("click", saveAsDraft);
+        document.getElementById("saveTemplateBtn").addEventListener("click", saveAsTemplate);
+        document.getElementById("startNewWorkoutBtn").addEventListener("click", () => {
+            if (hasDraftInCloud) {
+                if (!confirm("You have a saved draft. You can still start a new session; saving a new draft will replace it, or use Resume on the yellow banner. Continue?")) return;
+            }
+            openStartWorkoutModal();
+        });
+        document.getElementById("startBlankWorkoutBtn").addEventListener("click", () => {
+            closeStartWorkoutModal();
+            enterSessionWithExercises(buildExercisesFromPlain([]));
+        });
+        const closeM = document.getElementById("closeStartWorkoutModalBtn");
+        if (closeM) closeM.addEventListener("click", closeStartWorkoutModal);
+        startWorkoutModal.addEventListener("click", (e) => {
+            if (e.target === startWorkoutModal) closeStartWorkoutModal();
+        });
+        const resumeB = document.getElementById("resumeDraftBtn");
+        if (resumeB) {
+            resumeB.addEventListener("click", async () => {
+                if (!currentUser) return;
+                const d = await db.collection("users").doc(currentUser.uid).collection("meta").doc("workoutDraft").get();
+                if (!d.exists) { await checkDraftBanner(); return; }
+                const raw = d.data() || {};
+                if (!raw.exercises) return;
+                enterSessionFromDraft(raw);
+            });
+        }
+        const dismissB = document.getElementById("dismissDraftBtn");
+        if (dismissB) {
+            dismissB.addEventListener("click", () => {
+                draftBannerHidden = true;
+                if (draftResumeBanner) draftResumeBanner.classList.add("hidden");
+            });
+        }
         document.getElementById("loadReportBtn").addEventListener("click", loadReport);
         document.getElementById("saveWeightBtn").addEventListener("click", saveWeight);
         document.getElementById("saveGoalsBtn").addEventListener("click", saveGoals);
@@ -917,22 +1314,26 @@
             if (!shareLinkOutput.value) return;
             try {
                 await navigator.clipboard.writeText(shareLinkOutput.value);
-                workoutStatus.textContent = "Copied.";
+                if (logWorkoutStatus) logWorkoutStatus.textContent = "Copied.";
             } catch (e) {
-                workoutStatus.textContent = "Copy failed.";
+                if (logWorkoutStatus) logWorkoutStatus.textContent = "Copy failed.";
             }
         });
-        document.getElementById("reloadRecentBtn").addEventListener("click", loadRecentWorkouts);
+        document.getElementById("reloadListBtn").addEventListener("click", async () => {
+            await loadAllWorkouts();
+            await loadReport();
+        });
         document.getElementById("createGroupBtn").addEventListener("click", createGroup);
         document.getElementById("joinGroupBtn").addEventListener("click", joinGroup);
         document.getElementById("logoutBtn").addEventListener("click", logout);
         document.getElementById("logoutBtnMobile").addEventListener("click", logout);
 
-        document.getElementById("workoutDate").value = todayISO();
+        if (wdEl) wdEl.value = todayISO();
         document.getElementById("reportFrom").value = todayISO();
         document.getElementById("reportTo").value = todayISO();
+        const shareDayD = document.getElementById("shareDayDate");
+        if (shareDayD) shareDayD.value = todayISO();
         document.getElementById("weightDate").value = todayISO();
-        addExercise();
         updateStats();
         initMenus();
 
@@ -951,7 +1352,8 @@
                 await loadGoalsAndWeight(user.uid);
                 await loadGroups(user.uid);
                 await loadReport();
-                await loadRecentWorkouts();
+                await loadAllWorkouts();
+                await checkDraftBanner();
             });
         });
     })();
