@@ -1,45 +1,26 @@
-# Cloudflare Pages Deployment Script
-# Run this script to deploy to Cloudflare Pages
+# Cloudflare Pages — build (Vite) then deploy `dist/`
+# Project: ehsanmo-personal (perforated-panel-designer.pages.dev, ehsanmo.me)
 
-Write-Host "🚀 Deploying Perforated panel Designer to Cloudflare Pages..." -ForegroundColor Green
+Write-Host "Building and deploying to Cloudflare Pages..." -ForegroundColor Green
 
-# Check if wrangler is installed
 try {
-    $wranglerVersion = wrangler --version
-    Write-Host "✓ Wrangler found: $wranglerVersion" -ForegroundColor Green
+  $null = npx wrangler --version 2>&1
 } catch {
-    Write-Host "✗ Wrangler not found. Installing..." -ForegroundColor Red
-    npm install -g wrangler
+  Write-Host "Install deps: npm install" -ForegroundColor Red
+  exit 1
 }
 
-# Check authentication
-Write-Host "`nChecking authentication..." -ForegroundColor Yellow
-$authCheck = wrangler whoami 2>&1
-
+$authCheck = npx wrangler whoami 2>&1
 if ($LASTEXITCODE -ne 0) {
-    Write-Host "⚠ Not authenticated. Please run: wrangler login" -ForegroundColor Yellow
-    Write-Host "Or set CLOUDFLARE_API_TOKEN environment variable" -ForegroundColor Yellow
-    exit 1
+  Write-Host "Run: npx wrangler login" -ForegroundColor Yellow
+  exit 1
 }
 
-Write-Host "✓ Authenticated" -ForegroundColor Green
+Set-Location $PSScriptRoot
+npm run build
+if ($LASTEXITCODE -ne 0) { exit 1 }
 
-# Create project if it doesn't exist
-Write-Host "`nCreating/Updating Cloudflare Pages project..." -ForegroundColor Yellow
-try {
-    wrangler pages project create perforated-panel-designer --production-branch master 2>&1 | Out-Null
-    Write-Host "✓ Project ready" -ForegroundColor Green
-} catch {
-    Write-Host "ℹ Project may already exist, continuing..." -ForegroundColor Cyan
-}
-
-# Deploy
-Write-Host "`nDeploying to Cloudflare Pages..." -ForegroundColor Yellow
-wrangler pages deploy . --project-name=perforated-panel-designer
-
+npx wrangler pages deploy dist --project-name=ehsanmo-personal --commit-dirty=true
 if ($LASTEXITCODE -eq 0) {
-    Write-Host "`n✅ Deployment successful!" -ForegroundColor Green
-    Write-Host "Your app should be available at: https://perforated-panel-designer.pages.dev" -ForegroundColor Cyan
-} else {
-    Write-Host "`n✗ Deployment failed. Check errors above." -ForegroundColor Red
+  Write-Host "Done. Check Cloudflare dashboard for the preview URL." -ForegroundColor Cyan
 }
