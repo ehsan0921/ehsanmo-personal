@@ -51,7 +51,8 @@
                 <div class="flex flex-wrap gap-2">
                     <button id="openAddProductModalBtn" class="px-4 py-2 rounded bg-cyan-600 hover:bg-cyan-500 text-sm font-semibold">+ Add Product</button>
                     <button id="openUpdateModalBtn" class="px-4 py-2 rounded bg-indigo-600 hover:bg-indigo-500 text-sm font-semibold">Update Product</button>
-                    <button id="testAccessBtn" class="px-4 py-2 rounded bg-emerald-600 hover:bg-emerald-500 text-sm font-semibold">Test Firebase Access</button>
+                    <button id="seedDefaultsBtn" class="px-4 py-2 rounded bg-amber-600 hover:bg-amber-500 text-sm font-semibold">Seed Defaults</button>
+                    <button id="testAccessBtn" class="px-4 py-2 rounded bg-emerald-600 hover:bg-emerald-500 text-sm font-semibold">Test Access</button>
                 </div>
             </div>
 
@@ -97,17 +98,29 @@
                     <label class="block text-sm mb-1">Description</label>
                     <textarea id="productDescription" rows="3" class="w-full px-3 py-2 rounded bg-white border border-slate-300"></textarea>
                 </div>
-                <div class="md:col-span-2">
-                    <label class="block text-sm mb-1">File to upload</label>
-                    <input id="productFile" type="file" class="w-full px-3 py-2 rounded bg-white border border-slate-300">
+                <div class="md:col-span-2 flex items-center gap-2">
+                    <input id="productIsWebapp" type="checkbox">
+                    <label class="text-sm" for="productIsWebapp">This is a web app (no file upload)</label>
                 </div>
-                <div>
-                    <label class="block text-sm mb-1">Initial Version</label>
-                    <input id="productVersion" type="text" value="v1.0.0" class="w-full px-3 py-2 rounded bg-white border border-slate-300">
+                <div id="webappUrlField" class="md:col-span-2 hidden">
+                    <label class="block text-sm mb-1">App URL path</label>
+                    <input id="productUrl" type="text" placeholder="/Image-Panel-perforated-designer/" class="w-full px-3 py-2 rounded bg-white border border-slate-300">
                 </div>
-                <div>
-                    <label class="block text-sm mb-1">Version Notes (optional)</label>
-                    <input id="productVersionNotes" type="text" placeholder="Initial release" class="w-full px-3 py-2 rounded bg-white border border-slate-300">
+                <div id="downloadFields">
+                    <div class="md:col-span-2">
+                        <label class="block text-sm mb-1">File to upload</label>
+                        <input id="productFile" type="file" class="w-full px-3 py-2 rounded bg-white border border-slate-300">
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                        <div>
+                            <label class="block text-sm mb-1">Initial Version</label>
+                            <input id="productVersion" type="text" value="v1.0.0" class="w-full px-3 py-2 rounded bg-white border border-slate-300">
+                        </div>
+                        <div>
+                            <label class="block text-sm mb-1">Version Notes (optional)</label>
+                            <input id="productVersionNotes" type="text" placeholder="Initial release" class="w-full px-3 py-2 rounded bg-white border border-slate-300">
+                        </div>
+                    </div>
                 </div>
                 <div class="flex items-center gap-2">
                     <input id="productActive" type="checkbox" checked>
@@ -206,6 +219,7 @@
         const tbody = document.getElementById('productsTableBody');
         const createBtn = document.getElementById('createProductBtn');
         const testBtn = document.getElementById('testAccessBtn');
+        const seedDefaultsBtn = document.getElementById('seedDefaultsBtn');
         const createStatus = document.getElementById('createStatus');
         const addUpdateBtn = document.getElementById('addUpdateBtn');
         const updateStatus = document.getElementById('updateStatus');
@@ -220,6 +234,9 @@
         const closeEditModalBtn = document.getElementById('closeEditModalBtn');
         const saveEditBtn = document.getElementById('saveEditBtn');
         const editStatus = document.getElementById('editStatus');
+        const productIsWebapp = document.getElementById('productIsWebapp');
+        const webappUrlField = document.getElementById('webappUrlField');
+        const downloadFields = document.getElementById('downloadFields');
 
         function openModal(el) {
             if (!el) return;
@@ -229,6 +246,18 @@
         function closeModal(el) {
             if (!el) return;
             el.classList.remove('active');
+        }
+
+        if (productIsWebapp) {
+            productIsWebapp.addEventListener('change', () => {
+                if (productIsWebapp.checked) {
+                    webappUrlField.classList.remove('hidden');
+                    downloadFields.classList.add('hidden');
+                } else {
+                    webappUrlField.classList.add('hidden');
+                    downloadFields.classList.remove('hidden');
+                }
+            });
         }
 
         if (openAddProductModalBtn) openAddProductModalBtn.addEventListener('click', () => openModal(addProductModal));
@@ -287,46 +316,33 @@
                 const tr = document.createElement('tr');
                 tr.className = 'border-b border-slate-200';
                 const currentVersion = item.currentVersion || null;
+                const isWebapp = item.type === 'webapp';
+                const typeBadge = isWebapp
+                    ? '<span class="inline-block px-2 py-0.5 rounded bg-amber-100 text-amber-700 text-xs mr-1">Web App</span>'
+                    : '<span class="inline-block px-2 py-0.5 rounded bg-blue-100 text-blue-700 text-xs mr-1">Download</span>';
                 tr.innerHTML = `
                     <td class="py-2 pr-4">
-                        <div class="font-medium">${esc(item.title)}</div>
+                        <div class="font-medium">${esc(item.title)} ${typeBadge}</div>
                         <div class="text-xs text-slate-500">${esc(item.description || '')}</div>
                     </td>
                     <td class="py-2 pr-4">
-                        ${currentVersion ? `<span class="inline-block px-2 py-0.5 rounded bg-slate-100 text-slate-600 text-xs">${esc(currentVersion.version || '')}</span>` : '-'}
-                        <div class="text-xs text-slate-500">Versions: ${Array.isArray(item.versions) ? item.versions.length : (currentVersion ? 1 : 0)}</div>
+                        ${isWebapp
+                            ? `<span class="inline-block px-2 py-0.5 rounded bg-slate-100 text-slate-600 text-xs">${esc(item.url || '')}</span>`
+                            : (currentVersion ? `<span class="inline-block px-2 py-0.5 rounded bg-slate-100 text-slate-600 text-xs">${esc(currentVersion.version || '')}</span>` : '-')
+                        }
+                        ${!isWebapp ? `<div class="text-xs text-slate-500">Versions: ${Array.isArray(item.versions) ? item.versions.length : (currentVersion ? 1 : 0)}</div>` : ''}
                     </td>
-                    <td class="py-2 pr-4">${(item.downloadCount || 0).toLocaleString()}</td>
+                    <td class="py-2 pr-4">${isWebapp ? '-' : (item.downloadCount || 0).toLocaleString()}</td>
                     <td class="py-2 pr-4">${item.isActive === false ? 'No' : 'Yes'}</td>
                     <td class="py-2 pr-4">
                         <button data-id="${item.id}" class="edit px-2 py-1 bg-amber-600 hover:bg-amber-500 rounded text-xs mr-1">Edit</button>
-                        <button data-id="${item.id}" class="open-update px-2 py-1 bg-indigo-700 rounded text-xs mr-1">Update</button>
+                        ${!isWebapp ? `<button data-id="${item.id}" class="open-update px-2 py-1 bg-indigo-700 rounded text-xs mr-1">Update</button>` : ''}
                         <button data-id="${item.id}" data-active="${item.isActive === false ? '0' : '1'}" class="toggle px-2 py-1 bg-slate-200 hover:bg-slate-300 text-slate-800 rounded text-xs mr-1">${item.isActive === false ? 'Activate' : 'Deactivate'}</button>
                         <button data-id="${item.id}" class="delete px-2 py-1 bg-red-700 rounded text-xs">Delete</button>
                     </td>
                 `;
                 tbody.appendChild(tr);
             });
-
-            // Static tool: Perforated Panel Designer
-            const staticTr = document.createElement('tr');
-            staticTr.className = 'border-b border-slate-200';
-            staticTr.innerHTML = `
-                <td class="py-2 pr-4">
-                    <div class="font-medium">Perforated Panel Designer</div>
-                    <div class="text-xs text-slate-500">Upload an image, generate panel perforation, export PNG, CAD, and project settings.</div>
-                </td>
-                <td class="py-2 pr-4">
-                    <span class="inline-block px-2 py-0.5 rounded bg-slate-100 text-slate-600 text-xs">Web App</span>
-                    <div class="text-xs text-slate-500">Static tool</div>
-                </td>
-                <td class="py-2 pr-4">-</td>
-                <td class="py-2 pr-4">Yes</td>
-                <td class="py-2 pr-4">
-                    <a href="/Image-Panel-perforated-designer/" class="inline-block px-2 py-1 bg-cyan-700 rounded text-xs mr-1">Open Tool</a>
-                </td>
-            `;
-            tbody.appendChild(staticTr);
 
             tbody.querySelectorAll('button.open-update').forEach((btn) => {
                 btn.addEventListener('click', () => {
@@ -363,16 +379,18 @@
             tbody.querySelectorAll('button.delete').forEach((btn) => {
                 btn.addEventListener('click', async () => {
                     const id = btn.getAttribute('data-id');
-                    if (!confirm('Delete this product completely (web + storage)?')) return;
+                    if (!confirm('Delete this product?')) return;
                     const doc = await db.collection('products').doc(id).get();
                     const data = doc.exists ? doc.data() : null;
-                    const versions = (data && Array.isArray(data.versions)) ? data.versions : [];
-                    if (versions.length) {
-                        for (const v of versions) {
-                            await safeDeleteStoragePath(v.storagePath);
+                    if (data && data.type !== 'webapp') {
+                        const versions = (data && Array.isArray(data.versions)) ? data.versions : [];
+                        if (versions.length) {
+                            for (const v of versions) {
+                                await safeDeleteStoragePath(v.storagePath);
+                            }
+                        } else if (data && data.storagePath) {
+                            await safeDeleteStoragePath(data.storagePath);
                         }
-                    } else if (data && data.storagePath) {
-                        await safeDeleteStoragePath(data.storagePath);
                     }
                     await db.collection('products').doc(id).delete();
                     await loadProducts();
@@ -385,50 +403,79 @@
             const desc = document.getElementById('productDescription').value.trim();
             const buttonLabel = document.getElementById('productButtonLabel').value.trim() || 'Download';
             const active = document.getElementById('productActive').checked;
+            const isWebapp = document.getElementById('productIsWebapp').checked;
+            const url = document.getElementById('productUrl').value.trim();
             const fileInput = document.getElementById('productFile');
             const file = fileInput.files[0];
             const version = (document.getElementById('productVersion').value || 'v1.0.0').trim();
             const versionNotes = (document.getElementById('productVersionNotes').value || '').trim();
 
-            if (!title || !file) {
-                createStatus.textContent = 'Title and file are required.';
+            if (!title) {
+                createStatus.textContent = 'Title is required.';
                 return;
             }
-            createBtn.disabled = true;
-            createStatus.textContent = 'Uploading...';
-            try {
-                const safeName = Date.now() + '_' + file.name.replace(/\s+/g, '_');
-                const slug = slugify(title);
-                const ref = storage.ref().child(`EhsanMopersonal-website/products/${slug}/${version}/${safeName}`);
-                await ref.put(file);
-                const fileUrl = await ref.getDownloadURL();
-                const verObj = {
-                    version,
-                    notes: versionNotes,
-                    fileName: file.name,
-                    fileUrl,
-                    storagePath: ref.fullPath,
-                    createdAt: new Date().toISOString()
-                };
+            if (isWebapp && !url) {
+                createStatus.textContent = 'URL is required for web apps.';
+                return;
+            }
+            if (!isWebapp && !file) {
+                createStatus.textContent = 'File is required for download products.';
+                return;
+            }
 
-                await db.collection('products').add({
-                    title,
-                    description: desc,
-                    buttonLabel,
-                    isActive: active,
-                    slug,
-                    currentVersion: verObj,
-                    versions: [verObj],
-                    fileName: file.name, // legacy fallback
-                    fileUrl, // legacy fallback
-                    storagePath: ref.fullPath, // legacy fallback
-                    downloadCount: 0,
-                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                });
+            createBtn.disabled = true;
+            createStatus.textContent = isWebapp ? 'Creating...' : 'Uploading...';
+            try {
+                if (isWebapp) {
+                    await db.collection('products').add({
+                        title,
+                        description: desc,
+                        buttonLabel,
+                        isActive: active,
+                        type: 'webapp',
+                        url,
+                        downloadCount: 0,
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                } else {
+                    const safeName = Date.now() + '_' + file.name.replace(/\s+/g, '_');
+                    const slug = slugify(title);
+                    const ref = storage.ref().child(`EhsanMopersonal-website/products/${slug}/${version}/${safeName}`);
+                    await ref.put(file);
+                    const fileUrl = await ref.getDownloadURL();
+                    const verObj = {
+                        version,
+                        notes: versionNotes,
+                        fileName: file.name,
+                        fileUrl,
+                        storagePath: ref.fullPath,
+                        createdAt: new Date().toISOString()
+                    };
+
+                    await db.collection('products').add({
+                        title,
+                        description: desc,
+                        buttonLabel,
+                        isActive: active,
+                        type: 'download',
+                        slug,
+                        currentVersion: verObj,
+                        versions: [verObj],
+                        fileName: file.name,
+                        fileUrl,
+                        storagePath: ref.fullPath,
+                        downloadCount: 0,
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                }
                 createStatus.textContent = 'Product created.';
                 document.getElementById('productTitle').value = '';
                 document.getElementById('productDescription').value = '';
                 document.getElementById('productButtonLabel').value = '';
+                document.getElementById('productUrl').value = '';
+                document.getElementById('productIsWebapp').checked = false;
+                webappUrlField.classList.add('hidden');
+                downloadFields.classList.remove('hidden');
                 document.getElementById('productFile').value = '';
                 document.getElementById('productVersion').value = 'v1.0.0';
                 document.getElementById('productVersionNotes').value = '';
@@ -530,6 +577,50 @@
                 editStatus.textContent = 'Failed: ' + (e.message || 'unknown error');
             } finally {
                 saveEditBtn.disabled = false;
+            }
+        });
+
+        seedDefaultsBtn.addEventListener('click', async () => {
+            createStatus.textContent = 'Seeding default products...';
+            seedDefaultsBtn.disabled = true;
+            try {
+                const defaults = [
+                    {
+                        title: 'Perforated Panel Designer',
+                        description: 'Upload an image, generate panel perforation, export PNG, CAD, and project settings.',
+                        buttonLabel: 'Open',
+                        type: 'webapp',
+                        url: '/Image-Panel-perforated-designer/',
+                        isActive: true,
+                        downloadCount: 0
+                    },
+                    {
+                        title: 'Gym Records Tracker',
+                        description: 'Log sets, reps, and weight, session time, goals, body weight, reports, and share links.',
+                        buttonLabel: 'Open',
+                        type: 'webapp',
+                        url: '/gym-records/',
+                        isActive: true,
+                        downloadCount: 0
+                    }
+                ];
+                let created = 0;
+                for (const def of defaults) {
+                    const existing = await db.collection('products').where('type', '==', def.type).where('url', '==', def.url).limit(1).get();
+                    if (existing.empty) {
+                        await db.collection('products').add({
+                            ...def,
+                            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                        });
+                        created++;
+                    }
+                }
+                createStatus.textContent = `Seeded ${created} product(s).`;
+                await loadProducts();
+            } catch (e) {
+                createStatus.textContent = 'Seed failed: ' + (e.message || 'unknown error');
+            } finally {
+                seedDefaultsBtn.disabled = false;
             }
         });
 

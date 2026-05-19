@@ -29,7 +29,7 @@ export function HomePage() {
       const items: Product[] = [];
       snap.forEach((d) => items.push({ id: d.id, ...d.data() } as Product));
       const active = items
-        .filter((x) => x.isActive !== false && (x.currentVersion?.fileUrl || x.fileUrl))
+        .filter((x) => x.isActive !== false && (x.type === "webapp" ? x.url : (x.currentVersion?.fileUrl || x.fileUrl)))
         .sort((a, b) => {
           const ta = a.createdAt?.toMillis?.() ?? 0;
           const tb = b.createdAt?.toMillis?.() ?? 0;
@@ -141,42 +141,11 @@ export function HomePage() {
                 </a>
               </div>
               <div className="mt-8 grid grid-cols-1 gap-4 md:grid-cols-2">
-                <a
-                  href="/Image-Panel-perforated-designer/"
-                  className="group relative overflow-hidden rounded-2xl border border-zinc-800 bg-gradient-to-br from-zinc-900/90 to-zinc-950 p-6 transition duration-300 hover:-translate-y-0.5 hover:border-cyan-500/30 hover:shadow-lg hover:shadow-cyan-950/20"
-                >
-                  <div className="absolute -right-8 -top-8 h-32 w-32 rounded-full bg-cyan-500/10 blur-2xl transition group-hover:bg-cyan-500/20" />
-                  <h3 className="text-lg font-semibold text-zinc-50">Perforated Panel Designer</h3>
-                  <p className="mt-2 text-sm leading-relaxed text-zinc-400">
-                    Upload an image, generate panel perforation, export PNG, CAD, and project settings.
-                  </p>
-                  <div className="mt-4 inline-flex items-center text-sm font-semibold text-cyan-400">
-                    Open tool
-                    <span className="ml-1 transition group-hover:translate-x-0.5">→</span>
-                  </div>
-                </a>
-                <a
-                  href="/admin-main/"
-                  className="group relative overflow-hidden rounded-2xl border border-zinc-800 bg-gradient-to-br from-zinc-900/90 to-zinc-950 p-6 transition duration-300 hover:-translate-y-0.5 hover:border-amber-500/30 hover:shadow-lg hover:shadow-amber-950/20"
-                >
-                  <div className="absolute -right-8 -top-8 h-32 w-32 rounded-full bg-amber-500/10 blur-2xl transition group-hover:bg-amber-500/20" />
-                  <h3 className="text-lg font-semibold text-zinc-50">Admin Panel</h3>
-                  <p className="mt-2 text-sm leading-relaxed text-zinc-400">
-                    Manage products, versions, downloadable files, and monitor download counts.
-                  </p>
-                  <div className="mt-4 inline-flex items-center text-sm font-semibold text-amber-400">
-                    Open admin
-                    <span className="ml-1 transition group-hover:translate-x-0.5">→</span>
-                  </div>
-                </a>
-              </div>
-
-              <div className="mt-8 grid grid-cols-1 gap-4 md:grid-cols-2">
                 {products.map((item) => {
+                  const isWebapp = item.type === "webapp";
                   const currentVersion = item.currentVersion;
                   const dlUrl = currentVersion?.fileUrl || item.fileUrl;
-                  if (!dlUrl) return null;
-                  const btnLabel = item.buttonLabel || "Download";
+                  const btnLabel = item.buttonLabel || (isWebapp ? "Open" : "Download");
                   const dlVersion = currentVersion?.version;
                   return (
                     <div
@@ -188,20 +157,36 @@ export function HomePage() {
                         {item.description || "No description"}
                       </p>
                       <div className="mt-4 flex flex-wrap items-center gap-3">
-                        <button
-                          type="button"
-                          onClick={() => onDownload(item)}
-                          className="rounded-lg bg-cyan-600 py-2.5 text-sm font-semibold text-white transition hover:bg-cyan-500 px-4"
-                        >
-                          {btnLabel}
-                        </button>
+                        {isWebapp ? (
+                          <a
+                            href={item.url || "#"}
+                            className="rounded-lg bg-cyan-600 py-2.5 text-sm font-semibold text-white transition hover:bg-cyan-500 px-4"
+                          >
+                            {btnLabel}
+                          </a>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => onDownload(item)}
+                            className="rounded-lg bg-cyan-600 py-2.5 text-sm font-semibold text-white transition hover:bg-cyan-500 px-4"
+                          >
+                            {btnLabel}
+                          </button>
+                        )}
                         {dlVersion && (
                           <span className="inline-block rounded-full bg-zinc-800 px-2.5 py-1 text-xs text-zinc-400">
                             {dlVersion}
                           </span>
                         )}
+                        {isWebapp && (
+                          <span className="inline-block rounded-full bg-zinc-800 px-2.5 py-1 text-xs text-zinc-400">
+                            Web App
+                          </span>
+                        )}
                       </div>
-                      <div className="mt-2 text-sm text-zinc-500">Downloads: {(item.downloadCount || 0).toLocaleString()}</div>
+                      {!isWebapp && (
+                        <div className="mt-2 text-sm text-zinc-500">Downloads: {(item.downloadCount || 0).toLocaleString()}</div>
+                      )}
                     </div>
                   );
                 })}

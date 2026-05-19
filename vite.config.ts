@@ -14,6 +14,7 @@ export default defineConfig({
     tailwindcss(),
     viteStaticCopy({
       targets: [
+        { src: "gym-records", dest: "gym-records" },
         { src: "admin-main", dest: "." },
         { src: "Image-Panel-perforated-designer", dest: "Image-Panel-perforated-designer" },
         { src: "_redirects", dest: "." },

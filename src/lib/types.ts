@@ -4,6 +4,8 @@ export type Product = {
   id: string;
   title?: string;
   description?: string;
+  type?: "download" | "webapp";
+  url?: string;
   fileUrl?: string;
   fileName?: string;
   buttonLabel?: string;
