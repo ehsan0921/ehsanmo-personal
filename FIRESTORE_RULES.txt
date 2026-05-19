@@ -10,9 +10,11 @@ service cloud.firestore {
     }
 
     function isAdmin() {
-      return isSignedIn() &&
-             request.auth.token.email != null &&
-             lower(request.auth.token.email) == "ehsan0921@gmail.com";
+      return isSignedIn() && (
+        (request.auth.token.email != null &&
+         lower(request.auth.token.email) == "ehsan0921@gmail.com") ||
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true
+      );
     }
 
     match /users/{userId} {
