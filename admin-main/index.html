@@ -155,6 +155,34 @@
         </div>
     </div>
 
+    <div id="editProductModal" class="overlay">
+        <div class="card rounded-lg p-5 modal-card">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-lg font-semibold">Edit Product</h2>
+                <button id="closeEditModalBtn" class="px-3 py-1 rounded bg-slate-200 hover:bg-slate-300 text-sm text-slate-800">Close</button>
+            </div>
+            <input id="editProductId" type="hidden">
+            <div class="grid grid-cols-1 gap-4">
+                <div>
+                    <label class="block text-sm mb-1">Title</label>
+                    <input id="editProductTitle" type="text" class="w-full px-3 py-2 rounded bg-white border border-slate-300">
+                </div>
+                <div>
+                    <label class="block text-sm mb-1">Description</label>
+                    <textarea id="editProductDescription" rows="3" class="w-full px-3 py-2 rounded bg-white border border-slate-300"></textarea>
+                </div>
+                <div>
+                    <label class="block text-sm mb-1">Button Label</label>
+                    <input id="editProductButtonLabel" type="text" class="w-full px-3 py-2 rounded bg-white border border-slate-300">
+                </div>
+            </div>
+            <div class="mt-4 flex items-center gap-3">
+                <button id="saveEditBtn" class="px-4 py-2 rounded bg-amber-600 hover:bg-amber-500 text-sm font-semibold">Save Changes</button>
+                <span id="editStatus" class="text-sm text-slate-600"></span>
+            </div>
+        </div>
+    </div>
+
     <script>
     (function () {
         const SUPERADMIN_EMAIL = 'Ehsan0921@gmail.com';
@@ -184,10 +212,14 @@
         const updateProductIdSelect = document.getElementById('updateProductId');
         const addProductModal = document.getElementById('addProductModal');
         const updateProductModal = document.getElementById('updateProductModal');
+        const editProductModal = document.getElementById('editProductModal');
         const openAddProductModalBtn = document.getElementById('openAddProductModalBtn');
         const closeAddProductModalBtn = document.getElementById('closeAddProductModalBtn');
         const openUpdateModalBtn = document.getElementById('openUpdateModalBtn');
         const closeUpdateModalBtn = document.getElementById('closeUpdateModalBtn');
+        const closeEditModalBtn = document.getElementById('closeEditModalBtn');
+        const saveEditBtn = document.getElementById('saveEditBtn');
+        const editStatus = document.getElementById('editStatus');
 
         function openModal(el) {
             if (!el) return;
@@ -203,7 +235,8 @@
         if (closeAddProductModalBtn) closeAddProductModalBtn.addEventListener('click', () => closeModal(addProductModal));
         if (openUpdateModalBtn) openUpdateModalBtn.addEventListener('click', () => openModal(updateProductModal));
         if (closeUpdateModalBtn) closeUpdateModalBtn.addEventListener('click', () => closeModal(updateProductModal));
-        [addProductModal, updateProductModal].forEach((modal) => {
+        if (closeEditModalBtn) closeEditModalBtn.addEventListener('click', () => closeModal(editProductModal));
+        [addProductModal, updateProductModal, editProductModal].forEach((modal) => {
             if (!modal) return;
             modal.addEventListener('click', (e) => {
                 if (e.target === modal) closeModal(modal);
@@ -255,27 +288,66 @@
                 tr.className = 'border-b border-slate-200';
                 const currentVersion = item.currentVersion || null;
                 tr.innerHTML = `
-                    <td class="py-2 pr-4">${esc(item.title)}</td>
                     <td class="py-2 pr-4">
-                        ${currentVersion ? `${esc(currentVersion.version || '')} (${esc(currentVersion.fileName || '')})` : esc(item.fileName || '')}
+                        <div class="font-medium">${esc(item.title)}</div>
+                        <div class="text-xs text-slate-500">${esc(item.description || '')}</div>
+                    </td>
+                    <td class="py-2 pr-4">
+                        ${currentVersion ? `<span class="inline-block px-2 py-0.5 rounded bg-slate-100 text-slate-600 text-xs">${esc(currentVersion.version || '')}</span>` : '-'}
                         <div class="text-xs text-slate-500">Versions: ${Array.isArray(item.versions) ? item.versions.length : (currentVersion ? 1 : 0)}</div>
                     </td>
                     <td class="py-2 pr-4">${(item.downloadCount || 0).toLocaleString()}</td>
                     <td class="py-2 pr-4">${item.isActive === false ? 'No' : 'Yes'}</td>
                     <td class="py-2 pr-4">
-                        <button data-id="${item.id}" class="open-update px-2 py-1 bg-indigo-700 rounded text-xs mr-2">Update</button>
-                        <button data-id="${item.id}" data-active="${item.isActive === false ? '0' : '1'}" class="toggle px-2 py-1 bg-slate-200 hover:bg-slate-300 text-slate-800 rounded text-xs mr-2">${item.isActive === false ? 'Activate' : 'Deactivate'}</button>
-                        <button data-id="${item.id}" class="delete px-2 py-1 bg-red-700 rounded text-xs">Delete Product</button>
+                        <button data-id="${item.id}" class="edit px-2 py-1 bg-amber-600 hover:bg-amber-500 rounded text-xs mr-1">Edit</button>
+                        <button data-id="${item.id}" class="open-update px-2 py-1 bg-indigo-700 rounded text-xs mr-1">Update</button>
+                        <button data-id="${item.id}" data-active="${item.isActive === false ? '0' : '1'}" class="toggle px-2 py-1 bg-slate-200 hover:bg-slate-300 text-slate-800 rounded text-xs mr-1">${item.isActive === false ? 'Activate' : 'Deactivate'}</button>
+                        <button data-id="${item.id}" class="delete px-2 py-1 bg-red-700 rounded text-xs">Delete</button>
                     </td>
                 `;
                 tbody.appendChild(tr);
             });
+
+            // Static tool: Perforated Panel Designer
+            const staticTr = document.createElement('tr');
+            staticTr.className = 'border-b border-slate-200';
+            staticTr.innerHTML = `
+                <td class="py-2 pr-4">
+                    <div class="font-medium">Perforated Panel Designer</div>
+                    <div class="text-xs text-slate-500">Upload an image, generate panel perforation, export PNG, CAD, and project settings.</div>
+                </td>
+                <td class="py-2 pr-4">
+                    <span class="inline-block px-2 py-0.5 rounded bg-slate-100 text-slate-600 text-xs">Web App</span>
+                    <div class="text-xs text-slate-500">Static tool</div>
+                </td>
+                <td class="py-2 pr-4">-</td>
+                <td class="py-2 pr-4">Yes</td>
+                <td class="py-2 pr-4">
+                    <a href="/Image-Panel-perforated-designer/" class="inline-block px-2 py-1 bg-cyan-700 rounded text-xs mr-1">Open Tool</a>
+                </td>
+            `;
+            tbody.appendChild(staticTr);
 
             tbody.querySelectorAll('button.open-update').forEach((btn) => {
                 btn.addEventListener('click', () => {
                     const id = btn.getAttribute('data-id');
                     if (updateProductIdSelect) updateProductIdSelect.value = id;
                     openModal(updateProductModal);
+                });
+            });
+
+            tbody.querySelectorAll('button.edit').forEach((btn) => {
+                btn.addEventListener('click', async () => {
+                    const id = btn.getAttribute('data-id');
+                    const doc = await db.collection('products').doc(id).get();
+                    if (!doc.exists) return;
+                    const data = doc.data();
+                    document.getElementById('editProductId').value = id;
+                    document.getElementById('editProductTitle').value = data.title || '';
+                    document.getElementById('editProductDescription').value = data.description || '';
+                    document.getElementById('editProductButtonLabel').value = data.buttonLabel || 'Download';
+                    editStatus.textContent = '';
+                    openModal(editProductModal);
                 });
             });
 
@@ -430,6 +502,34 @@
                 updateStatus.textContent = 'Failed: ' + (e.message || 'unknown error');
             } finally {
                 addUpdateBtn.disabled = false;
+            }
+        });
+
+        saveEditBtn.addEventListener('click', async () => {
+            const id = document.getElementById('editProductId').value;
+            const title = document.getElementById('editProductTitle').value.trim();
+            const description = document.getElementById('editProductDescription').value.trim();
+            const buttonLabel = document.getElementById('editProductButtonLabel').value.trim() || 'Download';
+            if (!id) return;
+            if (!title) {
+                editStatus.textContent = 'Title is required.';
+                return;
+            }
+            saveEditBtn.disabled = true;
+            editStatus.textContent = 'Saving...';
+            try {
+                await db.collection('products').doc(id).update({
+                    title,
+                    description,
+                    buttonLabel
+                });
+                editStatus.textContent = 'Saved.';
+                closeModal(editProductModal);
+                await loadProducts();
+            } catch (e) {
+                editStatus.textContent = 'Failed: ' + (e.message || 'unknown error');
+            } finally {
+                saveEditBtn.disabled = false;
             }
         });
 

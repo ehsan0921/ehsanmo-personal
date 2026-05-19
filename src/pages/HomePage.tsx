@@ -156,16 +156,16 @@ export function HomePage() {
                   </div>
                 </a>
                 <a
-                  href="/gym-records/"
-                  className="group relative overflow-hidden rounded-2xl border border-zinc-800 bg-gradient-to-br from-zinc-900/90 to-zinc-950 p-6 transition duration-300 hover:-translate-y-0.5 hover:border-teal-500/30 hover:shadow-lg hover:shadow-teal-950/20"
+                  href="/admin-main/"
+                  className="group relative overflow-hidden rounded-2xl border border-zinc-800 bg-gradient-to-br from-zinc-900/90 to-zinc-950 p-6 transition duration-300 hover:-translate-y-0.5 hover:border-amber-500/30 hover:shadow-lg hover:shadow-amber-950/20"
                 >
-                  <div className="absolute -right-8 -top-8 h-32 w-32 rounded-full bg-teal-500/10 blur-2xl transition group-hover:bg-teal-500/20" />
-                  <h3 className="text-lg font-semibold text-zinc-50">Gym Records Tracker</h3>
+                  <div className="absolute -right-8 -top-8 h-32 w-32 rounded-full bg-amber-500/10 blur-2xl transition group-hover:bg-amber-500/20" />
+                  <h3 className="text-lg font-semibold text-zinc-50">Admin Panel</h3>
                   <p className="mt-2 text-sm leading-relaxed text-zinc-400">
-                    Log sets, reps, and weight, session time, goals, body weight, reports, and share links.
+                    Manage products, versions, downloadable files, and monitor download counts.
                   </p>
-                  <div className="mt-4 inline-flex items-center text-sm font-semibold text-teal-400">
-                    Open app
+                  <div className="mt-4 inline-flex items-center text-sm font-semibold text-amber-400">
+                    Open admin
                     <span className="ml-1 transition group-hover:translate-x-0.5">→</span>
                   </div>
                 </a>
@@ -177,7 +177,6 @@ export function HomePage() {
                   const dlUrl = currentVersion?.fileUrl || item.fileUrl;
                   if (!dlUrl) return null;
                   const btnLabel = item.buttonLabel || "Download";
-                  const dlName = currentVersion?.fileName || item.fileName;
                   const dlVersion = currentVersion?.version;
                   return (
                     <div
@@ -188,15 +187,20 @@ export function HomePage() {
                       <p className="mt-2 line-clamp-3 text-sm text-zinc-400">
                         {item.description || "No description"}
                       </p>
-                      <button
-                        type="button"
-                        onClick={() => onDownload(item)}
-                        className="mt-4 w-full rounded-lg bg-cyan-600 py-2.5 text-sm font-semibold text-white transition hover:bg-cyan-500 sm:w-auto sm:px-4"
-                      >
-                        {btnLabel}
-                        {dlName ? ` (${dlName})` : ""}
-                        {dlVersion ? ` · ${dlVersion}` : ""}
-                      </button>
+                      <div className="mt-4 flex flex-wrap items-center gap-3">
+                        <button
+                          type="button"
+                          onClick={() => onDownload(item)}
+                          className="rounded-lg bg-cyan-600 py-2.5 text-sm font-semibold text-white transition hover:bg-cyan-500 px-4"
+                        >
+                          {btnLabel}
+                        </button>
+                        {dlVersion && (
+                          <span className="inline-block rounded-full bg-zinc-800 px-2.5 py-1 text-xs text-zinc-400">
+                            {dlVersion}
+                          </span>
+                        )}
+                      </div>
                       <div className="mt-2 text-sm text-zinc-500">Downloads: {(item.downloadCount || 0).toLocaleString()}</div>
                     </div>
                   );
