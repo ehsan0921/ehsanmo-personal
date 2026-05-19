@@ -258,9 +258,23 @@
             measurementId: "G-347B8XCFLX"
         };
 
-        // Initialize Firebase
+        // Initialize Firebase (defensive: handles case where wrong app was initialized)
         if (typeof firebase !== 'undefined') {
-            firebase.initializeApp(firebaseConfig);
+            try {
+                if (firebase.apps.length > 0) {
+                    const existingApp = firebase.apps[0];
+                    const existingOptions = existingApp.options || {};
+                    if (existingOptions.projectId !== firebaseConfig.projectId) {
+                        console.warn('AdminPanel: Firebase was initialized with wrong project:', existingOptions.projectId, '- deleting and reinitializing');
+                        existingApp.delete();
+                    }
+                }
+                if (firebase.apps.length === 0) {
+                    firebase.initializeApp(firebaseConfig);
+                }
+            } catch (error) {
+                console.error('Firebase initialization error in adminpanel:', error);
+            }
         }
 
         // Get superadmin email from config

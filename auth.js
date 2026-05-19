@@ -15,7 +15,23 @@ class AuthManager {
         // Initialize Firebase (will be done via CDN in HTML)
         return new Promise((resolve) => {
             if (window.firebase) {
-                firebase.initializeApp(firebaseConfig);
+                try {
+                    // Check if already initialized with a different config
+                    if (firebase.apps.length > 0) {
+                        const existingApp = firebase.apps[0];
+                        const existingOptions = existingApp.options || {};
+                        if (existingOptions.projectId !== firebaseConfig.projectId) {
+                            console.warn('AuthManager: Firebase was initialized with wrong project:', existingOptions.projectId);
+                        }
+                    }
+                    // Only initialize if not already done
+                    if (firebase.apps.length === 0) {
+                        firebase.initializeApp(firebaseConfig);
+                    }
+                } catch (error) {
+                    console.error('Firebase initialization error in AuthManager:', error);
+                }
+                
                 this.auth = firebase.auth();
                 this.db = firebase.firestore();
                 

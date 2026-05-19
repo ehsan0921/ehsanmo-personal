@@ -4214,11 +4214,26 @@ OpenArea: ${document.getElementById('statArea').innerText}
         measurementId: "G-347B8XCFLX"
     };
     
-    // Initialize Firebase
+    // Initialize Firebase (defensive: handles case where wrong app was initialized)
     if (typeof firebase !== 'undefined') {
         try {
-            firebase.initializeApp(firebaseConfig);
-            console.log('Firebase initialized successfully');
+            // Check if already initialized with a different config
+            if (firebase.apps.length > 0) {
+                const existingApp = firebase.apps[0];
+                const existingOptions = existingApp.options || {};
+                // If projectId doesn't match, delete and reinitialize
+                if (existingOptions.projectId !== firebaseConfig.projectId) {
+                    console.warn('Firebase was initialized with wrong project:', existingOptions.projectId, '- deleting and reinitializing with', firebaseConfig.projectId);
+                    await existingApp.delete();
+                }
+            }
+            // Initialize if not already done (or after deletion)
+            if (firebase.apps.length === 0) {
+                firebase.initializeApp(firebaseConfig);
+                console.log('Firebase initialized successfully');
+            } else {
+                console.log('Firebase already initialized with correct project');
+            }
         } catch (error) {
             console.error('Firebase initialization error:', error);
         }

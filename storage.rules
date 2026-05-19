@@ -1,0 +1,18 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Original path style: EhsanMopersonal-website/products/...
+    match /EhsanMopersonal-website/products/{product}/{version}/{fileName} {
+      allow read, write, delete: if isAuthenticated();
+    }
+
+    // Simpler path style: products/... (used by admin upload)
+    match /products/{allPaths=**} {
+      allow read, write, delete: if isAuthenticated();
+    }
+  }
+}
