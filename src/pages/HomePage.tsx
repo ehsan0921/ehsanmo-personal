@@ -184,9 +184,7 @@ export function HomePage() {
                           </span>
                         )}
                       </div>
-                      {!isWebapp && (
-                        <div className="mt-2 text-sm text-zinc-500">Downloads: {(item.downloadCount || 0).toLocaleString()}</div>
-                      )}
+                      {/* Downloads visible only in admin panel */}
                     </div>
                   );
                 })}
