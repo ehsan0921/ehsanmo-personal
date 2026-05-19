@@ -1,53 +1,97 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Helper function to check if user is admin
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
     function isAdmin() {
-      return request.auth != null && 
-             exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
-             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true;
+      return isSignedIn() &&
+             request.auth.token.email != null &&
+             lower(request.auth.token.email) == "ehsan0921@gmail.com";
     }
-    
-    // Users collection - users can create and update their own document
+
     match /users/{userId} {
-      // Allow read if user is reading their own data or is an admin
-      allow read: if request.auth != null && (
-        request.auth.uid == userId || isAdmin()
-      );
-      
-      // Allow create/update if user is creating/updating their own document
-      allow create: if request.auth != null && request.auth.uid == userId;
-      allow update: if request.auth != null && request.auth.uid == userId;
-      allow delete: if request.auth != null && request.auth.uid == userId;
+      allow read: if isOwner(userId) || isAdmin();
+      allow create, update, delete: if isOwner(userId);
+
+      // Gym data belongs to each user only
+      match /workouts/{workoutId} {
+        allow read, write: if isOwner(userId);
+      }
+      match /weights/{weightId} {
+        allow read, write: if isOwner(userId);
+      }
+      match /meta/{metaId} {
+        allow read, write: if isOwner(userId);
+      }
+      match /workoutTemplates/{templateId} {
+        allow read, write: if isOwner(userId);
+      }
     }
-    
-    // Allow admins to list all users
+
     match /users {
       allow list: if isAdmin();
     }
-    
-    // Login logs - any authenticated user can write, admins can read all
-    match /loginLogs/{logId} {
-      allow read: if request.auth != null && (
-        request.auth.uid == resource.data.userId || isAdmin()
-      );
-      allow write: if request.auth != null;
+
+    // Public products visible on landing page, write restricted to admin
+    match /products/{productId} {
+      allow read: if true;
+      allow write: if isAdmin();
     }
-    
-    // Allow admins to list all login logs
+
+    // Share documents are intentionally public read-only by link ID
+    match /gymShares/{shareId} {
+      allow read: if true;
+      allow create: if isSignedIn();
+      allow update, delete: if isSignedIn() && request.auth.uid == resource.data.ownerUid;
+    }
+
+    // Groups: members can read; signed-in users can create; members can append logs
+    match /groups/{groupId} {
+      allow create: if isSignedIn();
+      allow read: if isSignedIn() && (
+        resource.data.ownerUid == request.auth.uid ||
+        request.auth.uid in resource.data.memberUids
+      );
+      allow update: if isSignedIn() && (
+        resource.data.ownerUid == request.auth.uid ||
+        request.auth.uid in resource.data.memberUids
+      );
+      allow delete: if isSignedIn() && resource.data.ownerUid == request.auth.uid;
+
+      match /logs/{logId} {
+        allow read: if isSignedIn() && (
+          get(/databases/$(database)/documents/groups/$(groupId)).data.ownerUid == request.auth.uid ||
+          request.auth.uid in get(/databases/$(database)/documents/groups/$(groupId)).data.memberUids
+        );
+        allow create: if isSignedIn() && (
+          get(/databases/$(database)/documents/groups/$(groupId)).data.ownerUid == request.auth.uid ||
+          request.auth.uid in get(/databases/$(database)/documents/groups/$(groupId)).data.memberUids
+        );
+        allow update, delete: if false;
+      }
+    }
+
+    // Existing logs and downloads
+    match /loginLogs/{logId} {
+      allow read: if isSignedIn() && (request.auth.uid == resource.data.userId || isAdmin());
+      allow write: if isSignedIn();
+    }
+
     match /loginLogs {
       allow list: if isAdmin();
     }
-    
-    // Downloads - any authenticated user can write, admins can read all
+
     match /downloads/{downloadId} {
-      allow read: if request.auth != null && (
-        request.auth.uid == resource.data.userId || isAdmin()
-      );
-      allow write: if request.auth != null;
+      allow read: if isSignedIn() && (request.auth.uid == resource.data.userId || isAdmin());
+      allow write: if isSignedIn();
     }
-    
-    // Allow admins to list all downloads
+
     match /downloads {
       allow list: if isAdmin();
     }

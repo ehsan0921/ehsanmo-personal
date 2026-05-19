@@ -1,1 +1,4 @@
-/adminpanel /adminpanel/ 200
+/admin-main /admin-main/ 301
+/adminpanel /admin-main/ 301
+/adminpanel/ /admin-main/ 301
+/gym-records /gym-records/ 301
