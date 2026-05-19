@@ -336,7 +336,7 @@
                     fileName: file.name,
                     fileUrl,
                     storagePath: ref.fullPath,
-                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                    createdAt: new Date().toISOString()
                 };
 
                 await db.collection('products').add({
@@ -400,7 +400,7 @@
                     fileName: file.name,
                     fileUrl,
                     storagePath: fileRef.fullPath,
-                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                    createdAt: new Date().toISOString()
                 };
 
                 const prevVersions = Array.isArray(p.versions) ? p.versions : (p.currentVersion ? [p.currentVersion] : []);
