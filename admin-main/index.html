@@ -443,6 +443,23 @@
                     throw new Error('Logged in, but not superadmin.');
                 }
 
+                // Ensure user document exists with isAdmin=true
+                const userRef = db.collection('users').doc(user.uid);
+                const userDoc = await userRef.get();
+                if (!userDoc.exists) {
+                    await userRef.set({
+                        email: user.email,
+                        displayName: user.displayName || '',
+                        photoURL: user.photoURL || '',
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                        lastLogin: firebase.firestore.FieldValue.serverTimestamp(),
+                        isAdmin: true,
+                        downloadCount: 0
+                    });
+                } else if (!userDoc.data().isAdmin) {
+                    await userRef.update({ isAdmin: true });
+                }
+
                 // Firestore read test
                 try {
                     await db.collection('products').limit(1).get();
