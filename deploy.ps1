@@ -20,7 +20,7 @@ Set-Location $PSScriptRoot
 npm run build
 if ($LASTEXITCODE -ne 0) { exit 1 }
 
-npx wrangler pages deploy dist --project-name=ehsanmo-personal --commit-dirty=true
+npx wrangler pages deploy dist --project-name=ehsanmo-project --commit-dirty=true
 if ($LASTEXITCODE -eq 0) {
   Write-Host "Done. Check Cloudflare dashboard for the preview URL." -ForegroundColor Cyan
 }
