@@ -160,6 +160,8 @@ export function HomePage() {
                         {isWebapp ? (
                           <a
                             href={item.url || "#"}
+                            target={item.url?.startsWith("http") ? "_blank" : undefined}
+                            rel={item.url?.startsWith("http") ? "noopener noreferrer" : undefined}
                             className="rounded-lg bg-cyan-600 py-2.5 text-sm font-semibold text-white transition hover:bg-cyan-500 px-4"
                           >
                             {btnLabel}
