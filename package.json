@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "deploy": "npm run build && wrangler pages deploy dist --project-name=ehsanmo-personal --commit-dirty=true"
+    "deploy": "npm run build && wrangler pages deploy dist --project-name=ehsanmo-project --commit-dirty=true"
   },
   "dependencies": {
     "firebase": "^11.6.0",

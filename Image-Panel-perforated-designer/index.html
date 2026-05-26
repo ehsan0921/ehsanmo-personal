@@ -560,7 +560,7 @@ if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
     <!-- Admin Config - Load before main script (for superadmin email) -->
-    <script src="/admin-config.js"></script>
+    <script src="/admin-config.js?v=2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -1449,16 +1449,28 @@ if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
 
             <!-- Right Side: Actions & Auth -->
             <div class="flex items-center gap-3 ml-auto">
+                <!-- Run Update Pattern -->
+                <button type="button" id="runUpdateBtn" class="nav-btn nav-btn-primary" title="Run update pattern (or press Enter)">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    Run Update Pattern
+                </button>
+
                 <!-- Upload Photo -->
-                <button type="button" onclick="document.getElementById('fileInput').click()" class="nav-btn nav-btn-primary" title="Upload image">
+                <button type="button" onclick="document.getElementById('fileInput').click()" class="nav-btn nav-btn-secondary" title="Upload image">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
                     Upload Photo
                 </button>
 
                 <!-- View raw photo (input image only) -->
-                <button type="button" id="viewRawPhotoBtn" onclick="window.openRawPhotoModal && window.openRawPhotoModal()" class="nav-btn nav-btn-secondary" title="View uploaded image before pattern">
+                <button type="button" id="viewRawPhotoBtn" onclick="window.openRawPhotoModal && window.openRawPhotoModal()" class="nav-btn nav-btn-secondary" title="View uploaded image before pattern" style="display:none;">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
                     View raw photo
+                </button>
+
+                <!-- Remove Image -->
+                <button type="button" id="removeImageBtn" onclick="window.removeImage && window.removeImage()" class="nav-btn nav-btn-secondary" title="Remove uploaded image" style="display:none;">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                    Remove Image
                 </button>
                 
                 <!-- Import Settings -->
@@ -1808,7 +1820,7 @@ if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
         <h2 style="margin:0; font-size:1.2rem;">Design Controls</h2>
     </div>
 
-    <div class="control-group sub-control-panel">
+    <div class="control-group sub-control-panel" id="imageFitPanel">
         <label style="margin-bottom:8px">Image Fit &amp; Placement</label>
         <select id="imgFitMode" style="margin-bottom:8px">
             <option value="stretch">Stretch to Fit (Default)</option>
@@ -1833,6 +1845,38 @@ if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
                 </div>
             </div>
         </div>
+    </div>
+
+    <div class="control-group sub-control-panel" id="patternSourcePanel">
+        <label style="font-size:0.75rem; color:#64748b; margin-bottom:5px;">Pattern Source</label>
+        <select id="patternSource" style="margin-bottom:8px">
+            <option value="uniform">Uniform (average size)</option>
+            <option value="gradient1d">Gradient 1-Direction</option>
+            <option value="gradient2d">Gradient 2-Direction</option>
+            <option value="radial">Gradient from Center</option>
+        </select>
+        <div id="gradient1dControls" style="display:none;">
+            <label style="font-size:0.75rem; color:#64748b; margin-bottom:5px;">Direction</label>
+            <select id="gradient1dDir">
+                <option value="leftRight">Left to Right</option>
+                <option value="rightLeft">Right to Left</option>
+                <option value="topBottom">Top to Bottom</option>
+                <option value="bottomTop">Bottom to Top</option>
+            </select>
+        </div>
+        <div id="gradient2dControls" style="display:none;">
+            <label style="font-size:0.75rem; color:#64748b; margin-bottom:5px;">Origin Corner</label>
+            <select id="gradient2dDir">
+                <option value="topLeft">Top-Left</option>
+                <option value="topRight">Top-Right</option>
+                <option value="bottomLeft">Bottom-Left</option>
+                <option value="bottomRight">Bottom-Right</option>
+            </select>
+        </div>
+        <label class="checkbox-row" style="margin-top:8px;">
+            <input type="checkbox" id="gradientReverse">
+            <span>Reverse (small first)</span>
+        </label>
     </div>
 
     <h2>Global Geometry (mm)</h2>
@@ -1903,22 +1947,43 @@ if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
 
     <h2>Perforation Specs (mm)</h2>
     <div class="control-group">
-        <div class="row" style="align-items:flex-end;">
-            <div>
-                <label>Min Hole Ø</label>
-                <input type="number" id="minHole" value="2">
-            </div>
-            <div>
-                <label>Max Hole Ø</label>
-                <input type="number" id="maxHole" value="18">
-            </div>
-            <div style="display:flex; flex-direction:column; gap:4px; margin-bottom:0;">
-                <label style="font-size:0.75rem; color:#64748b; margin:0;">Both</label>
-                <div style="display:flex; gap:4px;">
-                    <button type="button" id="holeSizeDecBtn" title="Decrease both" style="width:36px; height:32px; padding:0; border:1px solid #e2e8f0; border-radius:4px; background:#f8fafc; font-size:1.2rem; line-height:1; cursor:pointer;">−</button>
-                    <button type="button" id="holeSizeIncBtn" title="Increase both" style="width:36px; height:32px; padding:0; border:1px solid #e2e8f0; border-radius:4px; background:#f8fafc; font-size:1.2rem; line-height:1; cursor:pointer;">+</button>
+        <!-- Uniform mode: single hole size -->
+        <div id="uniformHoleSizeContainer" style="display:none;">
+            <label>Hole Size Ø</label>
+            <input type="number" id="uniformHoleSize" value="10">
+        </div>
+        <!-- Gradient/image mode: min/max hole size range -->
+        <div id="minMaxHoleContainer">
+            <div class="row" style="align-items:flex-end;">
+                <div>
+                    <label>Min Hole Ø</label>
+                    <input type="number" id="minHole" value="2">
+                </div>
+                <div>
+                    <label>Max Hole Ø</label>
+                    <input type="number" id="maxHole" value="18">
+                </div>
+                <div style="display:flex; flex-direction:column; gap:4px; margin-bottom:0;">
+                    <label style="font-size:0.75rem; color:#64748b; margin:0;">Both</label>
+                    <div style="display:flex; gap:4px;">
+                        <button type="button" id="holeSizeDecBtn" title="Decrease both" style="width:36px; height:32px; padding:0; border:1px solid #e2e8f0; border-radius:4px; background:#f8fafc; font-size:1.2rem; line-height:1; cursor:pointer;">−</button>
+                        <button type="button" id="holeSizeIncBtn" title="Increase both" style="width:36px; height:32px; padding:0; border:1px solid #e2e8f0; border-radius:4px; background:#f8fafc; font-size:1.2rem; line-height:1; cursor:pointer;">+</button>
+                    </div>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <div class="control-group">
+        <label class="checkbox-row">
+            <input type="checkbox" id="staggered">
+            <span>Staggered (brick pattern)</span>
+        </label>
+        <div id="staggerModeContainer" style="display:none; margin-top:8px; padding-left:24px;">
+            <label style="font-size:0.75rem; color:#64748b; margin-bottom:4px;">Stagger Type</label>
+            <select id="staggerMode">
+                <option value="equalDistance">Equal distance (C-C)</option>
+            </select>
         </div>
     </div>
 
@@ -2114,6 +2179,14 @@ if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
     let sourceImage = null;
     let imageAspectRatio = 0;
     
+    // Pattern mode state
+    let staggered = false;
+    let staggerMode = 'equalDistance';
+    let patternSource = 'uniform';
+    let gradient1dDir = 'leftRight';
+    let gradient2dDir = 'topLeft';
+    let gradientReverse = false;
+    
     // Unique ID for current generation
     let currentFileID = null;
 
@@ -2134,6 +2207,7 @@ if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
     const fileInput = document.getElementById('fileInput');
     const importFile = document.getElementById('importFile');
     const generateBtn = document.getElementById('generateBtn');
+    const runUpdateBtn = document.getElementById('runUpdateBtn');
     
     const downloadImgBtn = document.getElementById('downloadImgBtn');
     const downloadTxtBtn = document.getElementById('downloadTxtBtn');
@@ -2184,6 +2258,7 @@ if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
         edge: document.getElementById('edgeGap'),
         min: document.getElementById('minHole'),
         max: document.getElementById('maxHole'),
+        uniformHoleSize: document.getElementById('uniformHoleSize'),
         invert: document.getElementById('invertColors'),
         splitW: document.getElementById('splitW'),
         splitH: document.getElementById('splitH'),
@@ -2196,6 +2271,23 @@ if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
         imgPanX: document.getElementById('imgPanX'),
         imgPanY: document.getElementById('imgPanY'),
     };
+    
+    // Pattern mode elements
+    const patternSourceSelect = document.getElementById('patternSource');
+    const gradient1dControls = document.getElementById('gradient1dControls');
+    const gradient2dControls = document.getElementById('gradient2dControls');
+    const gradient1dDirSelect = document.getElementById('gradient1dDir');
+    const gradient2dDirSelect = document.getElementById('gradient2dDir');
+    const gradientReverseCheckbox = document.getElementById('gradientReverse');
+    const staggeredCheckbox = document.getElementById('staggered');
+    const staggerModeSelect = document.getElementById('staggerMode');
+    const imageFitPanel = document.getElementById('imageFitPanel');
+    const patternSourcePanel = document.getElementById('patternSourcePanel');
+    const removeImageBtn = document.getElementById('removeImageBtn');
+    const uniformHoleSizeContainer = document.getElementById('uniformHoleSizeContainer');
+    const minMaxHoleContainer = document.getElementById('minMaxHoleContainer');
+    const viewRawPhotoBtn = document.getElementById('viewRawPhotoBtn');
+    const staggerModeContainer = document.getElementById('staggerModeContainer');
     
     // Holes data cache for DXF export
     let generatedHoles = []; 
@@ -2227,6 +2319,7 @@ if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
             edge: inputs.edge.value,
             min: inputs.min.value,
             max: inputs.max.value,
+            uniformHoleSize: inputs.uniformHoleSize ? inputs.uniformHoleSize.value : '10',
             invert: inputs.invert.checked,
             splitW: inputs.splitW.value,
             splitH: inputs.splitH.value,
@@ -2247,7 +2340,13 @@ if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
             includeFooterStatsInDownload: includeFooterStatsInDownload,
             swapHolePanelColors: swapHolePanelColors,
             holeColor: holeColorInput && holeColorInput.value ? holeColorInput.value : '#000000',
-            panelColor: panelColorInput && panelColorInput.value ? panelColorInput.value : '#ffffff'
+            panelColor: panelColorInput && panelColorInput.value ? panelColorInput.value : '#ffffff',
+            staggered: staggered,
+            staggerMode: staggerMode,
+            patternSource: patternSource,
+            gradient1dDir: gradient1dDir,
+            gradient2dDir: gradient2dDir,
+            gradientReverse: gradientReverse
         };
         localStorage.setItem('holemapper_settings_v3', JSON.stringify(settings));
     }
@@ -2264,6 +2363,7 @@ if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
                 if(s.edge) inputs.edge.value = s.edge;
                 if(s.min) inputs.min.value = s.min;
                 if(s.max) inputs.max.value = s.max;
+                if(s.uniformHoleSize && inputs.uniformHoleSize) inputs.uniformHoleSize.value = s.uniformHoleSize;
                 if(s.invert !== undefined) inputs.invert.checked = s.invert;
                 if(s.splitW !== undefined) inputs.splitW.value = s.splitW;
                 if(s.splitH !== undefined) inputs.splitH.value = s.splitH;
@@ -2324,6 +2424,32 @@ if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
                         swapColorsToggle.classList.toggle('active', swapHolePanelColors);
                     }
                 }
+                if(s.staggered !== undefined) {
+                    staggered = s.staggered;
+                    if (staggeredCheckbox) staggeredCheckbox.checked = staggered;
+                    if (staggerModeContainer) staggerModeContainer.style.display = staggered ? 'block' : 'none';
+                }
+                if(s.staggerMode !== undefined) {
+                    staggerMode = s.staggerMode;
+                    if (staggerModeSelect) staggerModeSelect.value = staggerMode;
+                }
+                if(s.patternSource !== undefined) {
+                    patternSource = s.patternSource;
+                    if (patternSourceSelect) patternSourceSelect.value = patternSource;
+                }
+                if(s.gradient1dDir !== undefined) {
+                    gradient1dDir = s.gradient1dDir;
+                    if (gradient1dDirSelect) gradient1dDirSelect.value = gradient1dDir;
+                }
+                if(s.gradient2dDir !== undefined) {
+                    gradient2dDir = s.gradient2dDir;
+                    if (gradient2dDirSelect) gradient2dDirSelect.value = gradient2dDir;
+                }
+                if(s.gradientReverse !== undefined) {
+                    gradientReverse = s.gradientReverse;
+                    if (gradientReverseCheckbox) gradientReverseCheckbox.checked = gradientReverse;
+                }
+                updateImageDependentUI();
                 if (typeof ensureValidGap === 'function') ensureValidGap();
                 toggleImgControls();
             } catch(e) { console.error(e); }
@@ -2350,6 +2476,7 @@ if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
         if (inputs.edge) inputs.edge.value = inputs.edge.defaultValue;
         if (inputs.min) inputs.min.value = inputs.min.defaultValue;
         if (inputs.max) inputs.max.value = inputs.max.defaultValue;
+        if (inputs.uniformHoleSize) inputs.uniformHoleSize.value = inputs.uniformHoleSize.defaultValue || '10';
         if (inputs.splitW) inputs.splitW.value = inputs.splitW.defaultValue;
         if (inputs.splitH) inputs.splitH.value = inputs.splitH.defaultValue;
         if (inputs.mT) inputs.mT.value = inputs.mT.defaultValue;
@@ -2415,6 +2542,22 @@ if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
             swapColorsToggle.classList.remove('active');
         }
 
+        // Reset pattern mode
+        staggered = false;
+        if (staggeredCheckbox) staggeredCheckbox.checked = false;
+        staggerMode = 'equalDistance';
+        if (staggerModeSelect) staggerModeSelect.value = 'equalDistance';
+        if (staggerModeContainer) staggerModeContainer.style.display = 'none';
+        patternSource = 'uniform';
+        if (patternSourceSelect) patternSourceSelect.value = 'uniform';
+        gradient1dDir = 'leftRight';
+        if (gradient1dDirSelect) gradient1dDirSelect.value = 'leftRight';
+        gradient2dDir = 'topLeft';
+        if (gradient2dDirSelect) gradient2dDirSelect.value = 'topLeft';
+        gradientReverse = false;
+        if (gradientReverseCheckbox) gradientReverseCheckbox.checked = false;
+        updateImageDependentUI();
+
         // Reset alignment to center
         panelAlignment = 'center';
         if (alignmentButtons && alignmentButtons.length > 0) {
@@ -2451,10 +2594,8 @@ if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
         // Re-apply image control visibility
         toggleImgControls();
 
-        // Re-generate pattern if an image is already loaded
-        if (sourceImage) {
-            generatePerforation();
-        }
+        // Re-generate pattern
+        generatePerforation();
     }
     
     function toggleImgControls() {
@@ -2463,6 +2604,45 @@ if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
         } else {
             imgPlacementControls.style.display = 'none';
         }
+    }
+    
+    function updateImageDependentUI() {
+        const hasImage = !!sourceImage;
+        
+        // Navbar buttons
+        if (viewRawPhotoBtn) viewRawPhotoBtn.style.display = hasImage ? 'inline-flex' : 'none';
+        if (removeImageBtn) removeImageBtn.style.display = hasImage ? 'inline-flex' : 'none';
+        
+        // Sidebar panels
+        if (imageFitPanel) imageFitPanel.style.display = hasImage ? 'block' : 'none';
+        if (patternSourcePanel) patternSourcePanel.style.display = hasImage ? 'none' : 'block';
+        
+        // Gradient sub-controls
+        if (gradient1dControls) {
+            gradient1dControls.style.display = (!hasImage && patternSource === 'gradient1d') ? 'block' : 'none';
+        }
+        if (gradient2dControls) {
+            gradient2dControls.style.display = (!hasImage && patternSource === 'gradient2d') ? 'block' : 'none';
+        }
+        
+        // Hole size inputs: single for uniform, min/max for gradient/image
+        const isUniform = (!hasImage && patternSource === 'uniform');
+        if (uniformHoleSizeContainer) uniformHoleSizeContainer.style.display = isUniform ? 'block' : 'none';
+        if (minMaxHoleContainer) minMaxHoleContainer.style.display = isUniform ? 'none' : 'block';
+    }
+    
+    function handlePatternSourceChange() {
+        patternSource = patternSourceSelect.value;
+        
+        // Sync uniform hole size to average of current min/max when switching TO uniform
+        if (patternSource === 'uniform' && inputs.uniformHoleSize) {
+            const minVal = parseFloat(inputs.min.value) || 2;
+            const maxVal = parseFloat(inputs.max.value) || 18;
+            inputs.uniformHoleSize.value = ((minVal + maxVal) / 2).toFixed(1);
+        }
+        
+        updateImageDependentUI();
+        saveSettings();
     }
     
     function generateUniqueID() {
@@ -2568,7 +2748,12 @@ if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
 
     // Initialize
     loadSettings();
+    updateImageDependentUI();
+    const hasSharedDesign = new URLSearchParams(window.location.search).has('design');
     loadSharedDesign();
+    if (!hasSharedDesign) {
+        generatePerforation();
+    }
     // Prevent browser from autofilling project name; only our stored value (loadSettings) should fill it
     if (projectNameInput) {
         projectNameInput.setAttribute('autocomplete', 'off');
@@ -2591,6 +2776,21 @@ if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
     if (generateBtn) {
         generateBtn.addEventListener('click', generatePerforation);
     }
+    if (runUpdateBtn) {
+        runUpdateBtn.addEventListener('click', generatePerforation);
+    }
+    
+    // Global Enter key triggers pattern update
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !e.ctrlKey && !e.metaKey && !e.altKey && !e.shiftKey) {
+            // Don't trigger if a modal is open
+            const isModalOpen = document.querySelector('.modal.active');
+            if (!isModalOpen) {
+                e.preventDefault();
+                generatePerforation();
+            }
+        }
+    });
     
     // Download buttons - these are now in navbar dropdown with onclick handlers
     // Event listeners are optional since onclick is already set
@@ -2611,7 +2811,6 @@ if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
     imgFitMode.addEventListener('change', () => {
         toggleImgControls();
         saveSettings();
-        generatePerforation(); // Immediate redraw on mode change
     });
     
     // Canvas Pan/Zoom Interaction
@@ -2632,7 +2831,6 @@ if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
                 btn.classList.add('active');
                 panelAlignment = btn.dataset.align;
                 saveSettings();
-                if (sourceImage) generatePerforation();
             });
         });
     }
@@ -2646,7 +2844,6 @@ if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
                 percentageSizeContainer.style.display = showPercentage ? 'block' : 'none';
             }
             saveSettings();
-            if (sourceImage) generatePerforation();
         });
     }
     
@@ -2687,7 +2884,6 @@ if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
             swapHolePanelColors = !swapHolePanelColors;
             swapColorsToggle.classList.toggle('active', swapHolePanelColors);
             saveSettings();
-            if (sourceImage) generatePerforation();
         });
     }
     
@@ -2697,7 +2893,53 @@ if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
             percentageSize = parseInt(e.target.value);
             percentageSizeValue.textContent = percentageSize + '%';
             saveSettings();
-            if (sourceImage && showPercentage) generatePerforation();
+        });
+    }
+    
+    // Pattern mode toggles
+    if (staggeredCheckbox) {
+        staggeredCheckbox.addEventListener('change', () => {
+            staggered = staggeredCheckbox.checked;
+            if (staggerModeContainer) {
+                staggerModeContainer.style.display = staggered ? 'block' : 'none';
+            }
+            saveSettings();
+        });
+    }
+    if (staggerModeSelect) {
+        staggerModeSelect.addEventListener('change', () => {
+            staggerMode = staggerModeSelect.value;
+            saveSettings();
+        });
+    }
+    if (patternSourceSelect) {
+        patternSourceSelect.addEventListener('change', handlePatternSourceChange);
+    }
+    if (inputs.uniformHoleSize) {
+        inputs.uniformHoleSize.addEventListener('input', () => {
+            const val = parseFloat(inputs.uniformHoleSize.value) || 10;
+            inputs.min.value = val;
+            inputs.max.value = val;
+            ensureValidGap();
+            saveSettings();
+        });
+    }
+    if (gradient1dDirSelect) {
+        gradient1dDirSelect.addEventListener('change', () => {
+            gradient1dDir = gradient1dDirSelect.value;
+            saveSettings();
+        });
+    }
+    if (gradient2dDirSelect) {
+        gradient2dDirSelect.addEventListener('change', () => {
+            gradient2dDir = gradient2dDirSelect.value;
+            saveSettings();
+        });
+    }
+    if (gradientReverseCheckbox) {
+        gradientReverseCheckbox.addEventListener('change', () => {
+            gradientReverse = gradientReverseCheckbox.checked;
+            saveSettings();
         });
     }
     
@@ -2829,7 +3071,6 @@ if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
                 inputs.mL.value = val;
                 inputs.mR.value = val;
                 saveSettings();
-                setTimeout(generatePerforation, 10);
             }
         });
     }
@@ -2853,6 +3094,15 @@ if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
     const holeSizeStep = 1;
     if (holeSizeDecBtn) {
         holeSizeDecBtn.addEventListener('click', () => {
+            if (!sourceImage && patternSource === 'uniform' && inputs.uniformHoleSize) {
+                let val = parseFloat(inputs.uniformHoleSize.value) || 10;
+                val = Math.max(0.5, val - holeSizeStep);
+                inputs.uniformHoleSize.value = val;
+                inputs.min.value = val;
+                inputs.max.value = val;
+                saveSettings();
+                return;
+            }
             let minVal = parseFloat(inputs.min.value) || 0;
             let maxVal = parseFloat(inputs.max.value) || 0;
             minVal = Math.max(0.5, minVal - holeSizeStep);
@@ -2860,18 +3110,20 @@ if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
             inputs.min.value = minVal;
             inputs.max.value = maxVal;
             ensureValidGap();
-            // Force trigger input and change events so all handlers (including pitch sync) see the new values
-            inputs.min.dispatchEvent(new Event('input', {bubbles: true}));
-            inputs.max.dispatchEvent(new Event('input', {bubbles: true}));
-            inputs.min.dispatchEvent(new Event('change', {bubbles: true}));
-            inputs.max.dispatchEvent(new Event('change', {bubbles: true}));
             saveSettings();
-            // Explicitly trigger regeneration to update footer
-            if (sourceImage) setTimeout(() => generatePerforation(), 20);
         });
     }
     if (holeSizeIncBtn) {
         holeSizeIncBtn.addEventListener('click', () => {
+            if (!sourceImage && patternSource === 'uniform' && inputs.uniformHoleSize) {
+                let val = parseFloat(inputs.uniformHoleSize.value) || 10;
+                val += holeSizeStep;
+                inputs.uniformHoleSize.value = val;
+                inputs.min.value = val;
+                inputs.max.value = val;
+                saveSettings();
+                return;
+            }
             let minVal = parseFloat(inputs.min.value) || 0;
             let maxVal = parseFloat(inputs.max.value) || 0;
             minVal += holeSizeStep;
@@ -2879,18 +3131,11 @@ if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
             inputs.min.value = minVal;
             inputs.max.value = maxVal;
             ensureValidGap();
-            // Force trigger input and change events so all handlers (including pitch sync) see the new values
-            inputs.min.dispatchEvent(new Event('input', {bubbles: true}));
-            inputs.max.dispatchEvent(new Event('input', {bubbles: true}));
-            inputs.min.dispatchEvent(new Event('change', {bubbles: true}));
-            inputs.max.dispatchEvent(new Event('change', {bubbles: true}));
             saveSettings();
-            // Explicitly trigger regeneration to update footer
-            if (sourceImage) setTimeout(() => generatePerforation(), 20);
         });
     }
 
-    // Auto-save & Refresh triggers
+    // Auto-save triggers (no auto-generation — user must click Run Update Pattern or press Enter)
     const allInputs = Object.values(inputs);
     allInputs.push(lockRatioCheckbox, lockPitchRadio, lockGapRadio, splitMode);
     if (holeColorInput) allInputs.push(holeColorInput);
@@ -2899,7 +3144,6 @@ if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
     allInputs.forEach(el => {
         el.addEventListener('change', () => {
             saveSettings();
-            setTimeout(generatePerforation, 10);
         });
     });
 
@@ -3011,6 +3255,16 @@ if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
 
     // --- GENERATION LOGIC ---
 
+    function removeImage() {
+        sourceImage = null;
+        imageAspectRatio = 0;
+        if (ratioDisplay) ratioDisplay.innerText = '';
+        updateImageDependentUI();
+        generatePerforation();
+        saveSettings();
+    }
+    window.removeImage = removeImage;
+
     function handleImageUpload(e) {
         const file = e.target.files[0];
         if (!file) return;
@@ -3031,6 +3285,7 @@ if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
                     const currentH = parseFloat(inputs.h.value) || 2000;
                     inputs.w.value = Math.round(currentH * imageAspectRatio);
                 }
+                updateImageDependentUI();
                 generateBtn.innerText = "Generate Pattern";
                 generatePerforation();
             };
@@ -3086,14 +3341,15 @@ if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
     }
 
     // Calculate alignment offset for a panel (usable area after margins)
-    function getAlignmentOffset(usableW, usableH, pitch, alignment) {
+    function getAlignmentOffset(usableW, usableH, pitch, alignment, vPitch) {
+        vPitch = vPitch || pitch;
         // Calculate how many complete holes fit in each direction
         const colsInPanel = Math.floor(usableW / pitch);
-        const rowsInPanel = Math.floor(usableH / pitch);
+        const rowsInPanel = Math.floor(usableH / vPitch);
         
         // Calculate the "remainder" space that needs to be distributed for alignment
         const remainderX = usableW - (colsInPanel * pitch);
-        const remainderY = usableH - (rowsInPanel * pitch);
+        const remainderY = usableH - (rowsInPanel * vPitch);
         
         let offsetX = 0;
         let offsetY = 0;
@@ -3262,16 +3518,20 @@ if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
         }, 2200);
     }
     function generatePerforation() {
-        if (!sourceImage) return;
-
         // Generate new ID for this run
         currentFileID = generateUniqueID();
 
         const w = parseFloat(inputs.w.value);
         const h = parseFloat(inputs.h.value);
         const pitch = parseFloat(inputs.pitch.value);
-        const minDia = parseFloat(inputs.min.value);
-        const maxDia = parseFloat(inputs.max.value);
+        let minDia = parseFloat(inputs.min.value);
+        let maxDia = parseFloat(inputs.max.value);
+        // Uniform mode: use single hole size
+        if (!sourceImage && patternSource === 'uniform' && inputs.uniformHoleSize) {
+            const uniformSize = parseFloat(inputs.uniformHoleSize.value) || 10;
+            minDia = uniformSize;
+            maxDia = uniformSize;
+        }
         const invert = inputs.invert.checked;
         
         // Parsing subdivisions
@@ -3356,48 +3616,51 @@ if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
         const cols = Math.floor(w / pitch);
         const rows = Math.floor(h / pitch);
 
-        const analysisCanvas = document.createElement('canvas');
-        analysisCanvas.width = cols;
-        analysisCanvas.height = rows;
-        const actx = analysisCanvas.getContext('2d');
-        
-        // Logic for Image Drawing based on mode
-        if (imgFitMode.value === 'stretch') {
-            actx.drawImage(sourceImage, 0, 0, cols, rows);
-        } else {
-            // Keep Ratio logic
-            // 1. Calculate aspect ratios
-            const canvasRatio = cols / rows;
-            const imgRatio = sourceImage.naturalWidth / sourceImage.naturalHeight;
+        let pixels = null;
+        if (sourceImage) {
+            const analysisCanvas = document.createElement('canvas');
+            analysisCanvas.width = cols;
+            analysisCanvas.height = rows;
+            const actx = analysisCanvas.getContext('2d');
             
-            // 2. Base fit
-            let drawW = cols;
-            let drawH = cols / imgRatio;
+            // Logic for Image Drawing based on mode
+            if (imgFitMode.value === 'stretch') {
+                actx.drawImage(sourceImage, 0, 0, cols, rows);
+            } else {
+                // Keep Ratio logic
+                // 1. Calculate aspect ratios
+                const canvasRatio = cols / rows;
+                const imgRatio = sourceImage.naturalWidth / sourceImage.naturalHeight;
+                
+                // 2. Base fit
+                let drawW = cols;
+                let drawH = cols / imgRatio;
+                
+                // User scale override
+                const userScale = parseFloat(inputs.imgScale.value) || 1.0;
+                drawW *= userScale;
+                drawH *= userScale;
+                
+                // Center the image initially
+                let drawX = (cols - drawW) / 2;
+                let drawY = (rows - drawH) / 2;
+                
+                // Apply User Pan (Convert mm to grid units)
+                const panXGrid = (parseFloat(inputs.imgPanX.value) || 0) / pitch;
+                const panYGrid = (parseFloat(inputs.imgPanY.value) || 0) / pitch;
+                
+                drawX += panXGrid;
+                drawY += panYGrid;
+                
+                // Clear background for analysis
+                actx.fillStyle = "white"; 
+                actx.fillRect(0,0, cols, rows);
+                
+                actx.drawImage(sourceImage, drawX, drawY, drawW, drawH);
+            }
             
-            // User scale override
-            const userScale = parseFloat(inputs.imgScale.value) || 1.0;
-            drawW *= userScale;
-            drawH *= userScale;
-            
-            // Center the image initially
-            let drawX = (cols - drawW) / 2;
-            let drawY = (rows - drawH) / 2;
-            
-            // Apply User Pan (Convert mm to grid units)
-            const panXGrid = (parseFloat(inputs.imgPanX.value) || 0) / pitch;
-            const panYGrid = (parseFloat(inputs.imgPanY.value) || 0) / pitch;
-            
-            drawX += panXGrid;
-            drawY += panYGrid;
-            
-            // Clear background for analysis
-            actx.fillStyle = "white"; 
-            actx.fillRect(0,0, cols, rows);
-            
-            actx.drawImage(sourceImage, drawX, drawY, drawW, drawH);
+            pixels = actx.getImageData(0, 0, cols, rows).data;
         }
-        
-        const pixels = actx.getImageData(0, 0, cols, rows).data;
 
         // Margins
         const mT = parseFloat(inputs.mT.value) || 0;
@@ -3422,6 +3685,15 @@ if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
             });
         });
 
+        // Determine vertical pitch based on stagger mode
+        const vPitch = (staggered && staggerMode === 'equalGap') ? (pitch * Math.sqrt(3) / 2) : pitch;
+        
+        // Target edge gap for equal-gap relaxation
+        const targetEdgeGap = Math.max(0.1, parseFloat(inputs.edge.value) || (pitch - maxDia));
+        
+        // Temporary array to collect all holes before drawing
+        const tempHoles = [];
+
         // Process each panel separately with its own alignment
         sheetDefinitions.forEach((activeSheet, sheetIndex) => {
             // Calculate usable area (after margins)
@@ -3431,61 +3703,199 @@ if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
             if (usableW <= 0 || usableH <= 0) return; // Skip if no usable area
             
             // Calculate alignment offset for the usable area
-            const alignOffset = getAlignmentOffset(usableW, usableH, pitch, panelAlignment);
+            const alignOffset = getAlignmentOffset(usableW, usableH, pitch, panelAlignment, vPitch);
             
             // Calculate how many holes fit in this panel
             const colsInPanel = Math.floor(usableW / pitch);
-            const rowsInPanel = Math.floor(usableH / pitch);
+            const rowsInPanel = Math.floor(usableH / vPitch);
             
             // Starting position for first hole in this panel (with alignment)
             const startX = activeSheet.x + mL + alignOffset.offsetX + (pitch / 2);
-            const startY = activeSheet.y + mT + alignOffset.offsetY + (pitch / 2);
+            const startY = activeSheet.y + mT + alignOffset.offsetY + (vPitch / 2);
             
             // Generate holes for this panel
             for (let py = 0; py < rowsInPanel; py++) {
-                for (let px = 0; px < colsInPanel; px++) {
-                    const cx = startX + (px * pitch);
-                    const cy = startY + (py * pitch);
+                // Staggered: every other row shifted by half pitch
+                const rowOffset = (staggered && (py % 2 === 1)) ? (pitch / 2) : 0;
+                const colsInRow = staggered ? (colsInPanel + 1) : colsInPanel;
+                
+                for (let px = 0; px < colsInRow; px++) {
+                    const cx = startX + (px * pitch) + rowOffset;
+                    const cy = startY + (py * vPitch);
                     
                     // Verify hole is within panel bounds
                     if (cx < activeSheet.x + mL || cx > activeSheet.x + activeSheet.w - mR) continue;
                     if (cy < activeSheet.y + mT || cy > activeSheet.y + activeSheet.h - mB) continue;
                     
-                    // Get image pixel for this position
-                    const gridX = Math.floor((cx / w) * cols);
-                    const gridY = Math.floor((cy / h) * rows);
+                    let sizeFactor = 0.5; // default uniform
                     
-                    if (gridX < 0 || gridX >= cols || gridY < 0 || gridY >= rows) continue;
+                    if (sourceImage && pixels) {
+                        // Get image pixel for this position
+                        const gridX = Math.floor((cx / w) * cols);
+                        const gridY = Math.floor((cy / h) * rows);
+                        
+                        if (gridX < 0 || gridX >= cols || gridY < 0 || gridY >= rows) continue;
+                        
+                        const idx = (gridY * cols + gridX) * 4;
+                        const bVal = (pixels[idx] + pixels[idx+1] + pixels[idx+2]) / 3;
+                        const norm = bVal / 255;
+                        sizeFactor = invert ? norm : (1.0 - norm);
+                    } else {
+                        // Gradient mode sizing
+                        const ux = (cx - (activeSheet.x + mL)) / Math.max(usableW, 1);
+                        const uy = (cy - (activeSheet.y + mT)) / Math.max(usableH, 1);
+                        
+                        switch (patternSource) {
+                            case 'uniform':
+                                sizeFactor = 0.5;
+                                break;
+                            case 'gradient1d': {
+                                let pos = 0;
+                                switch (gradient1dDir) {
+                                    case 'leftRight': pos = ux; break;
+                                    case 'rightLeft': pos = 1 - ux; break;
+                                    case 'topBottom': pos = uy; break;
+                                    case 'bottomTop': pos = 1 - uy; break;
+                                }
+                                sizeFactor = pos;
+                                break;
+                            }
+                            case 'gradient2d': {
+                                let px2 = (gradient2dDir === 'topRight' || gradient2dDir === 'bottomRight') ? (1 - ux) : ux;
+                                let py2 = (gradient2dDir === 'bottomLeft' || gradient2dDir === 'bottomRight') ? (1 - uy) : uy;
+                                sizeFactor = (px2 + py2) / 2;
+                                break;
+                            }
+                            case 'radial': {
+                                const cxNorm = 0.5;
+                                const cyNorm = 0.5;
+                                const dx = ux - cxNorm;
+                                const dy = uy - cyNorm;
+                                const dist = Math.sqrt(dx*dx + dy*dy) / Math.sqrt(0.5);
+                                sizeFactor = Math.min(1, dist);
+                                break;
+                            }
+                        }
+                        if (gradientReverse) sizeFactor = 1 - sizeFactor;
+                        if (invert) sizeFactor = 1 - sizeFactor;
+                    }
                     
-                    const idx = (gridY * cols + gridX) * 4;
-                const bVal = (pixels[idx] + pixels[idx+1] + pixels[idx+2]) / 3;
-                const norm = bVal / 255;
-                const sizeFactor = invert ? norm : (1.0 - norm);
-                const diameter = minDia + (sizeFactor * (maxDia - minDia));
-                const r = diameter / 2;
+                    const diameter = minDia + (sizeFactor * (maxDia - minDia));
+                    const r = diameter / 2;
 
-                const drawX = cx * pixelScale;
-                const drawY = cy * pixelScale;
-                const drawR = r * pixelScale;
-
-                ctx.beginPath();
-                ctx.arc(drawX, drawY, drawR, 0, Math.PI * 2);
-                ctx.fill();
-
-                generatedHoles.push({x: cx, y: cy, r: r});
-                
-                    const holeArea = Math.PI * Math.pow(r, 2);
-                    totalHoleArea += holeArea;
-                count++;
-                    
-                    // Update panel stats
-                    if (sheetIndex < panelStats.length) {
-                        panelStats[sheetIndex].holeCount++;
-                        panelStats[sheetIndex].openArea += holeArea;
-            }
-        }
+                    tempHoles.push({
+                        x: cx, y: cy, r: r,
+                        sheetIndex: sheetIndex,
+                        sheet: activeSheet,
+                        px: px, py: py
+                    });
+                }
             }
         });
+        
+        // Equal-gap staggered mode: relax positions so edge-to-edge gap is constant
+        if (staggered && staggerMode === 'equalGap' && tempHoles.length > 0 && tempHoles.length <= 100000) {
+            // Build spatial hash grid for fast neighbor lookup
+            const cellSize = pitch * 2.5;
+            const grid = new Map();
+            
+            for (let i = 0; i < tempHoles.length; i++) {
+                const h = tempHoles[i];
+                const gx = Math.floor(h.x / cellSize);
+                const gy = Math.floor(h.y / cellSize);
+                const key = gx + ',' + gy;
+                if (!grid.has(key)) grid.set(key, []);
+                grid.get(key).push(i);
+            }
+            
+            // Relaxation iterations
+            const iterations = 4;
+            const damping = 0.35;
+            
+            for (let iter = 0; iter < iterations; iter++) {
+                const displacements = tempHoles.map(() => ({dx: 0, dy: 0}));
+                
+                for (let i = 0; i < tempHoles.length; i++) {
+                    const h = tempHoles[i];
+                    const gx = Math.floor(h.x / cellSize);
+                    const gy = Math.floor(h.y / cellSize);
+                    
+                    let fx = 0, fy = 0;
+                    let neighborCount = 0;
+                    
+                    // Check neighboring cells
+                    for (let cdx = -1; cdx <= 1; cdx++) {
+                        for (let cdy = -1; cdy <= 1; cdy++) {
+                            const key = (gx + cdx) + ',' + (gy + cdy);
+                            const indices = grid.get(key);
+                            if (!indices) continue;
+                            
+                            for (const j of indices) {
+                                if (i === j) continue;
+                                const n = tempHoles[j];
+                                const dx = n.x - h.x;
+                                const dy = n.y - h.y;
+                                const dist = Math.sqrt(dx*dx + dy*dy);
+                                
+                                if (dist > 0 && dist < pitch * 2.5) {
+                                    const idealDist = h.r + n.r + targetEdgeGap;
+                                    const diff = dist - idealDist;
+                                    const force = diff / dist * damping;
+                                    fx += dx * force;
+                                    fy += dy * force;
+                                    neighborCount++;
+                                }
+                            }
+                        }
+                    }
+                    
+                    if (neighborCount > 0) {
+                        displacements[i].dx = fx;
+                        displacements[i].dy = fy;
+                    }
+                }
+                
+                // Apply displacements with clamping to sheet bounds
+                for (let i = 0; i < tempHoles.length; i++) {
+                    const h = tempHoles[i];
+                    const sheet = h.sheet;
+                    h.x += displacements[i].dx;
+                    h.y += displacements[i].dy;
+                    
+                    // Clamp to sheet usable area (keep hole fully inside margins)
+                    const minX = sheet.x + mL + h.r;
+                    const maxX = sheet.x + sheet.w - mR - h.r;
+                    const minY = sheet.y + mT + h.r;
+                    const maxY = sheet.y + sheet.h - mB - h.r;
+                    
+                    h.x = Math.max(minX, Math.min(maxX, h.x));
+                    h.y = Math.max(minY, Math.min(maxY, h.y));
+                }
+            }
+        }
+        
+        // Draw all holes and update stats
+        for (const h of tempHoles) {
+            const drawX = h.x * pixelScale;
+            const drawY = h.y * pixelScale;
+            const drawR = h.r * pixelScale;
+
+            ctx.beginPath();
+            ctx.arc(drawX, drawY, drawR, 0, Math.PI * 2);
+            ctx.fill();
+
+            generatedHoles.push({x: h.x, y: h.y, r: h.r});
+            
+            const holeArea = Math.PI * Math.pow(h.r, 2);
+            totalHoleArea += holeArea;
+            count++;
+            
+            // Update panel stats
+            if (h.sheetIndex < panelStats.length) {
+                panelStats[h.sheetIndex].holeCount++;
+                panelStats[h.sheetIndex].openArea += holeArea;
+            }
+        }
         
         
         ctx.strokeStyle = "rgba(239, 68, 68, 0.3)";
@@ -3741,7 +4151,6 @@ if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
     }
 
     function downloadImage() {
-        if (!sourceImage) return;
         const filename = getDownloadFilename();
         const colors = getEffectiveColors(swapHolePanelColors);
         
@@ -3902,7 +4311,6 @@ OpenArea: ${document.getElementById('statArea').innerText}
     
     // Helper function to get PNG as data URL
     function getPNGDataURL() {
-        if (!sourceImage) return null;
         const colors = getEffectiveColors(swapHolePanelColors);
         
         // Calculate footer height if needed
@@ -4135,7 +4543,7 @@ OpenArea: ${document.getElementById('statArea').innerText}
     }
     
     async function downloadZIP() {
-        if (!sourceImage || generatedHoles.length === 0) {
+        if (generatedHoles.length === 0) {
             if (typeof showNotification === 'function') showNotification('Please generate a pattern first.', 'info');
             return;
         }
@@ -4219,7 +4627,11 @@ OpenArea: ${document.getElementById('statArea').innerText}
     };
     
     // Initialize Firebase (defensive: handles case where wrong app was initialized)
-    if (typeof firebase !== 'undefined') {
+    (function initFirebase() {
+        if (typeof firebase === 'undefined') {
+            console.error('Firebase SDK not loaded');
+            return;
+        }
         try {
             // Check if already initialized with a different config
             if (firebase.apps.length > 0) {
@@ -4228,7 +4640,13 @@ OpenArea: ${document.getElementById('statArea').innerText}
                 // If projectId doesn't match, delete and reinitialize
                 if (existingOptions.projectId !== firebaseConfig.projectId) {
                     console.warn('Firebase was initialized with wrong project:', existingOptions.projectId, '- deleting and reinitializing with', firebaseConfig.projectId);
-                    await existingApp.delete();
+                    existingApp.delete().then(function() {
+                        firebase.initializeApp(firebaseConfig);
+                        console.log('Firebase initialized successfully');
+                    }).catch(function(err) {
+                        console.error('Firebase deletion error:', err);
+                    });
+                    return;
                 }
             }
             // Initialize if not already done (or after deletion)
@@ -4241,9 +4659,7 @@ OpenArea: ${document.getElementById('statArea').innerText}
         } catch (error) {
             console.error('Firebase initialization error:', error);
         }
-    } else {
-        console.error('Firebase SDK not loaded');
-    }
+    })();
     
     // Auth Manager
     const authManager = {
@@ -4920,7 +5336,7 @@ OpenArea: ${document.getElementById('statArea').innerText}
     };
 
     async function sendEmailResult(toEmail, customMessage) {
-        if (!sourceImage) {
+        if (!sourceImage && generatedHoles.length === 0) {
             if (typeof showNotification === 'function') showNotification('Generate a pattern first, then use Email.', 'info');
             return;
         }

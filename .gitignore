@@ -6,3 +6,8 @@ local.env
 *.log
 .wrangler/
 dist/
+
+# Test artifacts
+.playwright-mcp/
+*.png
+
