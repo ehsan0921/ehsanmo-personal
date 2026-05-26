@@ -2749,6 +2749,10 @@ if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
     // Initialize
     loadSettings();
     updateImageDependentUI();
+    // Default: staggered off on page load
+    staggered = false;
+    if (staggeredCheckbox) staggeredCheckbox.checked = false;
+    if (staggerModeContainer) staggerModeContainer.style.display = 'none';
     const hasSharedDesign = new URLSearchParams(window.location.search).has('design');
     loadSharedDesign();
     if (!hasSharedDesign) {
