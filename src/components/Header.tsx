@@ -47,6 +47,20 @@ export function Header({ user, isAdmin, menuProducts, onOpenLogin, onOpenRegiste
             About
           </a>
           <a
+            href="#work"
+            className="rounded-lg px-3 py-2 text-zinc-300 transition hover:bg-zinc-800/80 hover:text-white"
+            onClick={() => setMenuOpen(false)}
+          >
+            Work
+          </a>
+          <a
+            href="#videos"
+            className="rounded-lg px-3 py-2 text-zinc-300 transition hover:bg-zinc-800/80 hover:text-white"
+            onClick={() => setMenuOpen(false)}
+          >
+            Videos
+          </a>
+          <a
             href="#tools"
             className="rounded-lg px-3 py-2 text-zinc-300 transition hover:bg-zinc-800/80 hover:text-white"
             onClick={() => setMenuOpen(false)}
