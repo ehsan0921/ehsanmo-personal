@@ -39,19 +39,25 @@ const PROJECTS = [
   {
     id: "XtfDwJbAbpw",
     title: "Atlassian Project — Sydney",
-    sub: "Computational design for a facade curtain wall system",
+    sub: "Computational design for the facade curtain wall system — SRG Global",
     tag: "Facade BIM",
   },
   {
     id: "FOphlK0PcCI",
-    title: "SRG Global Facade",
-    sub: "Algorithmic extraction of facade panel backpans",
+    title: "SRG Global Facade — Backpans",
+    sub: "Algorithmic extraction of facade panel backpans for production",
     tag: "Computational Design",
+  },
+  {
+    id: "9mhKwyhyww8",
+    title: "Curtain Wall Cast-ins",
+    sub: "Generating curtain wall cast-in embeds by algorithmic design",
+    tag: "Facade BIM",
   },
   {
     id: "KzDMJugAHxQ",
     title: "ETFE Hexagon Roof",
-    sub: "Parametric geometry for a hexagonal ETFE roof",
+    sub: "Parametric geometry for a hexagonal ETFE roof system",
     tag: "Parametric",
   },
   {
@@ -60,6 +66,50 @@ const PROJECTS = [
     sub: "End-to-end facade workflow in Rhino & Grasshopper",
     tag: "Workflow",
   },
+  {
+    id: "LRxphasTLmg",
+    title: "BIM in Augmented Reality",
+    sub: "Bringing Rhino BIM facade models into AR for site coordination",
+    tag: "AR / BIM",
+  },
+];
+
+const EXPERIENCE = [
+  {
+    period: "Current",
+    role: "Facade BIM Manager",
+    org: "SRG Global — Melbourne, Australia",
+    points: [
+      "Leading BIM delivery for complex facade and curtain wall packages on landmark Australian projects, including the Atlassian headquarters in Sydney.",
+      "Driving computational workflows: algorithmic panel backpan extraction, cast-in embed generation and panel auto-dimensioning straight to production data.",
+      "Bridging design, engineering and fabrication with Rhino/Grasshopper, IFC data and AR model coordination.",
+    ],
+    current: true,
+  },
+  {
+    period: "2021 — Present",
+    role: "Plug-in Developer",
+    org: "RhinoPlus — published on Food4Rhino",
+    points: [
+      "Designed and shipped RhinoPlus, a Rhino plug-in with 20+ productivity commands used by designers worldwide.",
+      "Includes PanelAutoDimension with CSV export, barcode generation, key-value/IFC parameter tooling and block management.",
+    ],
+  },
+  {
+    period: "Ongoing",
+    role: "Computational Designer & Educator",
+    org: "@ehsanmokhtaryArchitect — YouTube",
+    points: [
+      "Teaching BIM, Rhino and Grasshopper to the AEC community — full Rhino 7 course, facade design tutorials and automation talks.",
+      "Topics span parametric facade systems, AI & automation in BIM, and AR for construction.",
+    ],
+  },
+];
+
+const TALKS = [
+  { id: "9eFJMBZYURM", title: "Full Rhinoceros 7 Course", sub: "Complete training course — 3.4K views", kind: "Course" },
+  { id: "QuKsV6Zm0y4", title: "AI and Automation in BIM", sub: "Where BIM delivery is heading next", kind: "Talk" },
+  { id: "1WPABFxYrs8", title: "BIM Australia", sub: "BIM practice in the Australian market", kind: "Talk" },
 ];
 
 const VIDEOS = [
@@ -170,8 +220,20 @@ export function HomePage() {
           {/* ============ HERO ============ */}
           <section className="grid items-center gap-10 pt-14 sm:pt-20 lg:grid-cols-[1.15fr_0.85fr]">
             <div className="text-center lg:text-left">
-              <p className="text-xs font-semibold uppercase tracking-[0.3em] text-cyan-400/80">
-                Facade BIM Manager · Computational Designer · Developer
+              <a
+                href={LINKEDIN}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 rounded-full border border-cyan-500/30 bg-cyan-500/10 px-4 py-1.5 text-xs font-semibold text-cyan-300 transition hover:bg-cyan-500/20"
+              >
+                <span className="relative flex h-2 w-2">
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-cyan-400 opacity-75" />
+                  <span className="relative inline-flex h-2 w-2 rounded-full bg-cyan-400" />
+                </span>
+                Facade BIM Manager at SRG Global
+              </a>
+              <p className="mt-5 text-xs font-semibold uppercase tracking-[0.3em] text-cyan-400/80">
+                Computational Designer · Developer
               </p>
               <h1
                 className="mt-5 text-5xl font-bold leading-[1.05] tracking-tight text-zinc-50 sm:text-6xl md:text-7xl"
@@ -182,8 +244,9 @@ export function HomePage() {
                 <span className="text-flow">Mokhtary</span>
               </h1>
               <p className="mx-auto mt-6 max-w-xl text-balance text-base text-zinc-400 sm:text-lg lg:mx-0">
-                Shaping complex building facades through BIM leadership, algorithmic design and custom software —
-                from curtain wall systems in Sydney to the RhinoPlus plug-in used by designers worldwide.
+                Facade BIM Manager at SRG Global in Melbourne — shaping complex building envelopes through BIM
+                leadership, algorithmic design and custom software, from curtain wall systems in Sydney to the
+                RhinoPlus plug-in used by designers worldwide.
               </p>
               <div className="mt-8 flex flex-wrap items-center justify-center gap-3 lg:justify-start">
                 <a
@@ -228,7 +291,7 @@ export function HomePage() {
                 />
                 <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-zinc-950/90 to-transparent p-5">
                   <p className="text-sm font-semibold text-zinc-100">Ehsan Mokhtary</p>
-                  <p className="text-xs text-cyan-300/90">Facade BIM Manager · Melbourne, AU</p>
+                  <p className="text-xs text-cyan-300/90">Facade BIM Manager @ SRG Global</p>
                 </div>
               </div>
             </div>
@@ -283,6 +346,64 @@ export function HomePage() {
             </div>
           </section>
 
+          {/* ============ EXPERIENCE ============ */}
+          <section id="experience" className="mt-24">
+            <Reveal className="text-center">
+              <h2 className="text-3xl font-bold text-zinc-50 sm:text-4xl" style={{ fontFamily: "'Outfit', sans-serif" }}>
+                Experience
+              </h2>
+              <p className="mx-auto mt-3 max-w-xl text-zinc-400">
+                Where facade engineering, computational design and software development meet.
+              </p>
+            </Reveal>
+
+            <div className="relative mt-12 space-y-6 before:absolute before:bottom-4 before:left-[19px] before:top-4 before:w-px before:bg-gradient-to-b before:from-cyan-500/60 before:via-zinc-700 before:to-transparent sm:before:left-1/2">
+              {EXPERIENCE.map((e, i) => (
+                <Reveal key={e.role} delay={i * 120}>
+                  <div className={`relative flex gap-6 sm:gap-0 ${i % 2 === 0 ? "sm:flex-row" : "sm:flex-row-reverse"}`}>
+                    <div className="absolute left-[19px] top-6 z-10 h-3 w-3 -translate-x-1/2 rounded-full border-2 border-cyan-400 bg-zinc-950 sm:left-1/2" />
+                    <div className="ml-10 w-full sm:ml-0 sm:w-1/2 sm:px-8">
+                      <div className="glass-dark rounded-2xl p-6 transition duration-300 hover:-translate-y-1 hover:border-cyan-500/30">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="rounded-full bg-cyan-500/10 px-3 py-1 text-[11px] font-semibold text-cyan-300">
+                            {e.period}
+                          </span>
+                          {e.current && (
+                            <span className="rounded-full bg-cyan-500 px-3 py-1 text-[11px] font-semibold text-zinc-950">
+                              Current position
+                            </span>
+                          )}
+                        </div>
+                        <h3 className="mt-3 text-xl font-semibold text-zinc-100" style={{ fontFamily: "'Outfit', sans-serif" }}>
+                          {e.role}
+                        </h3>
+                        <p className="mt-1 text-sm font-medium text-cyan-400/90">{e.org}</p>
+                        <ul className="mt-4 space-y-2">
+                          {e.points.map((p) => (
+                            <li key={p} className="flex gap-2 text-sm leading-relaxed text-zinc-400">
+                              <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-cyan-500/70" />
+                              {p}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                </Reveal>
+              ))}
+            </div>
+            <Reveal className="mt-8 text-center">
+              <a
+                href={LINKEDIN}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm font-semibold text-cyan-400/90 transition hover:text-cyan-300"
+              >
+                See full experience on LinkedIn →
+              </a>
+            </Reveal>
+          </section>
+
           {/* ============ FEATURED WORK ============ */}
           <section id="work" className="mt-24">
             <Reveal className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
@@ -304,9 +425,9 @@ export function HomePage() {
               </a>
             </Reveal>
 
-            <div className="mt-10 grid grid-cols-1 gap-5 sm:grid-cols-2">
+            <div className="mt-10 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
               {PROJECTS.map((p, i) => (
-                <Reveal key={p.id} delay={(i % 2) * 120}>
+                <Reveal key={p.id} delay={(i % 3) * 100}>
                   <a
                     href={yt(p.id)}
                     target="_blank"
@@ -365,6 +486,45 @@ export function HomePage() {
                       </span>
                     </div>
                     <p className="flex-1 p-4 text-sm font-medium leading-snug text-zinc-200">{v.title}</p>
+                  </a>
+                </Reveal>
+              ))}
+            </div>
+          </section>
+
+          {/* ============ TALKS & TEACHING ============ */}
+          <section id="talks" className="mt-24">
+            <Reveal className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+              <div>
+                <h2 className="text-3xl font-bold text-zinc-50 sm:text-4xl" style={{ fontFamily: "'Outfit', sans-serif" }}>
+                  Talks, courses &amp; community
+                </h2>
+                <p className="mt-3 max-w-xl text-zinc-400">
+                  Sharing BIM and computational design knowledge with the AEC community — courses, talks and tutorials.
+                </p>
+              </div>
+            </Reveal>
+
+            <div className="mt-10 grid grid-cols-1 gap-5 md:grid-cols-3">
+              {TALKS.map((t, i) => (
+                <Reveal key={t.id} delay={i * 120}>
+                  <a
+                    href={yt(t.id)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="group glass-dark flex h-full flex-col overflow-hidden rounded-2xl transition duration-300 hover:-translate-y-1 hover:border-cyan-500/30"
+                  >
+                    <div className="relative aspect-video overflow-hidden">
+                      <img src={thumb(t.id)} alt={t.title} className="zoom-img h-full w-full object-cover" loading="lazy" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-zinc-950/70 via-transparent to-transparent" />
+                      <span className="absolute left-3 top-3 rounded-full bg-cyan-500 px-3 py-1 text-[11px] font-semibold text-zinc-950">
+                        {t.kind}
+                      </span>
+                    </div>
+                    <div className="flex flex-1 flex-col p-5">
+                      <h3 className="text-lg font-semibold text-zinc-100">{t.title}</h3>
+                      <p className="mt-1 text-sm text-zinc-400">{t.sub}</p>
+                    </div>
                   </a>
                 </Reveal>
               ))}

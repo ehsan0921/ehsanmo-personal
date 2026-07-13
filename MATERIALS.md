@@ -68,3 +68,28 @@ Rhino Plus — a Rhino plug-in by Ehsan Mokhtary that adds productivity commands
 - New component: `src/components/Reveal.tsx` — scroll-reveal via IntersectionObserver.
 - New CSS animations in `src/index.css`: flowing gradient text, floating orbs, marquee, card reveal.
 - View counts were scraped live from YouTube on 2026-07-13 and hard-coded; update them periodically.
+- Git identity for this repo: `Ehsan Mokhtary <Ehsan0921@gmail.com>` (local `git config`), remote: github.com/ehsan0921/ehsanmo-personal.
+
+## Sections on the landing page
+
+1. Hero — name, "Facade BIM Manager at SRG Global" badge, portrait, CTAs
+2. Skills marquee
+3. About — three disciplines (Facade BIM Manager / Computational Designer / Developer)
+4. **Experience** — timeline: SRG Global (current), RhinoPlus developer, educator
+5. **Featured work** — 6 projects w/ YouTube thumbnails (Atlassian Sydney, SRG backpans, cast-ins, ETFE roof, facade BIM process, AR)
+6. Most-watched videos (top 6 by live view count)
+7. **Talks, courses & community** — Full Rhino 7 Course, AI & Automation in BIM, BIM Australia
+8. RhinoPlus highlight → Food4Rhino
+9. Tools & products (Firebase)
+10. Contact (email / LinkedIn / YouTube)
+
+## ⚠️ To review/fill from LinkedIn (not publicly scrapeable)
+
+LinkedIn blocks automated fetching (HTTP 999/403), so the following could not be verified and were **not invented**:
+
+- Earlier roles/employers before SRG Global and their dates
+- Education entries
+- Conference appearances — the site currently uses a "Talks, courses & community" section built from real YouTube content instead. If you want specific conferences listed (name, year, topic), add them to the `TALKS`/`EXPERIENCE` arrays in `src/pages/HomePage.tsx`.
+- Certifications, honors, languages
+
+Verified from public sources: current role (Facade BIM Manager at SRG Global, Melbourne — via ZoomInfo), all YouTube content, RhinoPlus on Food4Rhino, email address.
