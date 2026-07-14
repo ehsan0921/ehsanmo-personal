@@ -34,6 +34,10 @@ const WORK: PortfolioProject[] = [
 ];
 
 const COMMANDS = ["PanelAutoDimension", "BlockManagementPlus", "ExportByKeyValue", "KeyValueToIFCParameter", "GenerateBarcode", "ImportCSV"];
+const SIDE_PROJECTS = [
+  { title: "Perforated Panel Designer", description: "A browser-based generative tool for exploring image-driven perforation patterns and fabrication geometry.", url: "/Image-Panel-perforated-designer/", label: "COMPUTATIONAL DESIGN" },
+  { title: "Gym Records", description: "A personal training and progress tracker built as a practical experiment in product design and data ownership.", url: "/gym-records/", label: "PERSONAL BUILD" },
+];
 
 export function HomePage() {
   const [user, setUser] = useState<User | null>(null);
@@ -169,7 +173,7 @@ export function HomePage() {
           <Reveal><p className="section-index">05 / BUILT, NOT BOUGHT</p><div className="mt-5 grid gap-12 lg:grid-cols-2"><div><h2>RhinoPlus.</h2><p className="mt-6 max-w-xl text-lg leading-relaxed text-white/60">A production toolkit I designed and shipped for Rhino—turning repeated modelling and information tasks into reliable commands.</p><a href={FOOD4RHINO} target="_blank" rel="noreferrer" className="button-primary mt-8 inline-flex">Explore the plug-in ↗</a></div><div className="command-list">{COMMANDS.map((c,i)=><div key={c}><span>CMD_{String(i+1).padStart(2,'0')}</span><code>{c}</code><b>READY</b></div>)}</div></div></Reveal>
         </section>
 
-        {products.length > 0 && <section id="tools" className="border-x border-white/10 px-5 py-24 sm:px-10 lg:px-16"><p className="section-index">06 / DIGITAL PRODUCTS</p><div className="mt-10 grid gap-4 md:grid-cols-2">{products.map(item=><article className="product-card" key={item.id}><h3>{item.title}</h3><p>{item.description}</p>{item.type === 'webapp' ? <a href={item.url}>OPEN TOOL ↗</a> : <button onClick={()=>onDownload(item)}>DOWNLOAD ↘</button>}</article>)}</div></section>}
+        <section id="tools" className="border-x border-white/10 px-5 py-24 sm:px-10 lg:px-16"><div className="section-head"><div><p className="section-index">06 / HOBBIES &amp; DEVELOPMENTS</p><h2>Things I build<br />to explore ideas.</h2></div><p>Personal experiments, computational design tools and useful products developed beyond day-to-day façade delivery.</p></div><div className="mt-10 grid gap-4 md:grid-cols-2">{SIDE_PROJECTS.map(item=><article className="product-card" key={item.title}><span className="product-label">{item.label}</span><h3>{item.title}</h3><p>{item.description}</p><a href={item.url}>EXPLORE PROJECT ↗</a></article>)}{products.map(item=><article className="product-card" key={item.id}><span className="product-label">INDEPENDENT DEVELOPMENT</span><h3>{item.title}</h3><p>{item.description}</p>{item.type === 'webapp' ? <a href={item.url}>OPEN PROJECT ↗</a> : <button onClick={()=>onDownload(item)}>DOWNLOAD ↘</button>}</article>)}</div></section>
 
         <section id="contact" className="contact-zone border border-white/10 px-5 py-24 text-center sm:px-10 lg:px-16 lg:py-40"><Reveal><p className="section-index">HAVE A COMPLEX FACADE?</p><h2>Let’s make it<br /><span>clear, coordinated, buildable.</span></h2><div className="mt-10 flex flex-wrap justify-center gap-3"><a className="button-primary" href={`mailto:${EMAIL}`}>Start a conversation ↗</a>{phone ? <a className="button-ghost phone-revealed" href={`tel:${phone}`}>{phone} <span>CALL ↗</span></a> : <button className="button-ghost" type="button" onClick={revealPhone}>Reveal phone <span>CLICK ↗</span></button>}<a className="button-ghost" href={LINKEDIN} target="_blank" rel="noreferrer">LinkedIn</a></div><p className="phone-note">Phone number is protected and only loaded after you click.</p></Reveal></section>
       </main>

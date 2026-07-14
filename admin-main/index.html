@@ -146,7 +146,7 @@
 
         <div id="adminContent" class="hidden">
             <div class="card rounded-lg p-4 mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-                <div class="text-sm text-slate-600">Manage products, versions, and downloadable files.</div>
+                <div class="text-sm text-slate-600">Manage hobbies, independent developments, versions, and downloadable tools.</div>
                 <div class="flex flex-wrap gap-2">
                     <button id="openAddProductModalBtn" class="px-4 py-2 rounded bg-cyan-600 hover:bg-cyan-500 text-sm font-semibold">+ Add Product</button>
                     <button id="openUpdateModalBtn" class="px-4 py-2 rounded bg-indigo-600 hover:bg-indigo-500 text-sm font-semibold">Update Product</button>
@@ -156,7 +156,7 @@
             </div>
 
             <div class="card rounded-lg p-5 mb-6">
-                <h2 class="text-lg font-semibold mb-4">Products & Download Counts</h2>
+                <h2 class="text-lg font-semibold mb-4">Hobbies & Developments</h2>
                 <div class="overflow-auto">
                     <table class="min-w-full text-sm">
                         <thead>
@@ -192,7 +192,7 @@
                 <p id="projectsEmpty" class="hidden py-10 text-center text-sm text-slate-500">No managed projects yet. Import the current portfolio or add your first project.</p>
             </div>
 
-            <div class="card rounded-lg p-5 mt-6">
+            <div class="hidden" aria-hidden="true">
                 <div class="mb-5">
                     <h2 class="text-lg font-semibold">Technical Theme — Quick Images</h2>
                     <p class="text-sm text-slate-500">Quickly replace the two main pictures in the existing Technical BIM theme.</p>
@@ -998,16 +998,26 @@
 
         async function loadProjects() {
             projectsGrid.innerHTML = '';
-            const snap = await db.collection('portfolioProjects').get();
             projectCache = [];
-            snap.forEach((d) => projectCache.push({ id: d.id, ...d.data() }));
+            try {
+                const snap = await db.collection('portfolioProjects').get();
+                snap.forEach((d) => projectCache.push({ id: d.id, ...d.data() }));
+            } catch (error) {
+                projectCache = [
+                    { id:'atlassian-central', title:'Atlassian Central', place:'Sydney, Australia', type:'Specialist curtain wall façade', stat:'SRG GLOBAL / CURRENT', link:'https://www.bvn.com.au/project/atlassian-central/', source:'IMAGES / BVN + PROJECT ARCHIVE', imageUrl:'/projects/atlassian-central.jpg', secondaryImageUrl:'/projects/atlassian-central-01.jpg', order:0, isPublished:true, bundled:true },
+                    { id:'new-dunedin-hospital', title:'New Dunedin Hospital', place:'Dunedin, New Zealand', type:'Outpatients Building façade', stat:'HEALTH / FACADE', link:'https://www.tewhatuora.govt.nz/health-services-and-programmes/infrastructure-and-investment/new-dunedin-hospital-whakatuputupu', source:'IMAGE / HEALTH NZ', imageUrl:'/projects/new-dunedin-hospital.png', order:1, isPublished:true, bundled:true },
+                    { id:'project-dove', title:'Project Dove', place:'53 Ord Street, Subiaco', type:'Expressive engineered façade', stat:'PERTH / COMMERCIAL', link:'https://www.linkedin.com/posts/glasss-wall-systems-india-pvt-ltd-_name-of-the-project-dove-location-perth-activity-7472978778894274562-h_-7', source:'IMAGE / GWS', imageUrl:'/projects/project-dove.jpg', order:2, isPublished:true, bundled:true },
+                    { id:'women-babies-hospital', title:'Women and Babies Hospital', place:'Murdoch, Western Australia', type:'Major healthcare façade delivery', stat:'PERTH / HEALTH', link:'https://www.webuild-group.com.au/en/media/press-notes/webuild-construction-commences-western-australias-new-women-and-babies-hospital/', source:'IMAGE / WEBUILD', imageUrl:'/projects/women-babies-hospital.png', order:3, isPublished:true, bundled:true }
+                ];
+                showProjectStatus('Showing bundled projects. Firebase denied access, so deploy the updated Firebase rules before saving changes.', true);
+            }
             projectCache.sort((a, b) => (Number(a.order) || 0) - (Number(b.order) || 0));
             projectsEmpty.classList.toggle('hidden', projectCache.length > 0);
             projectCache.forEach((item) => {
                 const card = document.createElement('article');
                 card.className = 'overflow-hidden rounded-xl border border-slate-200 bg-white';
                 card.innerHTML = `
-                    <div class="relative aspect-video bg-slate-100"><img src="${esc(item.imageUrl || '')}" alt="" class="h-full w-full object-cover"><span class="absolute left-2 top-2 rounded px-2 py-1 text-xs font-semibold ${item.isPublished === false ? 'bg-slate-800 text-white' : 'bg-emerald-600 text-white'}">${item.isPublished === false ? 'Draft' : 'Published'}</span><span class="absolute right-2 top-2 rounded bg-white/90 px-2 py-1 text-xs">Order ${Number(item.order) || 0}</span></div>
+                    <div class="relative aspect-video bg-slate-100"><img src="${esc(item.imageUrl || '')}" alt="" class="h-full w-full object-cover"><span class="absolute left-2 top-2 rounded px-2 py-1 text-xs font-semibold ${item.bundled ? 'bg-orange-600 text-white' : (item.isPublished === false ? 'bg-slate-800 text-white' : 'bg-emerald-600 text-white')}">${item.bundled ? 'Bundled' : (item.isPublished === false ? 'Draft' : 'Published')}</span><span class="absolute right-2 top-2 rounded bg-white/90 px-2 py-1 text-xs">Order ${Number(item.order) || 0}</span></div>
                     <div class="p-4"><h3 class="font-semibold">${esc(item.title)}</h3><p class="mt-1 text-xs text-slate-500">${esc(item.place)} · ${esc(item.type)}</p><div class="mt-4 flex flex-wrap gap-2"><button data-id="${esc(item.id)}" class="edit-project rounded bg-amber-500 px-3 py-1.5 text-xs font-semibold text-white">Edit</button><button data-id="${esc(item.id)}" class="toggle-project rounded bg-slate-700 px-3 py-1.5 text-xs font-semibold text-white">${item.isPublished === false ? 'Publish' : 'Unpublish'}</button><button data-id="${esc(item.id)}" class="delete-project rounded bg-rose-600 px-3 py-1.5 text-xs font-semibold text-white">Delete</button></div></div>`;
                 projectsGrid.appendChild(card);
             });
@@ -1194,7 +1204,7 @@
                 themeSettings[name]=config; document.getElementById('themeHeroImage').value=''; document.getElementById('themePortraitImage').value=''; document.getElementById('themeHeroLibrary').value=''; document.getElementById('themePortraitLibrary').value=''; renderThemeEditor(); showThemeStatus((name==='apple'?'Minimal 4K':'Technical BIM')+' theme saved. Images remain in Media Library.');
             } catch(error) { showThemeStatus('Save failed: '+error.message+'. Uploaded images remain in Media Library.',true); } finally {button.disabled=false;button.textContent='Save Theme';}
         });
-        document.getElementById('activateThemeBtn').addEventListener('click', async () => { try { const name=siteThemeEditor.value; await db.collection('siteConfig').doc('themes').set({activeTheme:name,updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});themeSettings.activeTheme=name;renderThemeEditor();showThemeStatus((name==='apple'?'Minimal 4K':'Technical BIM')+' is now the default website theme.'); } catch(error){showThemeStatus('Could not activate theme: '+error.message,true);} });
+        document.getElementById('activateThemeBtn').addEventListener('click', async () => { try { const name=siteThemeEditor.value; await db.collection('siteConfig').doc('themes').set({activeTheme:name,updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});themeSettings.activeTheme=name;renderThemeEditor();showThemeStatus((name==='apple'?'Minimal 4K':'Technical BIM')+' is now the default website theme.'); } catch(error){const permission=error&&error.code==='permission-denied';showThemeStatus(permission?'Firebase denied this change because the updated rules are not deployed. Run Firebase login and deploy the Firestore rules.':'Could not activate theme: '+error.message,true);} });
 
         // Populate controls and local fallback previews immediately. Firebase may be
         // slow, unavailable, or awaiting rule deployment; the editor must still work.
