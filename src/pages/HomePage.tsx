@@ -142,22 +142,28 @@ export function HomePage() {
     }, 220);
   };
   const activeTheme = themes[theme];
+  const scrollStoryRail = useCallback((index: number) => {
+    const rail = mediaRailRef.current;
+    const target = rail?.children[index] as HTMLElement | undefined;
+    if (!rail || !target) return;
+    rail.scrollTo({ left: target.offsetLeft - (rail.clientWidth - target.clientWidth) / 2, behavior: "smooth" });
+  }, []);
   const showStory = useCallback((index: number) => {
     const count = activeTheme.mediaRail.length;
     if (!count) return;
     const next = (index + count) % count;
     setActiveStory(next);
-    mediaRailRef.current?.children[next]?.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
-  }, [activeTheme.mediaRail.length]);
+    scrollStoryRail(next);
+  }, [activeTheme.mediaRail.length, scrollStoryRail]);
   useEffect(() => {
     if (theme !== "apple" || activeTheme.mediaRail.length < 2 || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     const timer = window.setInterval(() => setActiveStory((current) => {
       const next = (current + 1) % activeTheme.mediaRail.length;
-      mediaRailRef.current?.children[next]?.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
+      scrollStoryRail(next);
       return next;
     }), 5000);
     return () => window.clearInterval(timer);
-  }, [theme, activeTheme.mediaRail.length]);
+  }, [theme, activeTheme.mediaRail.length, scrollStoryRail]);
   const hobbyKeys = new Set(activeTheme.hobbies.flatMap((item) => [item.title.toLowerCase(), item.url.toLowerCase()]));
   const additionalProducts = products.filter((item) => !hobbyKeys.has((item.title || "").toLowerCase()) && !hobbyKeys.has((item.url || "").toLowerCase()));
 
@@ -194,8 +200,12 @@ export function HomePage() {
 
         <section className="apple-showcase" aria-label="Featured visual stories">
           <div className="apple-rail-heading"><div><span>FEATURED</span><h2>Stories in design.</h2></div><div className="apple-rail-actions"><p>Explore the person, process and projects behind the models.</p><nav aria-label="Featured story controls"><button type="button" onClick={() => showStory(activeStory - 1)} aria-label="Previous story">←</button><span>{String(activeStory + 1).padStart(2, "0")} / {String(activeTheme.mediaRail.length).padStart(2, "0")}</span><button type="button" onClick={() => showStory(activeStory + 1)} aria-label="Next story">→</button></nav></div></div>
-          <div className="apple-media-rail" ref={mediaRailRef}>
-            {activeTheme.mediaRail.map((item, index) => <article className={`apple-media-card ${item.wide ? "apple-media-wide" : ""}`} key={`${item.title}-${index}`}><img src={item.image} alt={item.title} /><div><span>{item.label}</span><h3>{item.title}</h3><p>{item.description}</p></div></article>)}
+          <div className="apple-rail-window">
+            <button className="apple-horizontal-button is-left" type="button" onClick={() => showStory(activeStory - 1)} aria-label="Scroll featured stories left">←</button>
+            <div className="apple-media-rail" ref={mediaRailRef}>
+              {activeTheme.mediaRail.map((item, index) => <article className={`apple-media-card ${item.wide ? "apple-media-wide" : ""}`} key={`${item.title}-${index}`}><img src={item.image} alt={item.title} /><div><span>{item.label}</span><h3>{item.title}</h3><p>{item.description}</p></div></article>)}
+            </div>
+            <button className="apple-horizontal-button is-right" type="button" onClick={() => showStory(activeStory + 1)} aria-label="Scroll featured stories right">→</button>
           </div>
         </section>
 
