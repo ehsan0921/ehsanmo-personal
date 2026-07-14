@@ -56,7 +56,7 @@
                 </div>
             </div>
 
-            <div class="card rounded-lg p-5">
+            <div class="card rounded-lg p-5 mb-6">
                 <h2 class="text-lg font-semibold mb-4">Products & Download Counts</h2>
                 <div class="overflow-auto">
                     <table class="min-w-full text-sm">
@@ -75,6 +75,22 @@
                 <div class="mt-4">
                     <span id="createStatus" class="text-sm text-slate-600"></span>
                 </div>
+            </div>
+
+            <div class="card rounded-lg p-5">
+                <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-5">
+                    <div>
+                        <h2 class="text-lg font-semibold">Portfolio Projects</h2>
+                        <p class="text-sm text-slate-500">Add projects, replace images, control ordering, and publish changes to the homepage.</p>
+                    </div>
+                    <div class="flex flex-wrap gap-2">
+                        <button id="seedProjectsBtn" class="px-4 py-2 rounded bg-slate-700 hover:bg-slate-600 text-white text-sm font-semibold">Import Current Projects</button>
+                        <button id="openProjectModalBtn" class="px-4 py-2 rounded bg-orange-600 hover:bg-orange-500 text-white text-sm font-semibold">+ Add Project</button>
+                    </div>
+                </div>
+                <div id="projectStatus" class="hidden mb-4 rounded px-3 py-2 text-sm"></div>
+                <div id="projectsGrid" class="grid gap-4 md:grid-cols-2"></div>
+                <p id="projectsEmpty" class="hidden py-10 text-center text-sm text-slate-500">No managed projects yet. Import the current portfolio or add your first project.</p>
             </div>
         </div>
     </div>
@@ -200,6 +216,34 @@
         </div>
     </div>
 
+    <div id="projectModal" class="overlay">
+        <div class="card rounded-lg p-5 modal-card">
+            <div class="flex items-center justify-between mb-4">
+                <div><h2 id="projectModalTitle" class="text-lg font-semibold">Add Project</h2><p class="text-xs text-slate-500">Images are uploaded to Firebase Storage.</p></div>
+                <button id="closeProjectModalBtn" class="px-3 py-1 rounded bg-slate-200 hover:bg-slate-300 text-sm text-slate-800">Close</button>
+            </div>
+            <input id="projectId" type="hidden">
+            <input id="projectImagePath" type="hidden">
+            <input id="projectSecondaryImagePath" type="hidden">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div><label class="block text-sm mb-1">Project title *</label><input id="projectTitle" class="w-full px-3 py-2 rounded border border-slate-300" required></div>
+                <div><label class="block text-sm mb-1">Location</label><input id="projectPlace" class="w-full px-3 py-2 rounded border border-slate-300" placeholder="Sydney, Australia"></div>
+                <div><label class="block text-sm mb-1">Project / façade type</label><input id="projectType" class="w-full px-3 py-2 rounded border border-slate-300" placeholder="Specialist curtain wall façade"></div>
+                <div><label class="block text-sm mb-1">Status label</label><input id="projectStat" class="w-full px-3 py-2 rounded border border-slate-300" placeholder="SRG GLOBAL / CURRENT"></div>
+                <div class="md:col-span-2"><label class="block text-sm mb-1">Project link</label><input id="projectLink" type="url" class="w-full px-3 py-2 rounded border border-slate-300" placeholder="https://..."></div>
+                <div><label class="block text-sm mb-1">Image credit</label><input id="projectSource" class="w-full px-3 py-2 rounded border border-slate-300" placeholder="IMAGE / PROJECT ARCHIVE"></div>
+                <div><label class="block text-sm mb-1">Display order</label><input id="projectOrder" type="number" min="0" value="0" class="w-full px-3 py-2 rounded border border-slate-300"></div>
+                <div><label class="block text-sm mb-1">Primary image <span id="primaryRequired">*</span></label><input id="projectImage" type="file" accept="image/jpeg,image/png,image/webp" class="w-full px-3 py-2 rounded border border-slate-300"><img id="projectImagePreview" class="hidden mt-2 h-28 w-full rounded object-cover" alt="Primary preview"></div>
+                <div><label class="block text-sm mb-1">Second image (optional)</label><input id="projectSecondaryImage" type="file" accept="image/jpeg,image/png,image/webp" class="w-full px-3 py-2 rounded border border-slate-300"><img id="projectSecondaryPreview" class="hidden mt-2 h-28 w-full rounded object-cover" alt="Secondary preview"></div>
+                <label class="md:col-span-2 flex items-center gap-2"><input id="projectPublished" type="checkbox" checked><span class="text-sm">Published on homepage</span></label>
+            </div>
+            <div class="mt-5 flex items-center gap-3">
+                <button id="saveProjectBtn" class="px-5 py-2 rounded bg-orange-600 hover:bg-orange-500 text-white text-sm font-semibold">Save Project</button>
+                <span id="projectModalStatus" class="text-sm text-slate-500"></span>
+            </div>
+        </div>
+    </div>
+
     <script>
     (function () {
         const SUPERADMIN_EMAIL = 'Ehsan0921@gmail.com';
@@ -241,6 +285,11 @@
         const productIsWebapp = document.getElementById('productIsWebapp');
         const webappUrlField = document.getElementById('webappUrlField');
         const downloadFields = document.getElementById('downloadFields');
+        const projectModal = document.getElementById('projectModal');
+        const projectsGrid = document.getElementById('projectsGrid');
+        const projectsEmpty = document.getElementById('projectsEmpty');
+        const projectStatus = document.getElementById('projectStatus');
+        let projectCache = [];
 
         function openModal(el) {
             if (!el) return;
@@ -698,6 +747,147 @@
             }
         });
 
+        function showProjectStatus(message, isError) {
+            projectStatus.textContent = message;
+            projectStatus.className = 'mb-4 rounded px-3 py-2 text-sm ' + (isError ? 'bg-rose-50 text-rose-700' : 'bg-emerald-50 text-emerald-700');
+        }
+
+        function projectSlug(text) {
+            return String(text || 'project').toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || ('project-' + Date.now());
+        }
+
+        function validateProjectImage(file) {
+            if (!file) return;
+            if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) throw new Error('Images must be JPG, PNG, or WebP.');
+            if (file.size > 10 * 1024 * 1024) throw new Error('Each image must be smaller than 10 MB.');
+        }
+
+        async function uploadProjectImage(file, slug, kind) {
+            validateProjectImage(file);
+            const extension = (file.name.split('.').pop() || 'jpg').toLowerCase().replace(/[^a-z0-9]/g, '');
+            const path = `projects/${slug}/${kind}-${Date.now()}.${extension}`;
+            const ref = storage.ref().child(path);
+            await ref.put(file, { contentType: file.type, cacheControl: 'public,max-age=31536000' });
+            return { url: await ref.getDownloadURL(), path };
+        }
+
+        function resetProjectForm() {
+            ['projectId','projectImagePath','projectSecondaryImagePath','projectTitle','projectPlace','projectType','projectStat','projectLink','projectSource'].forEach((id) => document.getElementById(id).value = '');
+            document.getElementById('projectOrder').value = projectCache.length;
+            document.getElementById('projectPublished').checked = true;
+            document.getElementById('projectImage').value = '';
+            document.getElementById('projectSecondaryImage').value = '';
+            document.getElementById('projectImagePreview').classList.add('hidden');
+            document.getElementById('projectSecondaryPreview').classList.add('hidden');
+            document.getElementById('primaryRequired').classList.remove('hidden');
+            document.getElementById('projectModalTitle').textContent = 'Add Project';
+            document.getElementById('projectModalStatus').textContent = '';
+        }
+
+        function fillProjectForm(item) {
+            document.getElementById('projectId').value = item.id;
+            document.getElementById('projectImagePath').value = item.imagePath || '';
+            document.getElementById('projectSecondaryImagePath').value = item.secondaryImagePath || '';
+            document.getElementById('projectTitle').value = item.title || '';
+            document.getElementById('projectPlace').value = item.place || '';
+            document.getElementById('projectType').value = item.type || '';
+            document.getElementById('projectStat').value = item.stat || '';
+            document.getElementById('projectLink').value = item.link || '';
+            document.getElementById('projectSource').value = item.source || '';
+            document.getElementById('projectOrder').value = Number(item.order) || 0;
+            document.getElementById('projectPublished').checked = item.isPublished !== false;
+            const primary = document.getElementById('projectImagePreview');
+            primary.src = item.imageUrl || '';
+            primary.classList.toggle('hidden', !item.imageUrl);
+            const secondary = document.getElementById('projectSecondaryPreview');
+            secondary.src = item.secondaryImageUrl || '';
+            secondary.classList.toggle('hidden', !item.secondaryImageUrl);
+            document.getElementById('primaryRequired').classList.add('hidden');
+            document.getElementById('projectModalTitle').textContent = 'Edit Project';
+            document.getElementById('projectModalStatus').textContent = '';
+        }
+
+        async function loadProjects() {
+            projectsGrid.innerHTML = '';
+            const snap = await db.collection('portfolioProjects').get();
+            projectCache = [];
+            snap.forEach((d) => projectCache.push({ id: d.id, ...d.data() }));
+            projectCache.sort((a, b) => (Number(a.order) || 0) - (Number(b.order) || 0));
+            projectsEmpty.classList.toggle('hidden', projectCache.length > 0);
+            projectCache.forEach((item) => {
+                const card = document.createElement('article');
+                card.className = 'overflow-hidden rounded-xl border border-slate-200 bg-white';
+                card.innerHTML = `
+                    <div class="relative aspect-video bg-slate-100"><img src="${esc(item.imageUrl || '')}" alt="" class="h-full w-full object-cover"><span class="absolute left-2 top-2 rounded px-2 py-1 text-xs font-semibold ${item.isPublished === false ? 'bg-slate-800 text-white' : 'bg-emerald-600 text-white'}">${item.isPublished === false ? 'Draft' : 'Published'}</span><span class="absolute right-2 top-2 rounded bg-white/90 px-2 py-1 text-xs">Order ${Number(item.order) || 0}</span></div>
+                    <div class="p-4"><h3 class="font-semibold">${esc(item.title)}</h3><p class="mt-1 text-xs text-slate-500">${esc(item.place)} · ${esc(item.type)}</p><div class="mt-4 flex flex-wrap gap-2"><button data-id="${esc(item.id)}" class="edit-project rounded bg-amber-500 px-3 py-1.5 text-xs font-semibold text-white">Edit</button><button data-id="${esc(item.id)}" class="toggle-project rounded bg-slate-700 px-3 py-1.5 text-xs font-semibold text-white">${item.isPublished === false ? 'Publish' : 'Unpublish'}</button><button data-id="${esc(item.id)}" class="delete-project rounded bg-rose-600 px-3 py-1.5 text-xs font-semibold text-white">Delete</button></div></div>`;
+                projectsGrid.appendChild(card);
+            });
+            projectsGrid.querySelectorAll('.edit-project').forEach((button) => button.addEventListener('click', () => { const item = projectCache.find((x) => x.id === button.dataset.id); if (item) { fillProjectForm(item); openModal(projectModal); } }));
+            projectsGrid.querySelectorAll('.toggle-project').forEach((button) => button.addEventListener('click', async () => { const item = projectCache.find((x) => x.id === button.dataset.id); if (!item) return; await db.collection('portfolioProjects').doc(item.id).update({ isPublished: item.isPublished === false, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }); await loadProjects(); }));
+            projectsGrid.querySelectorAll('.delete-project').forEach((button) => button.addEventListener('click', async () => { const item = projectCache.find((x) => x.id === button.dataset.id); if (!item || !confirm(`Delete “${item.title}”? This cannot be undone.`)) return; await db.collection('portfolioProjects').doc(item.id).delete(); await Promise.all([safeDeleteStoragePath(item.imagePath), safeDeleteStoragePath(item.secondaryImagePath)]); showProjectStatus('Project deleted.'); await loadProjects(); }));
+        }
+
+        document.getElementById('openProjectModalBtn').addEventListener('click', () => { resetProjectForm(); openModal(projectModal); });
+        document.getElementById('closeProjectModalBtn').addEventListener('click', () => closeModal(projectModal));
+        projectModal.addEventListener('click', (event) => { if (event.target === projectModal) closeModal(projectModal); });
+        [['projectImage','projectImagePreview'],['projectSecondaryImage','projectSecondaryPreview']].forEach(([inputId, previewId]) => document.getElementById(inputId).addEventListener('change', (event) => { const file = event.target.files[0]; const preview = document.getElementById(previewId); if (!file) return; try { validateProjectImage(file); preview.src = URL.createObjectURL(file); preview.classList.remove('hidden'); } catch (error) { event.target.value = ''; alert(error.message); } }));
+
+        document.getElementById('saveProjectBtn').addEventListener('click', async () => {
+            const saveButton = document.getElementById('saveProjectBtn');
+            const status = document.getElementById('projectModalStatus');
+            const id = document.getElementById('projectId').value;
+            const existing = projectCache.find((item) => item.id === id);
+            const title = document.getElementById('projectTitle').value.trim();
+            const primaryFile = document.getElementById('projectImage').files[0];
+            const secondaryFile = document.getElementById('projectSecondaryImage').files[0];
+            if (!title || (!existing && !primaryFile)) { status.textContent = 'Title and primary image are required.'; return; }
+            saveButton.disabled = true;
+            status.textContent = 'Uploading and saving…';
+            let newPrimary, newSecondary;
+            try {
+                const slug = projectSlug(title);
+                if (primaryFile) newPrimary = await uploadProjectImage(primaryFile, slug, 'primary');
+                if (secondaryFile) newSecondary = await uploadProjectImage(secondaryFile, slug, 'secondary');
+                const data = {
+                    title,
+                    place: document.getElementById('projectPlace').value.trim(),
+                    type: document.getElementById('projectType').value.trim(),
+                    stat: document.getElementById('projectStat').value.trim() || 'PROJECT',
+                    link: document.getElementById('projectLink').value.trim() || '#',
+                    source: document.getElementById('projectSource').value.trim() || 'PROJECT IMAGE',
+                    order: Number(document.getElementById('projectOrder').value) || 0,
+                    isPublished: document.getElementById('projectPublished').checked,
+                    imageUrl: newPrimary ? newPrimary.url : existing.imageUrl,
+                    imagePath: newPrimary ? newPrimary.path : (existing.imagePath || ''),
+                    secondaryImageUrl: newSecondary ? newSecondary.url : (existing ? existing.secondaryImageUrl || '' : ''),
+                    secondaryImagePath: newSecondary ? newSecondary.path : (existing ? existing.secondaryImagePath || '' : ''),
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                };
+                if (existing) await db.collection('portfolioProjects').doc(existing.id).update(data);
+                else await db.collection('portfolioProjects').add({ ...data, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+                if (newPrimary && existing && existing.imagePath) await safeDeleteStoragePath(existing.imagePath);
+                if (newSecondary && existing && existing.secondaryImagePath) await safeDeleteStoragePath(existing.secondaryImagePath);
+                closeModal(projectModal);
+                showProjectStatus(existing ? 'Project updated.' : 'Project added.');
+                await loadProjects();
+            } catch (error) {
+                if (newPrimary) await safeDeleteStoragePath(newPrimary.path);
+                if (newSecondary) await safeDeleteStoragePath(newSecondary.path);
+                status.textContent = 'Could not save: ' + (error.message || 'Unknown error');
+            } finally { saveButton.disabled = false; }
+        });
+
+        document.getElementById('seedProjectsBtn').addEventListener('click', async () => {
+            if (projectCache.length && !confirm('Projects already exist. Import any missing current projects?')) return;
+            const defaults = [
+                { id:'atlassian-central', title:'Atlassian Central', place:'Sydney, Australia', type:'Specialist curtain wall façade', stat:'SRG GLOBAL / CURRENT', link:'https://www.bvn.com.au/project/atlassian-central/', source:'IMAGES / BVN + PROJECT ARCHIVE', imageUrl:'/projects/atlassian-central.jpg', secondaryImageUrl:'/projects/atlassian-central-01.jpg', order:0 },
+                { id:'new-dunedin-hospital', title:'New Dunedin Hospital', place:'Dunedin, New Zealand', type:'Outpatients Building façade', stat:'HEALTH / FACADE', link:'https://www.tewhatuora.govt.nz/health-services-and-programmes/infrastructure-and-investment/new-dunedin-hospital-whakatuputupu', source:'IMAGE / HEALTH NZ', imageUrl:'/projects/new-dunedin-hospital.png', order:1 },
+                { id:'project-dove', title:'Project Dove', place:'53 Ord Street, Subiaco', type:'Expressive engineered façade', stat:'PERTH / COMMERCIAL', link:'https://www.linkedin.com/posts/glasss-wall-systems-india-pvt-ltd-_name-of-the-project-dove-location-perth-activity-7472978778894274562-h_-7', source:'IMAGE / GWS', imageUrl:'/projects/project-dove.jpg', order:2 },
+                { id:'women-babies-hospital', title:'Women and Babies Hospital', place:'Murdoch, Western Australia', type:'Major healthcare façade delivery', stat:'PERTH / HEALTH', link:'https://www.webuild-group.com.au/en/media/press-notes/webuild-construction-commences-western-australias-new-women-and-babies-hospital/', source:'IMAGE / WEBUILD', imageUrl:'/projects/women-babies-hospital.png', order:3 }
+            ];
+            try { for (const item of defaults) await db.collection('portfolioProjects').doc(item.id).set({ ...item, isPublished:true, imagePath:'', secondaryImagePath:'', updatedAt:firebase.firestore.FieldValue.serverTimestamp() }, { merge:true }); showProjectStatus('Current projects imported. You can now edit or replace their images.'); await loadProjects(); } catch (error) { showProjectStatus('Import failed: ' + error.message, true); }
+        });
+
         document.getElementById('logoutBtn').addEventListener('click', async () => {
             try { await auth.signOut(); } catch(e) {}
             location.href = '/';
@@ -712,6 +902,7 @@
             notAuthorized.classList.add('hidden');
             adminContent.classList.remove('hidden');
             await loadProducts();
+            await loadProjects();
         });
     })();
     </script>

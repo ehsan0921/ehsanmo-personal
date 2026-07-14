@@ -47,6 +47,12 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
+    // Published portfolio projects are public; only the superadmin can manage them.
+    match /portfolioProjects/{projectId} {
+      allow read: if true;
+      allow create, update, delete: if isAdmin();
+    }
+
     // Share documents are intentionally public read-only by link ID
     match /gymShares/{shareId} {
       allow read: if true;

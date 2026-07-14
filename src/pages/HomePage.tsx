@@ -12,6 +12,7 @@ const LINKEDIN = "https://www.linkedin.com/in/ehsan-mokhtary/";
 const YOUTUBE = "https://www.youtube.com/@ehsanmokhtaryArchitect";
 const FOOD4RHINO = "https://www.food4rhino.com/en/app/rhinoplus";
 const EMAIL = "Ehsan0921@gmail.com";
+type PortfolioProject = { id?: string; image: string; secondaryImage?: string; title: string; place: string; type: string; stat: string; link: string; source: string; order?: number };
 const SERVICES = [
   { no: "01", title: "Facade clash detection", text: "Federated coordination focused on curtain wall interfaces—structure, embeds, brackets, slab edges, fire-stopping and access zones.", meta: ["Model federation", "Issue ownership", "Resolution tracking"] },
   { no: "02", title: "Metadata & LOI control", text: "Information that survives handover. I define, validate and govern parameters from design intent through procurement and fabrication.", meta: ["Parameter schemas", "IFC mapping", "QA validation"] },
@@ -19,7 +20,7 @@ const SERVICES = [
   { no: "04", title: "Computational production", text: "Rhino and Grasshopper workflows that rationalise panels and automate backpans, cast-ins, dimensions, schedules and production data.", meta: ["Panelisation", "Automation", "Fabrication data"] },
 ];
 
-const WORK = [
+const WORK: PortfolioProject[] = [
   { image: "/projects/atlassian-central.jpg", secondaryImage: "/projects/atlassian-central-01.jpg", title: "Atlassian Central", place: "Sydney, Australia", type: "Specialist curtain wall façade", stat: "SRG GLOBAL / CURRENT", link: "https://www.bvn.com.au/project/atlassian-central/", source: "IMAGES / BVN + PROJECT ARCHIVE" },
   { image: "/projects/new-dunedin-hospital.png", title: "New Dunedin Hospital", place: "Dunedin, New Zealand", type: "Outpatients Building façade", stat: "HEALTH / FACADE", link: "https://www.tewhatuora.govt.nz/health-services-and-programmes/infrastructure-and-investment/new-dunedin-hospital-whakatuputupu", source: "IMAGE / HEALTH NZ" },
   { image: "/projects/project-dove.jpg", title: "Project Dove", place: "53 Ord Street, Subiaco", type: "Expressive engineered façade", stat: "PERTH / COMMERCIAL", link: "https://www.linkedin.com/posts/glasss-wall-systems-india-pvt-ltd-_name-of-the-project-dove-location-perth-activity-7472978778894274562-h_-7", source: "IMAGE / GWS" },
@@ -33,6 +34,7 @@ export function HomePage() {
   const [authOpen, setAuthOpen] = useState(false);
   const [authMode, setAuthMode] = useState<"login" | "register">("login");
   const [products, setProducts] = useState<Product[]>([]);
+  const [projects, setProjects] = useState<PortfolioProject[]>(WORK);
   const [phone, setPhone] = useState<string | null>(null);
   const isAdmin = !!user?.email && user.email.toLowerCase() === SUPERADMIN_EMAIL.toLowerCase();
 
@@ -46,6 +48,16 @@ export function HomePage() {
     } catch { setProducts([]); }
   }, []);
   useEffect(() => { loadProducts(); }, [loadProducts]);
+  useEffect(() => {
+    getDocs(collection(db, "portfolioProjects")).then((snap) => {
+      const remote = snap.docs
+        .map((item) => ({ id: item.id, ...item.data() }))
+        .filter((item: any) => item.isPublished !== false && item.title && item.imageUrl)
+        .map((item: any) => ({ id: item.id, image: item.imageUrl, secondaryImage: item.secondaryImageUrl || undefined, title: item.title, place: item.place || "", type: item.type || "", stat: item.stat || "PROJECT", link: item.link || "#", source: item.source || "PROJECT IMAGE", order: Number(item.order) || 0 }))
+        .sort((a, b) => a.order - b.order);
+      if (remote.length) setProjects(remote);
+    }).catch(() => undefined);
+  }, []);
   useEffect(() => {
     const move = (event: PointerEvent) => {
       document.documentElement.style.setProperty("--mx", `${(event.clientX / window.innerWidth - 0.5) * 2}`);
@@ -116,7 +128,7 @@ export function HomePage() {
         <section id="work" className="border-x border-white/10 px-5 py-24 sm:px-10 lg:px-16 lg:py-32">
           <Reveal><div className="section-head"><div><p className="section-index">03 / SELECTED WORK</p><h2>Proof in the model.</h2></div><a href={YOUTUBE} target="_blank" rel="noreferrer">VIEW ALL CASE STUDIES ↗</a></div></Reveal>
           <div className="mt-14 grid gap-px bg-white/10 md:grid-cols-2">
-            {WORK.map((w, i) => <Reveal key={w.title} delay={(i%2)*90}><a href={w.link} target="_blank" rel="noreferrer" className="project-card group"><div className={`project-image ${w.secondaryImage ? "project-image-dual" : ""}`}><img src={w.image} alt={w.title} />{w.secondaryImage && <img className="project-image-alt" src={w.secondaryImage} alt={`${w.title} full tower view`} />}<span>{w.stat}</span>{w.secondaryImage && <em>02 VIEWS</em>}<i>VIEW PROJECT ↗</i></div><div className="project-copy"><span>0{i+1}</span><div><h3>{w.title}</h3><p>{w.place} — {w.type}</p><small>{w.source}</small></div></div></a></Reveal>)}
+            {projects.map((w, i) => <Reveal key={w.id || w.title} delay={(i%2)*90}><a href={w.link} target="_blank" rel="noreferrer" className="project-card group"><div className={`project-image ${w.secondaryImage ? "project-image-dual" : ""}`}><img src={w.image} alt={w.title} />{w.secondaryImage && <img className="project-image-alt" src={w.secondaryImage} alt={`${w.title} alternate view`} />}<span>{w.stat}</span>{w.secondaryImage && <em>02 VIEWS</em>}<i>VIEW PROJECT ↗</i></div><div className="project-copy"><span>{String(i+1).padStart(2,"0")}</span><div><h3>{w.title}</h3><p>{w.place} — {w.type}</p><small>{w.source}</small></div></div></a></Reveal>)}
           </div>
         </section>
 

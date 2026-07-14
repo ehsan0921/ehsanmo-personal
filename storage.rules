@@ -5,6 +5,12 @@ service firebase.storage {
       return request.auth != null;
     }
 
+    function isAdmin() {
+      return request.auth != null &&
+        request.auth.token.email != null &&
+        request.auth.token.email == "Ehsan0921@gmail.com";
+    }
+
     // Original path style: EhsanMopersonal-website/products/...
     match /EhsanMopersonal-website/products/{product}/{version}/{fileName} {
       allow read, write, delete: if isAuthenticated();
@@ -13,6 +19,11 @@ service firebase.storage {
     // Simpler path style: products/... (used by admin upload)
     match /products/{allPaths=**} {
       allow read, write, delete: if isAuthenticated();
+    }
+
+    match /projects/{allPaths=**} {
+      allow read: if true;
+      allow write: if isAdmin();
     }
   }
 }
