@@ -13,6 +13,12 @@ const YOUTUBE = "https://www.youtube.com/@ehsanmokhtaryArchitect";
 const FOOD4RHINO = "https://www.food4rhino.com/en/app/rhinoplus";
 const EMAIL = "Ehsan0921@gmail.com";
 type PortfolioProject = { id?: string; image: string; secondaryImage?: string; title: string; place: string; type: string; stat: string; link: string; source: string; order?: number };
+type ThemeName = "technical" | "apple";
+type ThemeConfig = { heroImageUrl: string; portraitImageUrl: string; accentColor: string; heroLine1: string; heroLine2: string; heroSubtitle: string; showParticles: boolean; showFloatingPanels: boolean };
+const DEFAULT_THEMES: Record<ThemeName, ThemeConfig> = {
+  technical: { heroImageUrl: "/ehsan-banner-portrait.png", portraitImageUrl: "/ehsan-mokhtary-portrait.png", accentColor: "#ff5c35", heroLine1: "I make complex", heroLine2: "facades buildable.", heroSubtitle: "Facade BIM leadership for projects where geometry, coordination and information cannot fail—from clash detection and LOD strategy to fabrication-ready models and metadata.", showParticles: true, showFloatingPanels: true },
+  apple: { heroImageUrl: "/ehsan-banner-portrait.png", portraitImageUrl: "/ehsan-mokhtary-portrait.png", accentColor: "#ff5a1f", heroLine1: "Precision at", heroLine2: "building scale.", heroSubtitle: "Facade BIM, computational design and information control—made clear, coordinated and ready to build.", showParticles: false, showFloatingPanels: false },
+};
 const SERVICES = [
   { no: "01", title: "Facade clash detection", text: "Federated coordination focused on curtain wall interfaces—structure, embeds, brackets, slab edges, fire-stopping and access zones.", meta: ["Model federation", "Issue ownership", "Resolution tracking"] },
   { no: "02", title: "Metadata & LOI control", text: "Information that survives handover. I define, validate and govern parameters from design intent through procurement and fabrication.", meta: ["Parameter schemas", "IFC mapping", "QA validation"] },
@@ -35,8 +41,9 @@ export function HomePage() {
   const [authMode, setAuthMode] = useState<"login" | "register">("login");
   const [products, setProducts] = useState<Product[]>([]);
   const [projects, setProjects] = useState<PortfolioProject[]>(WORK);
-  const [portraitImage, setPortraitImage] = useState("/ehsan-mokhtary-portrait.png");
   const [phone, setPhone] = useState<string | null>(null);
+  const [theme, setTheme] = useState<ThemeName>("technical");
+  const [themes, setThemes] = useState<Record<ThemeName, ThemeConfig>>(DEFAULT_THEMES);
   const isAdmin = !!user?.email && user.email.toLowerCase() === SUPERADMIN_EMAIL.toLowerCase();
 
   useEffect(() => onAuthStateChanged(auth, (u) => { setUser(u); if (u) setAuthOpen(false); }), []);
@@ -50,11 +57,12 @@ export function HomePage() {
   }, []);
   useEffect(() => { loadProducts(); }, [loadProducts]);
   useEffect(() => {
-    getDoc(doc(db, "siteConfig", "images")).then((snap) => {
+    getDoc(doc(db, "siteConfig", "themes")).then((snap) => {
       if (!snap.exists()) return;
-      const data = snap.data();
-      if (data.hero) document.documentElement.style.setProperty("--hero-image", `url("${data.hero}")`);
-      if (data.portrait) setPortraitImage(data.portrait);
+      const data = snap.data() as any;
+      setThemes({ technical: { ...DEFAULT_THEMES.technical, ...(data.technical || {}) }, apple: { ...DEFAULT_THEMES.apple, ...(data.apple || {}) } });
+      const saved = localStorage.getItem("ehsan-theme");
+      setTheme(saved === "technical" || saved === "apple" ? saved : (data.activeTheme === "apple" ? "apple" : "technical"));
     }).catch(() => undefined);
   }, []);
   useEffect(() => {
@@ -85,9 +93,16 @@ export function HomePage() {
     try { await updateDoc(doc(db, "products", item.id), { downloadCount: increment(1), lastDownloadedAt: serverTimestamp() }); } catch { /* best effort */ }
     window.open(url, "_blank", "noopener,noreferrer");
   };
+  const switchTheme = () => {
+    const next: ThemeName = theme === "technical" ? "apple" : "technical";
+    setTheme(next);
+    localStorage.setItem("ehsan-theme", next);
+  };
+  const activeTheme = themes[theme];
 
-  return <div className="site-shell min-h-screen overflow-x-hidden text-[#deddd8]">
-    <BackgroundCanvas />
+  return <div className={`site-shell theme-${theme} min-h-screen overflow-x-hidden text-[#deddd8]`} data-theme={theme} style={{ "--accent": activeTheme.accentColor, "--theme-hero": `url("${activeTheme.heroImageUrl}")` } as React.CSSProperties}>
+    {activeTheme.showParticles && <BackgroundCanvas />}
+    <button type="button" className="theme-switch" onClick={switchTheme} aria-label={`Switch to ${theme === "technical" ? "minimal" : "technical"} theme`}><span>{theme === "technical" ? "MINIMAL" : "TECHNICAL"}</span><i><b /></i></button>
     <div className="relative z-10 mx-auto max-w-[1500px] px-4 sm:px-7 lg:px-10">
       <Header user={user} isAdmin={isAdmin} menuProducts={products} onOpenLogin={() => { setAuthMode("login"); setAuthOpen(true); }} onOpenRegister={() => { setAuthMode("register"); setAuthOpen(true); }} onLogout={() => signOut(auth).catch(() => undefined)} />
 
@@ -95,13 +110,11 @@ export function HomePage() {
         <section className="hero-grid relative min-h-[820px] overflow-hidden border-x border-white/10 px-5 pb-16 pt-20 sm:px-10 lg:px-16 lg:pt-28">
           <div className="hero-image absolute inset-0" aria-hidden />
           <div className="hero-scan absolute inset-0" aria-hidden />
-          <div className="hero-float hero-float-a" aria-hidden><span>CLASH / 014</span><b>RESOLVED</b></div>
-          <div className="hero-float hero-float-b" aria-hidden><span>MODEL STATE</span><b>FEDERATED</b></div>
-          <div className="hero-float hero-float-c" aria-hidden><span>LOD</span><b>350</b></div>
+          {activeTheme.showFloatingPanels && <><div className="hero-float hero-float-a" aria-hidden><span>CLASH / 014</span><b>RESOLVED</b></div><div className="hero-float hero-float-b" aria-hidden><span>MODEL STATE</span><b>FEDERATED</b></div><div className="hero-float hero-float-c" aria-hidden><span>LOD</span><b>350</b></div></>}
           <div className="relative z-10 max-w-4xl">
             <p className="eyebrow"><span className="status-dot" /> MELBOURNE / AUSTRALIA — AVAILABLE FOR BIM CONSULTING</p>
-            <h1 className="hero-title mt-8">I make complex<br /><span>facades buildable.</span></h1>
-            <p className="mt-8 max-w-2xl text-lg leading-relaxed text-white/65 sm:text-xl">Facade BIM leadership for projects where geometry, coordination and information cannot fail—from clash detection and LOD strategy to fabrication-ready models and metadata.</p>
+            <h1 className="hero-title mt-8">{activeTheme.heroLine1}<br /><span>{activeTheme.heroLine2}</span></h1>
+            <p className="hero-subtitle mt-8 max-w-2xl text-lg leading-relaxed text-white/65 sm:text-xl">{activeTheme.heroSubtitle}</p>
             <a className="current-company" href="https://srgglobal.com.au/" target="_blank" rel="noreferrer"><span>CURRENTLY AT</span><span className="company-logo-wrap"><img src="/srg-global-logo.svg" alt="SRG Global" /></span><b>FACADE BIM MANAGER</b></a>
             <div className="mt-10 flex flex-wrap gap-3">
               <a href="#services" className="button-primary">Explore BIM services <span>↘</span></a>
@@ -118,7 +131,7 @@ export function HomePage() {
         </section>
 
         <section className="identity-zone border-x border-b border-white/10">
-          <Reveal className="identity-photo"><img src={portraitImage} alt="Ehsan Mokhtary, Facade BIM Manager" loading="lazy" /><div className="portrait-reticle" aria-hidden /><span className="portrait-code">EM / PROFILE_01</span></Reveal>
+          <Reveal className="identity-photo"><img src={activeTheme.portraitImageUrl} alt="Ehsan Mokhtary, Facade BIM Manager" loading="lazy" /><div className="portrait-reticle" aria-hidden /><span className="portrait-code">EM / PROFILE_01</span></Reveal>
           <Reveal className="identity-copy" delay={120}><p className="section-index">PERSON BEHIND THE MODEL</p><h2>Technical precision.<br /><span>Human leadership.</span></h2><p>I lead teams through complex digital delivery with a practical focus: make responsibilities clear, make information dependable and make the façade buildable.</p><dl><div><dt>ROLE</dt><dd>Facade BIM Manager</dd></div><div><dt>BASE</dt><dd>Melbourne, Australia</dd></div><div><dt>FOCUS</dt><dd>Facade systems + computation</dd></div></dl></Reveal>
         </section>
 

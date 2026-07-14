@@ -194,8 +194,8 @@
 
             <div class="card rounded-lg p-5 mt-6">
                 <div class="mb-5">
-                    <h2 class="text-lg font-semibold">Theme Settings — Site Images</h2>
-                    <p class="text-sm text-slate-500">Change the homepage pictures. Uploads are stored in Firebase and apply instantly, in every theme.</p>
+                    <h2 class="text-lg font-semibold">Technical Theme — Quick Images</h2>
+                    <p class="text-sm text-slate-500">Quickly replace the two main pictures in the existing Technical BIM theme.</p>
                 </div>
                 <div id="siteImagesStatus" class="hidden mb-4 rounded px-3 py-2 text-sm"></div>
                 <div class="grid gap-4 md:grid-cols-2">
@@ -213,6 +213,15 @@
                         <input id="portraitImageInput" type="file" accept="image/jpeg,image/png,image/webp" class="w-full px-3 py-2 rounded border border-slate-300 text-sm">
                         <button id="uploadPortraitBtn" class="mt-3 w-full px-4 py-2 rounded bg-orange-600 hover:bg-orange-500 text-white text-sm font-semibold">Upload Portrait</button>
                     </div>
+                </div>
+            </div>
+
+            <div class="card rounded-lg p-5 mt-6">
+                <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-5"><div><h2 class="text-lg font-semibold">Per-theme Customization</h2><p class="text-sm text-slate-500">Each website theme has independent photos, headline, colour and motion settings.</p></div><div><label class="block text-xs font-semibold mb-1">Theme to edit</label><select id="siteThemeEditor" class="px-3 py-2 rounded border border-slate-300"><option value="technical">Technical BIM</option><option value="apple">Minimal 4K</option></select></div></div>
+                <div id="themeEditorStatus" class="hidden mb-4 rounded px-3 py-2 text-sm"></div>
+                <div class="grid gap-5 lg:grid-cols-[.8fr_1.2fr]">
+                    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-1"><div class="border border-slate-200 rounded-lg p-4"><p class="text-sm font-semibold mb-2">Theme hero image</p><img id="themeHeroPreview" class="h-36 w-full rounded object-cover bg-slate-100 mb-3" alt="Hero preview"><input id="themeHeroImage" type="file" accept="image/jpeg,image/png,image/webp" class="w-full text-sm"></div><div class="border border-slate-200 rounded-lg p-4"><p class="text-sm font-semibold mb-2">Theme portrait</p><img id="themePortraitPreview" class="h-36 w-full rounded object-cover bg-slate-100 mb-3" alt="Portrait preview"><input id="themePortraitImage" type="file" accept="image/jpeg,image/png,image/webp" class="w-full text-sm"></div></div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4"><div><label class="block text-sm mb-1">Headline line 1</label><input id="themeHeroLine1" class="w-full px-3 py-2 rounded border border-slate-300"></div><div><label class="block text-sm mb-1">Headline line 2</label><input id="themeHeroLine2" class="w-full px-3 py-2 rounded border border-slate-300"></div><div class="md:col-span-2"><label class="block text-sm mb-1">Hero introduction</label><textarea id="themeHeroSubtitle" rows="3" class="w-full px-3 py-2 rounded border border-slate-300"></textarea></div><div><label class="block text-sm mb-1">Accent colour</label><div class="flex gap-2"><input id="themeAccentColor" type="color" class="h-10 w-14 rounded border border-slate-300"><input id="themeAccentText" class="min-w-0 flex-1 px-3 py-2 rounded border border-slate-300"></div></div><div class="space-y-3 pt-1"><label class="flex items-center gap-2"><input id="themeParticles" type="checkbox"><span class="text-sm">Background particles</span></label><label class="flex items-center gap-2"><input id="themeFloatingPanels" type="checkbox"><span class="text-sm">Floating BIM panels</span></label></div><div class="md:col-span-2 flex flex-wrap gap-2 border-t border-slate-200 pt-4"><button id="saveThemeBtn" class="px-5 py-2 rounded bg-orange-600 hover:bg-orange-500 text-white text-sm font-semibold">Save Theme</button><button id="activateThemeBtn" class="px-5 py-2 rounded bg-slate-700 hover:bg-slate-600 text-white text-sm font-semibold">Make Default Theme</button><a href="/" target="_blank" class="px-5 py-2 rounded bg-slate-200 hover:bg-slate-300 text-slate-800 text-sm font-semibold">Preview Website ↗</a></div></div>
                 </div>
             </div>
         </div>
@@ -1038,10 +1047,10 @@
 
         async function loadSiteImages() {
             try {
-                const snap = await db.collection('siteConfig').doc('images').get();
-                const data = snap.exists ? snap.data() : {};
-                heroPreview.src = data.hero || '/ehsan-banner-portrait.png';
-                portraitPreview.src = data.portrait || '/ehsan-mokhtary-portrait.png';
+                const snap = await db.collection('siteConfig').doc('themes').get();
+                const data = snap.exists ? (snap.data().technical || {}) : {};
+                heroPreview.src = data.heroImageUrl || '/ehsan-banner-portrait.png';
+                portraitPreview.src = data.portraitImageUrl || '/ehsan-mokhtary-portrait.png';
             } catch (error) {
                 showSiteImagesStatus('Could not load site images: ' + error.message, true);
             }
@@ -1059,10 +1068,12 @@
                 const ref = storage.ref(`site-images/${key}-${Date.now()}.${ext}`);
                 await ref.put(file);
                 const url = await ref.getDownloadURL();
-                await db.collection('siteConfig').doc('images').set({ [key]: url, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
+                const technical = { ...(themeSettings.technical || themeDefaults.technical), [key === 'hero' ? 'heroImageUrl' : 'portraitImageUrl']: url };
+                await db.collection('siteConfig').doc('themes').set({ technical, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
+                themeSettings.technical = technical;
                 input.value = '';
                 await loadSiteImages();
-                showSiteImagesStatus('Image updated. The homepage now uses the new picture in every theme.');
+                showSiteImagesStatus('Technical BIM theme image updated.');
             } catch (error) {
                 showSiteImagesStatus('Upload failed: ' + error.message, true);
             } finally {
@@ -1073,6 +1084,68 @@
 
         uploadHeroBtn.addEventListener('click', () => uploadSiteImage('hero', heroImageInput, uploadHeroBtn));
         uploadPortraitBtn.addEventListener('click', () => uploadSiteImage('portrait', portraitImageInput, uploadPortraitBtn));
+
+        const themeDefaults = {
+            technical: { heroImageUrl:'/ehsan-banner-portrait.png', portraitImageUrl:'/ehsan-mokhtary-portrait.png', accentColor:'#ff5c35', heroLine1:'I make complex', heroLine2:'facades buildable.', heroSubtitle:'Facade BIM leadership for projects where geometry, coordination and information cannot fail—from clash detection and LOD strategy to fabrication-ready models and metadata.', showParticles:true, showFloatingPanels:true },
+            apple: { heroImageUrl:'/ehsan-banner-portrait.png', portraitImageUrl:'/ehsan-mokhtary-portrait.png', accentColor:'#ff5a1f', heroLine1:'Precision at', heroLine2:'building scale.', heroSubtitle:'Facade BIM, computational design and information control—made clear, coordinated and ready to build.', showParticles:false, showFloatingPanels:false }
+        };
+        let themeSettings = { activeTheme:'technical', technical:{...themeDefaults.technical}, apple:{...themeDefaults.apple} };
+        const siteThemeEditor = document.getElementById('siteThemeEditor');
+        const themeEditorStatus = document.getElementById('themeEditorStatus');
+
+        function showThemeStatus(message, isError) {
+            themeEditorStatus.textContent = message;
+            themeEditorStatus.className = 'mb-4 rounded px-3 py-2 text-sm ' + (isError ? 'bg-rose-50 text-rose-700' : 'bg-emerald-50 text-emerald-700');
+        }
+        function renderThemeEditor() {
+            const config = themeSettings[siteThemeEditor.value] || themeDefaults[siteThemeEditor.value];
+            document.getElementById('themeHeroPreview').src = config.heroImageUrl;
+            document.getElementById('themePortraitPreview').src = config.portraitImageUrl;
+            document.getElementById('themeHeroLine1').value = config.heroLine1 || '';
+            document.getElementById('themeHeroLine2').value = config.heroLine2 || '';
+            document.getElementById('themeHeroSubtitle').value = config.heroSubtitle || '';
+            document.getElementById('themeAccentColor').value = config.accentColor || '#ff5c35';
+            document.getElementById('themeAccentText').value = config.accentColor || '#ff5c35';
+            document.getElementById('themeParticles').checked = config.showParticles !== false;
+            document.getElementById('themeFloatingPanels').checked = config.showFloatingPanels !== false;
+            document.getElementById('activateThemeBtn').textContent = themeSettings.activeTheme === siteThemeEditor.value ? 'Current Default ✓' : 'Make Default Theme';
+        }
+        async function loadThemeSettings() {
+            try {
+                const snap = await db.collection('siteConfig').doc('themes').get();
+                const data = snap.exists ? snap.data() : {};
+                themeSettings = { activeTheme:data.activeTheme === 'apple' ? 'apple' : 'technical', technical:{...themeDefaults.technical,...(data.technical || {})}, apple:{...themeDefaults.apple,...(data.apple || {})} };
+                renderThemeEditor();
+            } catch (error) { showThemeStatus('Could not load theme settings: ' + error.message, true); }
+        }
+        async function uploadThemeAsset(file, themeName, kind) {
+            if (!file) return null;
+            validateProjectImage(file);
+            const ext = (file.name.split('.').pop() || 'jpg').toLowerCase().replace(/[^a-z0-9]/g, '') || 'jpg';
+            const path = `site-images/themes/${themeName}/${kind}-${Date.now()}.${ext}`;
+            const ref = storage.ref(path);
+            await ref.put(file, { contentType:file.type, cacheControl:'public,max-age=31536000' });
+            return { url:await ref.getDownloadURL(), path };
+        }
+        siteThemeEditor.addEventListener('change', renderThemeEditor);
+        document.getElementById('themeAccentColor').addEventListener('input', (event) => document.getElementById('themeAccentText').value = event.target.value);
+        document.getElementById('themeAccentText').addEventListener('input', (event) => { if (/^#[0-9a-f]{6}$/i.test(event.target.value)) document.getElementById('themeAccentColor').value = event.target.value; });
+        [['themeHeroImage','themeHeroPreview'],['themePortraitImage','themePortraitPreview']].forEach(([inputId, previewId]) => document.getElementById(inputId).addEventListener('change', (event) => { const file=event.target.files[0]; if (!file) return; try { validateProjectImage(file); document.getElementById(previewId).src=URL.createObjectURL(file); } catch(error) { event.target.value=''; showThemeStatus(error.message,true); } }));
+        document.getElementById('saveThemeBtn').addEventListener('click', async () => {
+            const button=document.getElementById('saveThemeBtn'); const name=siteThemeEditor.value; const old=themeSettings[name]; let heroUpload,portraitUpload;
+            button.disabled=true; button.textContent='Saving…';
+            try {
+                heroUpload=await uploadThemeAsset(document.getElementById('themeHeroImage').files[0],name,'hero');
+                portraitUpload=await uploadThemeAsset(document.getElementById('themePortraitImage').files[0],name,'portrait');
+                const accent=document.getElementById('themeAccentText').value.trim();
+                if (!/^#[0-9a-f]{6}$/i.test(accent)) throw new Error('Accent colour must be a six-digit hex colour.');
+                const config={ heroImageUrl:heroUpload?heroUpload.url:old.heroImageUrl, heroImagePath:heroUpload?heroUpload.path:(old.heroImagePath||''), portraitImageUrl:portraitUpload?portraitUpload.url:old.portraitImageUrl, portraitImagePath:portraitUpload?portraitUpload.path:(old.portraitImagePath||''), accentColor:accent, heroLine1:document.getElementById('themeHeroLine1').value.trim(), heroLine2:document.getElementById('themeHeroLine2').value.trim(), heroSubtitle:document.getElementById('themeHeroSubtitle').value.trim(), showParticles:document.getElementById('themeParticles').checked, showFloatingPanels:document.getElementById('themeFloatingPanels').checked };
+                await db.collection('siteConfig').doc('themes').set({ [name]:config, updatedAt:firebase.firestore.FieldValue.serverTimestamp() },{merge:true});
+                if(heroUpload&&old.heroImagePath) await safeDeleteStoragePath(old.heroImagePath); if(portraitUpload&&old.portraitImagePath) await safeDeleteStoragePath(old.portraitImagePath);
+                themeSettings[name]=config; document.getElementById('themeHeroImage').value=''; document.getElementById('themePortraitImage').value=''; renderThemeEditor(); showThemeStatus((name==='apple'?'Minimal 4K':'Technical BIM')+' theme saved.');
+            } catch(error) { if(heroUpload)await safeDeleteStoragePath(heroUpload.path);if(portraitUpload)await safeDeleteStoragePath(portraitUpload.path);showThemeStatus('Save failed: '+error.message,true); } finally {button.disabled=false;button.textContent='Save Theme';}
+        });
+        document.getElementById('activateThemeBtn').addEventListener('click', async () => { try { const name=siteThemeEditor.value; await db.collection('siteConfig').doc('themes').set({activeTheme:name,updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});themeSettings.activeTheme=name;renderThemeEditor();showThemeStatus((name==='apple'?'Minimal 4K':'Technical BIM')+' is now the default website theme.'); } catch(error){showThemeStatus('Could not activate theme: '+error.message,true);} });
 
         document.getElementById('logoutBtn').addEventListener('click', async () => {
             try { await auth.signOut(); } catch(e) {}
@@ -1090,6 +1163,7 @@
             await loadProducts();
             await loadProjects();
             await loadSiteImages();
+            await loadThemeSettings();
         });
     })();
     </script>
