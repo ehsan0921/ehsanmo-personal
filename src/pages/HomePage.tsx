@@ -14,10 +14,21 @@ const FOOD4RHINO = "https://www.food4rhino.com/en/app/rhinoplus";
 const EMAIL = "Ehsan0921@gmail.com";
 type PortfolioProject = { id?: string; image: string; secondaryImage?: string; title: string; place: string; type: string; stat: string; link: string; source: string; order?: number };
 type ThemeName = "technical" | "apple";
-type ThemeConfig = { heroImageUrl: string; portraitImageUrl: string; accentColor: string; heroLine1: string; heroLine2: string; heroSubtitle: string; showParticles: boolean; showFloatingPanels: boolean };
+type MediaStory = { image: string; label: string; title: string; description: string; wide?: boolean };
+type HobbyItem = { title: string; description: string; url: string; label: string };
+type ThemeConfig = { heroImageUrl: string; portraitImageUrl: string; accentColor: string; heroLine1: string; heroLine2: string; heroSubtitle: string; showParticles: boolean; showFloatingPanels: boolean; mediaRail: MediaStory[]; hobbies: HobbyItem[] };
+const DEFAULT_HOBBIES: HobbyItem[] = [
+  { title: "Perforated Panel Designer", description: "A browser-based generative tool for exploring image-driven perforation patterns and fabrication geometry.", url: "/Image-Panel-perforated-designer/", label: "COMPUTATIONAL DESIGN" },
+  { title: "Gym Records", description: "A personal training and progress tracker built as a practical experiment in product design and data ownership.", url: "/gym-records/", label: "PERSONAL BUILD" },
+];
 const DEFAULT_THEMES: Record<ThemeName, ThemeConfig> = {
-  technical: { heroImageUrl: "/ehsan-banner-portrait.png", portraitImageUrl: "/ehsan-mokhtary-portrait.png", accentColor: "#ff5c35", heroLine1: "I make complex", heroLine2: "facades buildable.", heroSubtitle: "Facade BIM leadership for projects where geometry, coordination and information cannot fail—from clash detection and LOD strategy to fabrication-ready models and metadata.", showParticles: true, showFloatingPanels: true },
-  apple: { heroImageUrl: "/apple-tv-hero.png", portraitImageUrl: "/Black and White no glass.jpg", accentColor: "#ff7a18", heroLine1: "Building the", heroLine2: "unbuildable.", heroSubtitle: "Facade BIM, computational design and digital delivery—where ambitious architecture becomes coordinated, controlled and real.", showParticles: false, showFloatingPanels: false },
+  technical: { heroImageUrl: "/ehsan-banner-portrait.png", portraitImageUrl: "/ehsan-mokhtary-portrait.png", accentColor: "#ff5c35", heroLine1: "I make complex", heroLine2: "facades buildable.", heroSubtitle: "Facade BIM leadership for projects where geometry, coordination and information cannot fail—from clash detection and LOD strategy to fabrication-ready models and metadata.", showParticles: true, showFloatingPanels: true, mediaRail: [], hobbies: DEFAULT_HOBBIES },
+  apple: { heroImageUrl: "/apple-tv-hero-2X.png", portraitImageUrl: "/Black and White no glass.jpg", accentColor: "#ff7a18", heroLine1: "Building the", heroLine2: "unbuildable.", heroSubtitle: "Facade BIM, computational design and digital delivery—where ambitious architecture becomes coordinated, controlled and real.", showParticles: false, showFloatingPanels: false, mediaRail: [
+    { image: "/orange background.jpg", label: "PROFILE", title: "Beyond the model", description: "Leadership, computation and a career built around complex façades.", wide: true },
+    { image: "/ehsan-mokhtary-portrait-Hotizontal.png", label: "PERSON", title: "Technical. Human.", description: "Making digital delivery clear." },
+    { image: "/bim-exploded-hero.png", label: "PROCESS", title: "Inside the façade", description: "Geometry, information and interfaces brought under control." },
+    { image: "/ehsan-banner-portrait.png", label: "PERSPECTIVE", title: "Architecture meets code", description: "A connected approach to digital construction." },
+  ], hobbies: DEFAULT_HOBBIES },
 };
 const SERVICES = [
   { no: "01", title: "Facade clash detection", text: "Federated coordination focused on curtain wall interfaces—structure, embeds, brackets, slab edges, fire-stopping and access zones.", meta: ["Model federation", "Issue ownership", "Resolution tracking"] },
@@ -34,10 +45,6 @@ const WORK: PortfolioProject[] = [
 ];
 
 const COMMANDS = ["PanelAutoDimension", "BlockManagementPlus", "ExportByKeyValue", "KeyValueToIFCParameter", "GenerateBarcode", "ImportCSV"];
-const SIDE_PROJECTS = [
-  { title: "Perforated Panel Designer", description: "A browser-based generative tool for exploring image-driven perforation patterns and fabrication geometry.", url: "/Image-Panel-perforated-designer/", label: "COMPUTATIONAL DESIGN" },
-  { title: "Gym Records", description: "A personal training and progress tracker built as a practical experiment in product design and data ownership.", url: "/gym-records/", label: "PERSONAL BUILD" },
-];
 
 export function HomePage() {
   const [user, setUser] = useState<User | null>(null);
@@ -64,7 +71,9 @@ export function HomePage() {
     getDoc(doc(db, "siteConfig", "themes")).then((snap) => {
       if (!snap.exists()) return;
       const data = snap.data() as any;
-      setThemes({ technical: { ...DEFAULT_THEMES.technical, ...(data.technical || {}) }, apple: { ...DEFAULT_THEMES.apple, ...(data.apple || {}) } });
+      const savedApple = { ...DEFAULT_THEMES.apple, ...(data.apple || {}) };
+      if (savedApple.heroImageUrl === "/apple-tv-hero.png") savedApple.heroImageUrl = DEFAULT_THEMES.apple.heroImageUrl;
+      setThemes({ technical: { ...DEFAULT_THEMES.technical, ...(data.technical || {}) }, apple: savedApple });
       const saved = localStorage.getItem("ehsan-theme");
       setTheme(saved === "technical" || saved === "apple" ? saved : (data.activeTheme === "apple" ? "apple" : "technical"));
     }).catch(() => undefined);
@@ -103,6 +112,8 @@ export function HomePage() {
     localStorage.setItem("ehsan-theme", next);
   };
   const activeTheme = themes[theme];
+  const hobbyKeys = new Set(activeTheme.hobbies.flatMap((item) => [item.title.toLowerCase(), item.url.toLowerCase()]));
+  const additionalProducts = products.filter((item) => !hobbyKeys.has((item.title || "").toLowerCase()) && !hobbyKeys.has((item.url || "").toLowerCase()));
 
   return <div className={`site-shell theme-${theme} min-h-screen overflow-x-hidden text-[#deddd8]`} data-theme={theme} style={{ "--accent": activeTheme.accentColor, "--theme-hero": `url("${activeTheme.heroImageUrl}")` } as React.CSSProperties}>
     {activeTheme.showParticles && <BackgroundCanvas />}
@@ -133,10 +144,7 @@ export function HomePage() {
         <section className="apple-showcase" aria-label="Featured visual stories">
           <div className="apple-rail-heading"><div><span>FEATURED</span><h2>Stories in design.</h2></div><p>Explore the person, process and projects behind the models.</p></div>
           <div className="apple-media-rail">
-            <article className="apple-media-card apple-media-wide"><img src="/orange background.jpg" alt="Ehsan Mokhtary portrait on orange background" /><div><span>PROFILE</span><h3>Beyond the model</h3><p>Leadership, computation and a career built around complex façades.</p></div></article>
-            <article className="apple-media-card"><img src="/projects/atlassian-central-01.jpg" alt="Atlassian Central Sydney" /><div><span>PROJECT</span><h3>Atlassian Central</h3><p>Sydney · Specialist façade delivery</p></div></article>
-            <article className="apple-media-card"><img src="/ehsan-mokhtary-portrait-Hotizontal.png" alt="Ehsan Mokhtary" /><div><span>PERSON</span><h3>Technical. Human.</h3><p>Making digital delivery clear.</p></div></article>
-            <article className="apple-media-card"><img src="/projects/project-dove.jpg" alt="Project Dove Perth" /><div><span>PROJECT</span><h3>Project Dove</h3><p>Perth · Expressive façade systems</p></div></article>
+            {activeTheme.mediaRail.map((item, index) => <article className={`apple-media-card ${item.wide ? "apple-media-wide" : ""}`} key={`${item.title}-${index}`}><img src={item.image} alt={item.title} /><div><span>{item.label}</span><h3>{item.title}</h3><p>{item.description}</p></div></article>)}
           </div>
         </section>
 
@@ -183,7 +191,7 @@ export function HomePage() {
           <Reveal><p className="section-index">05 / BUILT, NOT BOUGHT</p><div className="mt-5 grid gap-12 lg:grid-cols-2"><div><h2>RhinoPlus.</h2><p className="mt-6 max-w-xl text-lg leading-relaxed text-white/60">A production toolkit I designed and shipped for Rhino—turning repeated modelling and information tasks into reliable commands.</p><a href={FOOD4RHINO} target="_blank" rel="noreferrer" className="button-primary mt-8 inline-flex">Explore the plug-in ↗</a></div><div className="command-list">{COMMANDS.map((c,i)=><div key={c}><span>CMD_{String(i+1).padStart(2,'0')}</span><code>{c}</code><b>READY</b></div>)}</div></div></Reveal>
         </section>
 
-        <section id="tools" className="border-x border-white/10 px-5 py-24 sm:px-10 lg:px-16"><div className="section-head"><div><p className="section-index">06 / HOBBIES &amp; DEVELOPMENTS</p><h2>Things I build<br />to explore ideas.</h2></div><p>Personal experiments, computational design tools and useful products developed beyond day-to-day façade delivery.</p></div><div className="mt-10 grid gap-4 md:grid-cols-2">{SIDE_PROJECTS.map(item=><article className="product-card" key={item.title}><span className="product-label">{item.label}</span><h3>{item.title}</h3><p>{item.description}</p><a href={item.url}>EXPLORE PROJECT ↗</a></article>)}{products.map(item=><article className="product-card" key={item.id}><span className="product-label">INDEPENDENT DEVELOPMENT</span><h3>{item.title}</h3><p>{item.description}</p>{item.type === 'webapp' ? <a href={item.url}>OPEN PROJECT ↗</a> : <button onClick={()=>onDownload(item)}>DOWNLOAD ↘</button>}</article>)}</div></section>
+        <section id="tools" className="border-x border-white/10 px-5 py-24 sm:px-10 lg:px-16"><div className="section-head"><div><p className="section-index">06 / HOBBIES &amp; DEVELOPMENTS</p><h2>Things I build<br />to explore ideas.</h2></div><p>Personal experiments, computational design tools and useful products developed beyond day-to-day façade delivery.</p></div><div className="mt-10 grid gap-4 md:grid-cols-2">{activeTheme.hobbies.map((item,index)=><article className="product-card" key={`${item.title}-${index}`}><span className="product-label">{item.label}</span><h3>{item.title}</h3><p>{item.description}</p><a href={item.url}>EXPLORE PROJECT ↗</a></article>)}{additionalProducts.map(item=><article className="product-card" key={item.id}><span className="product-label">INDEPENDENT DEVELOPMENT</span><h3>{item.title}</h3><p>{item.description}</p>{item.type === 'webapp' ? <a href={item.url}>OPEN PROJECT ↗</a> : <button onClick={()=>onDownload(item)}>DOWNLOAD ↘</button>}</article>)}</div></section>
 
         <section id="contact" className="contact-zone border border-white/10 px-5 py-24 text-center sm:px-10 lg:px-16 lg:py-40"><Reveal><p className="section-index">HAVE A COMPLEX FACADE?</p><h2>Let’s make it<br /><span>clear, coordinated, buildable.</span></h2><div className="mt-10 flex flex-wrap justify-center gap-3"><a className="button-primary" href={`mailto:${EMAIL}`}>Start a conversation ↗</a>{phone ? <a className="button-ghost phone-revealed" href={`tel:${phone}`}>{phone} <span>CALL ↗</span></a> : <button className="button-ghost" type="button" onClick={revealPhone}>Reveal phone <span>CLICK ↗</span></button>}<a className="button-ghost" href={LINKEDIN} target="_blank" rel="noreferrer">LinkedIn</a></div><p className="phone-note">Phone number is protected and only loaded after you click.</p></Reveal></section>
       </main>
