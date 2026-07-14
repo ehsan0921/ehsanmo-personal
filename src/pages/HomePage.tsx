@@ -35,6 +35,16 @@ const DEFAULT_THEMES: Record<ThemeName, ThemeConfig> = {
     { image: "/projects/women-babies-hospital.png", label: "CURRENT PROJECT · PERTH", title: "Women and Babies Hospital", description: "Major healthcare delivery with façade information under control.", detail: "Large healthcare projects demand reliable model governance across design, procurement and construction. The façade workflow brings LOD, LOI, metadata, interfaces and issue ownership together so decisions remain traceable and buildable.", wide: true },
   ], hobbies: DEFAULT_HOBBIES },
 };
+const PROJECT_STORY_ORDER = ["Atlassian Central — façade in delivery", "Atlassian Central — climate envelope", "New Dunedin Hospital", "Project Dove", "Women and Babies Hospital"];
+const sortProjectStoriesFirst = (stories: MediaStory[]) => stories.sort((a, b) => {
+  const aIndex = PROJECT_STORY_ORDER.indexOf(a.title);
+  const bIndex = PROJECT_STORY_ORDER.indexOf(b.title);
+  if (aIndex === -1 && bIndex === -1) return 0;
+  if (aIndex === -1) return 1;
+  if (bIndex === -1) return -1;
+  return aIndex - bIndex;
+});
+sortProjectStoriesFirst(DEFAULT_THEMES.apple.mediaRail);
 const SERVICES = [
   { no: "01", title: "Facade clash detection", text: "Federated coordination focused on curtain wall interfaces—structure, embeds, brackets, slab edges, fire-stopping and access zones.", meta: ["Model federation", "Issue ownership", "Resolution tracking"] },
   { no: "02", title: "Metadata & LOI control", text: "Information that survives handover. I define, validate and govern parameters from design intent through procurement and fabrication.", meta: ["Parameter schemas", "IFC mapping", "QA validation"] },
@@ -95,7 +105,8 @@ export function HomePage() {
       if (["/apple-tv-hero.png", "/apple-tv-hero-2X.png"].includes(savedApple.heroImageUrl)) savedApple.heroImageUrl = DEFAULT_THEMES.apple.heroImageUrl;
       savedApple.mediaRail = (savedApple.mediaRail || []).map((item) => item.title === "Beyond the model" && item.image === "/orange background.jpg" ? { ...item, image: "/apple-story-beyond-model.png" } : item.title === "Technical. Human." && item.image === "/ehsan-mokhtary-portrait-Hotizontal.png" ? { ...item, image: "/apple-story-technical-human.png" } : item);
       savedApple.mediaRail = savedApple.mediaRail.map((item) => item.title === "Architecture meets code" && item.image === "/ehsan-banner-portrait.png" ? DEFAULT_THEMES.apple.mediaRail.find((story) => story.title === item.title)! : item);
-      for (const title of ["Architecture meets code", "Clash to clarity", "Atlassian Central — façade in delivery", "Atlassian Central — climate envelope", "New Dunedin Hospital", "Project Dove", "Women and Babies Hospital"]) if (!savedApple.mediaRail.some((item) => item.title === title)) savedApple.mediaRail.push(DEFAULT_THEMES.apple.mediaRail.find((item) => item.title === title)!);
+      for (const title of ["Architecture meets code", "Clash to clarity", ...PROJECT_STORY_ORDER]) if (!savedApple.mediaRail.some((item) => item.title === title)) savedApple.mediaRail.push(DEFAULT_THEMES.apple.mediaRail.find((item) => item.title === title)!);
+      sortProjectStoriesFirst(savedApple.mediaRail);
       savedApple.mediaRail = savedApple.mediaRail.map((item) => ({ ...item, detail: item.detail || DEFAULT_THEMES.apple.mediaRail.find((story) => story.title === item.title)?.detail }));
       const savedTechnical = { ...DEFAULT_THEMES.technical, ...(data.technical || {}) };
       savedTechnical.hobbies = (savedTechnical.hobbies || []).filter((item) => item.title !== "Gym Records");

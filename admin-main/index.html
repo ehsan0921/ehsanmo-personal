@@ -1146,6 +1146,9 @@
             {image:'/projects/project-dove.jpg',label:'CURRENT PROJECT · PERTH',title:'Project Dove',description:'Expressive geometry translated into coordinated façade assemblies.',detail:'Project Dove demonstrates how a distinctive architectural envelope depends on rigorous model control. Computational workflows help rationalise geometry while BIM coordination manages structure, brackets, panels and information through the delivery sequence.'},
             {image:'/projects/women-babies-hospital.png',label:'CURRENT PROJECT · PERTH',title:'Women and Babies Hospital',description:'Major healthcare delivery with façade information under control.',detail:'Large healthcare projects demand reliable model governance across design, procurement and construction. The façade workflow brings LOD, LOI, metadata, interfaces and issue ownership together so decisions remain traceable and buildable.',wide:true}
         );
+        const projectStoryOrder=['Atlassian Central — façade in delivery','Atlassian Central — climate envelope','New Dunedin Hospital','Project Dove','Women and Babies Hospital'];
+        const sortProjectStoriesFirst=(stories)=>stories.sort((a,b)=>{const ai=projectStoryOrder.indexOf(a.title);const bi=projectStoryOrder.indexOf(b.title);if(ai===-1&&bi===-1)return 0;if(ai===-1)return 1;if(bi===-1)return -1;return ai-bi;});
+        sortProjectStoriesFirst(themeDefaults.apple.mediaRail);
         let themeSettings = { activeTheme:'technical', technical:{...themeDefaults.technical}, apple:{...themeDefaults.apple} };
         const siteThemeEditor = document.getElementById('siteThemeEditor');
         const themeEditorStatus = document.getElementById('themeEditorStatus');
@@ -1192,6 +1195,7 @@
                 savedApple.mediaRail=(savedApple.mediaRail||[]).map((item)=>item.title==='Beyond the model'&&item.image==='/orange background.jpg'?{...item,image:'/apple-story-beyond-model.png'}:item.title==='Technical. Human.'&&item.image==='/ehsan-mokhtary-portrait-Hotizontal.png'?{...item,image:'/apple-story-technical-human.png'}:item);
                 savedApple.mediaRail=savedApple.mediaRail.map((item)=>item.title==='Architecture meets code'&&item.image==='/ehsan-banner-portrait.png'?themeDefaults.apple.mediaRail.find((story)=>story.title===item.title):item);
                 ['Architecture meets code','Clash to clarity','Atlassian Central — façade in delivery','Atlassian Central — climate envelope','New Dunedin Hospital','Project Dove','Women and Babies Hospital'].forEach((title)=>{if(!savedApple.mediaRail.some((item)=>item.title===title))savedApple.mediaRail.push(themeDefaults.apple.mediaRail.find((item)=>item.title===title));});
+                sortProjectStoriesFirst(savedApple.mediaRail);
                 themeSettings = { activeTheme:data.activeTheme === 'technical' ? 'technical' : 'apple', technical:{...themeDefaults.technical,...(data.technical || {})}, apple:savedApple };
                 themeSettings.technical.hobbies=(themeSettings.technical.hobbies||[]).filter((item)=>item.title!=='Gym Records');
                 themeSettings.apple.hobbies=(themeSettings.apple.hobbies||[]).filter((item)=>item.title!=='Gym Records');
