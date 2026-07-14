@@ -158,7 +158,8 @@ export function HomePage() {
   const activeTheme = themes[theme];
   const scrollStoryRail = useCallback((index: number) => {
     const rail = mediaRailRef.current;
-    const target = rail?.children[index] as HTMLElement | undefined;
+    const firstSet = rail?.firstElementChild as HTMLElement | null;
+    const target = firstSet?.children[index] as HTMLElement | undefined;
     if (!rail || !target) return;
     rail.scrollTo({ left: target.offsetLeft - (rail.clientWidth - target.clientWidth) / 2, behavior: "smooth" });
   }, []);
@@ -170,14 +171,23 @@ export function HomePage() {
     scrollStoryRail(next);
   }, [activeTheme.mediaRail.length, scrollStoryRail]);
   useEffect(() => {
-    if (theme !== "apple" || railPaused || selectedStory || activeTheme.mediaRail.length < 2 || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    const timer = window.setInterval(() => setActiveStory((current) => {
-      const next = (current + 1) % activeTheme.mediaRail.length;
-      scrollStoryRail(next);
-      return next;
-    }), 5000);
-    return () => window.clearInterval(timer);
-  }, [theme, railPaused, selectedStory, activeTheme.mediaRail.length, scrollStoryRail]);
+    if (theme !== "apple" || railPaused || activeTheme.mediaRail.length < 2 || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    let frame = 0;
+    let previous = performance.now();
+    const roll = (now: number) => {
+      const rail = mediaRailRef.current;
+      const firstSet = rail?.firstElementChild as HTMLElement | null;
+      if (rail && firstSet) {
+        rail.scrollLeft += Math.min(now - previous, 40) * 0.035;
+        const loopAt = firstSet.scrollWidth + 20;
+        if (rail.scrollLeft >= loopAt) rail.scrollLeft -= loopAt;
+      }
+      previous = now;
+      frame = window.requestAnimationFrame(roll);
+    };
+    frame = window.requestAnimationFrame(roll);
+    return () => window.cancelAnimationFrame(frame);
+  }, [theme, railPaused, activeTheme.mediaRail.length]);
   useEffect(() => {
     if (!selectedStory) return;
     const close = (event: KeyboardEvent) => { if (event.key === "Escape") setSelectedStory(null); };
@@ -221,10 +231,10 @@ export function HomePage() {
 
         <section className="apple-showcase" aria-label="Featured visual stories">
           <div className="apple-rail-heading"><div><span>FEATURED</span><h2>Stories in design.</h2></div><div className="apple-rail-actions"><p>Explore the person, process and projects behind the models.</p><nav aria-label="Featured story controls"><button type="button" onClick={() => showStory(activeStory - 1)} aria-label="Previous story">←</button><span>{String(activeStory + 1).padStart(2, "0")} / {String(activeTheme.mediaRail.length).padStart(2, "0")}</span><button type="button" onClick={() => showStory(activeStory + 1)} aria-label="Next story">→</button></nav></div></div>
-          <div className="apple-rail-window" onMouseEnter={() => setRailPaused(true)} onMouseLeave={() => setRailPaused(false)} onFocusCapture={() => setRailPaused(true)} onBlurCapture={() => setRailPaused(false)}>
+          <div className="apple-rail-window" onMouseEnter={() => setRailPaused(true)} onMouseLeave={() => setRailPaused(false)}>
             <button className="apple-horizontal-button is-left" type="button" onClick={() => showStory(activeStory - 1)} aria-label="Scroll featured stories left">←</button>
             <div className="apple-media-rail" ref={mediaRailRef}>
-              {activeTheme.mediaRail.map((item, index) => <button type="button" onClick={() => setSelectedStory(item)} className={`apple-media-card ${item.wide ? "apple-media-wide" : ""}`} key={`${item.title}-${index}`}><img src={item.image} alt={item.title} /><div><span>{item.label}</span><h3>{item.title}</h3><p>{item.description}</p><small>EXPLORE STORY +</small></div></button>)}
+              {[0, 1].map((copy) => <div className="apple-media-set" aria-hidden={copy === 1} key={copy}>{activeTheme.mediaRail.map((item, index) => <button type="button" tabIndex={copy ? -1 : 0} onClick={() => setSelectedStory(item)} className={`apple-media-card ${item.wide ? "apple-media-wide" : ""}`} key={`${copy}-${item.title}-${index}`}><img src={item.image} alt={copy ? "" : item.title} /><div><span>{item.label}</span><h3>{item.title}</h3><p>{item.description}</p><small>EXPLORE STORY +</small></div></button>)}</div>)}
             </div>
             <button className="apple-horizontal-button is-right" type="button" onClick={() => showStory(activeStory + 1)} aria-label="Scroll featured stories right">→</button>
           </div>
@@ -237,6 +247,17 @@ export function HomePage() {
         <section className="identity-zone border-x border-b border-white/10">
           <Reveal className="identity-photo"><img src={activeTheme.portraitImageUrl} alt="Ehsan Mokhtary, Facade BIM Manager" loading="lazy" /><div className="portrait-reticle" aria-hidden /><span className="portrait-code">EM / PROFILE_01</span></Reveal>
           <Reveal className="identity-copy" delay={120}><p className="section-index">PERSON BEHIND THE MODEL</p><h2>Technical precision.<br /><span>Human leadership.</span></h2><p>I lead teams through complex digital delivery with a practical focus: make responsibilities clear, make information dependable and make the façade buildable.</p><dl><div><dt>ROLE</dt><dd>Facade BIM Manager</dd></div><div><dt>BASE</dt><dd>Melbourne, Australia</dd></div><div><dt>FOCUS</dt><dd>Facade systems + computation</dd></div></dl></Reveal>
+        </section>
+
+        <section id="experience" className="experience-grid border border-white/10 px-5 py-24 sm:px-10 lg:px-16 lg:py-32">
+          <Reveal><p className="section-index">04 / EXPERIENCE</p><h2>15 years across<br />architecture, facades<br />and digital delivery.</h2><p className="mt-8 max-w-lg leading-relaxed text-white/55">From façade engineering and BIM modelling to computational leadership—experience shaped across Iran, Malaysia and Australia.</p><a href={LINKEDIN} target="_blank" rel="noreferrer" className="text-link mt-8 inline-block">FULL LINKEDIN PROFILE ↗</a></Reveal>
+          <Reveal delay={120}><div className="timeline">
+            <div><time>2021—NOW</time><h3>Facade BIM Manager</h3><p>SRG Global · Melbourne</p></div>
+            <div><time>MAR 2020—JUL 2021 · 1 YR 5 MOS</time><h3>Facade BIM Manager &amp; Computational Designer</h3><p>Euro Facade Tech · Full-time · Malaysia</p></div>
+            <div><time>2018—2020</time><h3>BIM / Architectural Management</h3><p>VR-CAM Technologies &amp; ADAS</p></div>
+            <div><time>2014—2018</time><h3>Facade engineering &amp; simulation</h3><p>Alumglass Facade Consultancy</p></div>
+            <div><time>2018—2020</time><h3>Master of Architecture</h3><p>Universiti Putra Malaysia</p></div>
+          </div></Reveal>
         </section>
 
         <section id="services" className="border-x border-white/10 px-5 py-24 sm:px-10 lg:px-16 lg:py-32">
@@ -257,17 +278,6 @@ export function HomePage() {
             {projects.map((w, i) => <Reveal key={w.id || w.title} delay={(i%2)*90}><a href={w.link} target="_blank" rel="noreferrer" className="project-card group"><div className={`project-image ${w.secondaryImage ? "project-image-dual" : ""}`}><img src={w.image} alt={w.title} />{w.secondaryImage && <img className="project-image-alt" src={w.secondaryImage} alt={`${w.title} alternate view`} />}<span>{w.stat}</span>{w.secondaryImage && <em>02 VIEWS</em>}<i>VIEW PROJECT ↗</i></div><div className="project-copy"><span>{String(i+1).padStart(2,"0")}</span><div><h3>{w.title}</h3><p>{w.place} — {w.type}</p><small>{w.source}</small></div></div></a></Reveal>)}
           </div>
           <div className="youtube-zone"><div className="youtube-heading"><div><p className="section-index">MOST WATCHED ON YOUTUBE</p><h2>Ideas in motion.</h2></div><a href={YOUTUBE} target="_blank" rel="noreferrer">VISIT CHANNEL ↗</a></div><div className="youtube-grid">{TOP_VIDEOS.map((video, index) => <a className="youtube-card" href={`https://www.youtube.com/watch?v=${video.id}`} target="_blank" rel="noreferrer" key={video.id}><div><img src={`https://i.ytimg.com/vi/${video.id}/hqdefault.jpg`} alt={video.title} loading="lazy" /><i>▶</i><span>0{index + 1}</span></div><h3>{video.title}</h3><p>{video.views}</p></a>)}</div></div>
-        </section>
-
-        <section id="experience" className="experience-grid border border-white/10 px-5 py-24 sm:px-10 lg:px-16 lg:py-32">
-          <Reveal><p className="section-index">04 / EXPERIENCE</p><h2>15 years across<br />architecture, facades<br />and digital delivery.</h2><p className="mt-8 max-w-lg leading-relaxed text-white/55">From façade engineering and BIM modelling to computational leadership—experience shaped across Iran, Malaysia and Australia.</p><a href={LINKEDIN} target="_blank" rel="noreferrer" className="text-link mt-8 inline-block">FULL LINKEDIN PROFILE ↗</a></Reveal>
-          <Reveal delay={120}><div className="timeline">
-            <div><time>2021—NOW</time><h3>Facade BIM Manager</h3><p>SRG Global · Melbourne</p></div>
-            <div><time>MAR 2020—JUL 2021 · 1 YR 5 MOS</time><h3>Facade BIM Manager & Computational Designer</h3><p>Euro Facade Tech · Full-time · Malaysia</p></div>
-            <div><time>2018—2020</time><h3>BIM / Architectural Management</h3><p>VR-CAM Technologies & ADAS</p></div>
-            <div><time>2014—2018</time><h3>Facade engineering & simulation</h3><p>Alumglass Facade Consultancy</p></div>
-            <div><time>2018—2020</time><h3>Master of Architecture</h3><p>Universiti Putra Malaysia</p></div>
-          </div></Reveal>
         </section>
 
         <section className="rhino-zone border-x border-white/10 px-5 py-24 sm:px-10 lg:px-16 lg:py-32">
