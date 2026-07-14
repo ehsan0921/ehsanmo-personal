@@ -17,7 +17,7 @@ type ThemeName = "technical" | "apple";
 type ThemeConfig = { heroImageUrl: string; portraitImageUrl: string; accentColor: string; heroLine1: string; heroLine2: string; heroSubtitle: string; showParticles: boolean; showFloatingPanels: boolean };
 const DEFAULT_THEMES: Record<ThemeName, ThemeConfig> = {
   technical: { heroImageUrl: "/ehsan-banner-portrait.png", portraitImageUrl: "/ehsan-mokhtary-portrait.png", accentColor: "#ff5c35", heroLine1: "I make complex", heroLine2: "facades buildable.", heroSubtitle: "Facade BIM leadership for projects where geometry, coordination and information cannot fail—from clash detection and LOD strategy to fabrication-ready models and metadata.", showParticles: true, showFloatingPanels: true },
-  apple: { heroImageUrl: "/ehsan-banner-portrait.png", portraitImageUrl: "/ehsan-mokhtary-portrait.png", accentColor: "#ff5a1f", heroLine1: "Precision at", heroLine2: "building scale.", heroSubtitle: "Facade BIM, computational design and information control—made clear, coordinated and ready to build.", showParticles: false, showFloatingPanels: false },
+  apple: { heroImageUrl: "/apple-tv-hero.png", portraitImageUrl: "/Black and White no glass.jpg", accentColor: "#ff7a18", heroLine1: "Building the", heroLine2: "unbuildable.", heroSubtitle: "Facade BIM, computational design and digital delivery—where ambitious architecture becomes coordinated, controlled and real.", showParticles: false, showFloatingPanels: false },
 };
 const SERVICES = [
   { no: "01", title: "Facade clash detection", text: "Federated coordination focused on curtain wall interfaces—structure, embeds, brackets, slab edges, fire-stopping and access zones.", meta: ["Model federation", "Issue ownership", "Resolution tracking"] },
@@ -106,7 +106,7 @@ export function HomePage() {
 
   return <div className={`site-shell theme-${theme} min-h-screen overflow-x-hidden text-[#deddd8]`} data-theme={theme} style={{ "--accent": activeTheme.accentColor, "--theme-hero": `url("${activeTheme.heroImageUrl}")` } as React.CSSProperties}>
     {activeTheme.showParticles && <BackgroundCanvas />}
-    <button type="button" className="theme-switch" onClick={switchTheme} aria-label={`Switch to ${theme === "technical" ? "minimal" : "technical"} theme`}><span>{theme === "technical" ? "MINIMAL" : "TECHNICAL"}</span><i><b /></i></button>
+    <button type="button" className="theme-switch" onClick={switchTheme} aria-label={`Switch to ${theme === "technical" ? "Apple TV" : "technical"} theme`}><span>{theme === "technical" ? "APPLE TV" : "TECHNICAL"}</span><i><b /></i></button>
     <div className="relative z-10 mx-auto max-w-[1500px] px-4 sm:px-7 lg:px-10">
       <Header user={user} isAdmin={isAdmin} menuProducts={products} onOpenLogin={() => { setAuthMode("login"); setAuthOpen(true); }} onOpenRegister={() => { setAuthMode("register"); setAuthOpen(true); }} onLogout={() => signOut(auth).catch(() => undefined)} />
 
@@ -127,6 +127,16 @@ export function HomePage() {
           </div>
           <div className="hero-data absolute bottom-7 left-5 right-5 z-10 grid grid-cols-2 border-t border-white/15 pt-5 sm:left-10 sm:right-10 lg:left-16 lg:right-16 lg:grid-cols-4">
             {[['15+', 'YEARS IN AEC'], ['20+', 'RHINOPLUS COMMANDS'], ['LOD 100–500', 'MODEL GOVERNANCE'], ['01', 'CONNECTED WORKFLOW']].map(([a,b]) => <div key={b} className="border-l border-white/15 px-4 first:border-0 first:pl-0"><strong>{a}</strong><span>{b}</span></div>)}
+          </div>
+        </section>
+
+        <section className="apple-showcase" aria-label="Featured visual stories">
+          <div className="apple-rail-heading"><div><span>FEATURED</span><h2>Stories in design.</h2></div><p>Explore the person, process and projects behind the models.</p></div>
+          <div className="apple-media-rail">
+            <article className="apple-media-card apple-media-wide"><img src="/orange background.jpg" alt="Ehsan Mokhtary portrait on orange background" /><div><span>PROFILE</span><h3>Beyond the model</h3><p>Leadership, computation and a career built around complex façades.</p></div></article>
+            <article className="apple-media-card"><img src="/projects/atlassian-central-01.jpg" alt="Atlassian Central Sydney" /><div><span>PROJECT</span><h3>Atlassian Central</h3><p>Sydney · Specialist façade delivery</p></div></article>
+            <article className="apple-media-card"><img src="/ehsan-mokhtary-portrait-Hotizontal.png" alt="Ehsan Mokhtary" /><div><span>PERSON</span><h3>Technical. Human.</h3><p>Making digital delivery clear.</p></div></article>
+            <article className="apple-media-card"><img src="/projects/project-dove.jpg" alt="Project Dove Perth" /><div><span>PROJECT</span><h3>Project Dove</h3><p>Perth · Expressive façade systems</p></div></article>
           </div>
         </section>
 

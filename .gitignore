@@ -12,6 +12,8 @@ dist/
 *.png
 !public/bim-exploded-hero.png
 !public/ehsan-mokhtary-portrait.png
+!public/ehsan-mokhtary-portrait-Hotizontal.png
+!public/apple-tv-hero.png
 !public/ehsan-banner-portrait.png
 !public/projects/*.png
 
