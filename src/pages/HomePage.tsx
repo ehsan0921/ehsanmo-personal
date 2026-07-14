@@ -12,9 +12,6 @@ const LINKEDIN = "https://www.linkedin.com/in/ehsan-mokhtary/";
 const YOUTUBE = "https://www.youtube.com/@ehsanmokhtaryArchitect";
 const FOOD4RHINO = "https://www.food4rhino.com/en/app/rhinoplus";
 const EMAIL = "Ehsan0921@gmail.com";
-const yt = (id: string) => `https://www.youtube.com/watch?v=${id}`;
-const thumb = (id: string) => `https://i.ytimg.com/vi/${id}/hqdefault.jpg`;
-
 const SERVICES = [
   { no: "01", title: "Facade clash detection", text: "Federated coordination focused on curtain wall interfaces—structure, embeds, brackets, slab edges, fire-stopping and access zones.", meta: ["Model federation", "Issue ownership", "Resolution tracking"] },
   { no: "02", title: "Metadata & LOI control", text: "Information that survives handover. I define, validate and govern parameters from design intent through procurement and fabrication.", meta: ["Parameter schemas", "IFC mapping", "QA validation"] },
@@ -23,10 +20,10 @@ const SERVICES = [
 ];
 
 const WORK = [
-  { id: "XtfDwJbAbpw", title: "Atlassian Central", place: "Sydney, Australia", type: "Curtain wall computational delivery", stat: "LANDMARK / HIGH-RISE" },
-  { id: "FOphlK0PcCI", title: "Facade backpan extraction", place: "SRG Global", type: "Algorithmic production workflow", stat: "AUTOMATED / TRACEABLE" },
-  { id: "9mhKwyhyww8", title: "Cast-in coordination", place: "Curtain wall systems", type: "Parametric embed generation", stat: "DESIGN → SITE" },
-  { id: "KzDMJugAHxQ", title: "ETFE hexagon roof", place: "Computational design", type: "Complex geometry rationalisation", stat: "PARAMETRIC / CONTROLLED" },
+  { image: "/projects/atlassian-central.jpg", secondaryImage: "/projects/atlassian-central-01.jpg", title: "Atlassian Central", place: "Sydney, Australia", type: "Specialist curtain wall façade", stat: "SRG GLOBAL / CURRENT", link: "https://www.bvn.com.au/project/atlassian-central/", source: "IMAGES / BVN + PROJECT ARCHIVE" },
+  { image: "/projects/new-dunedin-hospital.png", title: "New Dunedin Hospital", place: "Dunedin, New Zealand", type: "Outpatients Building façade", stat: "HEALTH / FACADE", link: "https://www.tewhatuora.govt.nz/health-services-and-programmes/infrastructure-and-investment/new-dunedin-hospital-whakatuputupu", source: "IMAGE / HEALTH NZ" },
+  { image: "/projects/project-dove.jpg", title: "Project Dove", place: "53 Ord Street, Subiaco", type: "Expressive engineered façade", stat: "PERTH / COMMERCIAL", link: "https://www.linkedin.com/posts/glasss-wall-systems-india-pvt-ltd-_name-of-the-project-dove-location-perth-activity-7472978778894274562-h_-7", source: "IMAGE / GWS" },
+  { image: "/projects/women-babies-hospital.png", title: "Women and Babies Hospital", place: "Murdoch, Western Australia", type: "Major healthcare façade delivery", stat: "PERTH / HEALTH", link: "https://www.webuild-group.com.au/en/media/press-notes/webuild-construction-commences-western-australias-new-women-and-babies-hospital/", source: "IMAGE / WEBUILD" },
 ];
 
 const COMMANDS = ["PanelAutoDimension", "BlockManagementPlus", "ExportByKeyValue", "KeyValueToIFCParameter", "GenerateBarcode", "ImportCSV"];
@@ -84,6 +81,7 @@ export function HomePage() {
             <p className="eyebrow"><span className="status-dot" /> MELBOURNE / AUSTRALIA — AVAILABLE FOR BIM CONSULTING</p>
             <h1 className="hero-title mt-8">I make complex<br /><span>facades buildable.</span></h1>
             <p className="mt-8 max-w-2xl text-lg leading-relaxed text-white/65 sm:text-xl">Facade BIM leadership for projects where geometry, coordination and information cannot fail—from clash detection and LOD strategy to fabrication-ready models and metadata.</p>
+            <a className="current-company" href="https://srgglobal.com.au/" target="_blank" rel="noreferrer"><span>CURRENTLY AT</span><span className="company-logo-wrap"><img src="/srg-global-logo.svg" alt="SRG Global" /></span><b>FACADE BIM MANAGER</b></a>
             <div className="mt-10 flex flex-wrap gap-3">
               <a href="#services" className="button-primary">Explore BIM services <span>↘</span></a>
               <a href={`mailto:${EMAIL}`} className="button-ghost">Discuss a project</a>
@@ -118,7 +116,7 @@ export function HomePage() {
         <section id="work" className="border-x border-white/10 px-5 py-24 sm:px-10 lg:px-16 lg:py-32">
           <Reveal><div className="section-head"><div><p className="section-index">03 / SELECTED WORK</p><h2>Proof in the model.</h2></div><a href={YOUTUBE} target="_blank" rel="noreferrer">VIEW ALL CASE STUDIES ↗</a></div></Reveal>
           <div className="mt-14 grid gap-px bg-white/10 md:grid-cols-2">
-            {WORK.map((w, i) => <Reveal key={w.id} delay={(i%2)*90}><a href={yt(w.id)} target="_blank" rel="noreferrer" className="project-card group"><div className="project-image"><img src={thumb(w.id)} alt={w.title} /><span>{w.stat}</span><i>PLAY ↗</i></div><div className="project-copy"><span>0{i+1}</span><div><h3>{w.title}</h3><p>{w.place} — {w.type}</p></div></div></a></Reveal>)}
+            {WORK.map((w, i) => <Reveal key={w.title} delay={(i%2)*90}><a href={w.link} target="_blank" rel="noreferrer" className="project-card group"><div className={`project-image ${w.secondaryImage ? "project-image-dual" : ""}`}><img src={w.image} alt={w.title} />{w.secondaryImage && <img className="project-image-alt" src={w.secondaryImage} alt={`${w.title} full tower view`} />}<span>{w.stat}</span>{w.secondaryImage && <em>02 VIEWS</em>}<i>VIEW PROJECT ↗</i></div><div className="project-copy"><span>0{i+1}</span><div><h3>{w.title}</h3><p>{w.place} — {w.type}</p><small>{w.source}</small></div></div></a></Reveal>)}
           </div>
         </section>
 
@@ -126,7 +124,7 @@ export function HomePage() {
           <Reveal><p className="section-index">04 / EXPERIENCE</p><h2>15 years across<br />architecture, facades<br />and digital delivery.</h2><p className="mt-8 max-w-lg leading-relaxed text-white/55">From façade engineering and BIM modelling to computational leadership—experience shaped across Iran, Malaysia and Australia.</p><a href={LINKEDIN} target="_blank" rel="noreferrer" className="text-link mt-8 inline-block">FULL LINKEDIN PROFILE ↗</a></Reveal>
           <Reveal delay={120}><div className="timeline">
             <div><time>2021—NOW</time><h3>Facade BIM Manager</h3><p>SRG Global · Melbourne</p></div>
-            <div><time>2020—2021</time><h3>Facade BIM Manager & Computational Designer</h3><p>RFY Group · Malaysia</p></div>
+            <div><time>MAR 2020—JUL 2021 · 1 YR 5 MOS</time><h3>Facade BIM Manager & Computational Designer</h3><p>Euro Facade Tech · Full-time · Malaysia</p></div>
             <div><time>2018—2020</time><h3>BIM / Architectural Management</h3><p>VR-CAM Technologies & ADAS</p></div>
             <div><time>2014—2018</time><h3>Facade engineering & simulation</h3><p>Alumglass Facade Consultancy</p></div>
             <div><time>2018—2020</time><h3>Master of Architecture</h3><p>Universiti Putra Malaysia</p></div>

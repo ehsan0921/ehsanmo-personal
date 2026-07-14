@@ -12,5 +12,7 @@ dist/
 *.png
 !public/bim-exploded-hero.png
 !public/ehsan-mokhtary-portrait.png
+!public/ehsan-banner-portrait.png
+!public/projects/*.png
 
 .tmp-scripts/
