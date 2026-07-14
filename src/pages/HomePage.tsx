@@ -14,7 +14,7 @@ const FOOD4RHINO = "https://www.food4rhino.com/en/app/rhinoplus";
 const EMAIL = "Ehsan0921@gmail.com";
 type PortfolioProject = { id?: string; image: string; secondaryImage?: string; title: string; place: string; type: string; stat: string; link: string; source: string; order?: number };
 type ThemeName = "technical" | "apple";
-type MediaStory = { image: string; label: string; title: string; description: string; wide?: boolean };
+type MediaStory = { image: string; label: string; title: string; description: string; detail?: string; wide?: boolean };
 type HobbyItem = { title: string; description: string; url: string; label: string };
 type ThemeConfig = { heroImageUrl: string; portraitImageUrl: string; accentColor: string; heroLine1: string; heroLine2: string; heroSubtitle: string; showParticles: boolean; showFloatingPanels: boolean; mediaRail: MediaStory[]; hobbies: HobbyItem[] };
 const DEFAULT_HOBBIES: HobbyItem[] = [
@@ -24,10 +24,11 @@ const DEFAULT_HOBBIES: HobbyItem[] = [
 const DEFAULT_THEMES: Record<ThemeName, ThemeConfig> = {
   technical: { heroImageUrl: "/ehsan-banner-portrait.png", portraitImageUrl: "/ehsan-mokhtary-portrait.png", accentColor: "#ff5c35", heroLine1: "I make complex", heroLine2: "facades buildable.", heroSubtitle: "Facade BIM leadership for projects where geometry, coordination and information cannot fail—from clash detection and LOD strategy to fabrication-ready models and metadata.", showParticles: true, showFloatingPanels: true, mediaRail: [], hobbies: DEFAULT_HOBBIES },
   apple: { heroImageUrl: "/apple-tv-hero-2X.png", portraitImageUrl: "/Black and White no glass.jpg", accentColor: "#ff7a18", heroLine1: "Building the", heroLine2: "unbuildable.", heroSubtitle: "Facade BIM, computational design and digital delivery—where ambitious architecture becomes coordinated, controlled and real.", showParticles: false, showFloatingPanels: false, mediaRail: [
-    { image: "/apple-story-beyond-model.png", label: "PROFILE", title: "Beyond the model", description: "Leadership, computation and a career built around complex façades.", wide: true },
-    { image: "/apple-story-technical-human.png", label: "PERSON", title: "Technical. Human.", description: "Making digital delivery clear." },
-    { image: "/bim-exploded-hero.png", label: "PROCESS", title: "Inside the façade", description: "Geometry, information and interfaces brought under control." },
-    { image: "/ehsan-banner-portrait.png", label: "PERSPECTIVE", title: "Architecture meets code", description: "A connected approach to digital construction." },
+    { image: "/apple-story-beyond-model.png", label: "PROFILE", title: "Beyond the model", description: "Leadership, computation and a career built around complex façades.", detail: "Complex façade delivery depends on more than model production. It requires clear leadership, controlled information, computational thinking and the confidence to connect designers, engineers, fabricators and site teams around one reliable digital workflow.", wide: true },
+    { image: "/apple-story-technical-human.png", label: "PERSON", title: "Technical. Human.", description: "Making digital delivery clear.", detail: "The strongest BIM systems support people rather than overwhelm them. I translate technical complexity into clear responsibilities, practical reviews and dependable decisions so every discipline understands what must happen next." },
+    { image: "/bim-exploded-hero.png", label: "PROCESS", title: "Inside the façade", description: "Geometry, information and interfaces brought under control.", detail: "A façade model becomes valuable when geometry, metadata, interfaces and sequencing are coordinated together. This approach exposes risk early and carries design intelligence forward into procurement, fabrication and installation." },
+    { image: "/apple-story-architecture-code.png", label: "COMPUTATIONAL DESIGN", title: "Architecture meets code", description: "Grasshopper logic translated into buildable façade geometry.", detail: "Parametric workflows connect design intent to panelisation, rationalisation and fabrication data. The result is a façade system that can respond to change without losing coordination, constructability or information quality." },
+    { image: "/apple-story-clash-clarity.png", label: "COORDINATION", title: "Clash to clarity", description: "Resolving interfaces before they reach site.", detail: "Federated clash detection focuses on the high-risk junctions between façade, structure, embeds, fire-stopping and access zones—assigning ownership and tracking every issue through to a coordinated outcome.", wide: true },
   ], hobbies: DEFAULT_HOBBIES },
 };
 const SERVICES = [
@@ -45,6 +46,14 @@ const WORK: PortfolioProject[] = [
 ];
 
 const COMMANDS = ["PanelAutoDimension", "BlockManagementPlus", "ExportByKeyValue", "KeyValueToIFCParameter", "GenerateBarcode", "ImportCSV"];
+const TOP_VIDEOS = [
+  { id: "TafuodYqCHQ", title: "Auto Dimension Rhino Grasshopper", views: "9,849 views" },
+  { id: "KzDMJugAHxQ", title: "Hexagon Roof of ETFE", views: "4,006 views" },
+  { id: "9eFJMBZYURM", title: "Full Rhinoceros 7 Course", views: "3,388 views" },
+  { id: "Lw7ydXdN-7M", title: "Facade design process in BIM by Rhino Grasshopper", views: "1,217 views" },
+  { id: "HddA8nMklF8", title: "BIM or Parametric design", views: "1,171 views" },
+  { id: "9mhKwyhyww8", title: "Generating CurtainWall Cast-ins by Algorithmic Design", views: "970 views" },
+];
 
 export function HomePage() {
   const [user, setUser] = useState<User | null>(null);
@@ -63,6 +72,8 @@ export function HomePage() {
   const [pageLoaded, setPageLoaded] = useState(document.readyState === "complete");
   const [introComplete, setIntroComplete] = useState(false);
   const [themeChanging, setThemeChanging] = useState(false);
+  const [railPaused, setRailPaused] = useState(false);
+  const [selectedStory, setSelectedStory] = useState<MediaStory | null>(null);
   const mediaRailRef = useRef<HTMLDivElement>(null);
   const isAdmin = !!user?.email && user.email.toLowerCase() === SUPERADMIN_EMAIL.toLowerCase();
 
@@ -83,6 +94,9 @@ export function HomePage() {
       const savedApple = { ...DEFAULT_THEMES.apple, ...(data.apple || {}) };
       if (savedApple.heroImageUrl === "/apple-tv-hero.png") savedApple.heroImageUrl = DEFAULT_THEMES.apple.heroImageUrl;
       savedApple.mediaRail = (savedApple.mediaRail || []).map((item) => item.title === "Beyond the model" && item.image === "/orange background.jpg" ? { ...item, image: "/apple-story-beyond-model.png" } : item.title === "Technical. Human." && item.image === "/ehsan-mokhtary-portrait-Hotizontal.png" ? { ...item, image: "/apple-story-technical-human.png" } : item);
+      savedApple.mediaRail = savedApple.mediaRail.map((item) => item.title === "Architecture meets code" && item.image === "/ehsan-banner-portrait.png" ? DEFAULT_THEMES.apple.mediaRail.find((story) => story.title === item.title)! : item);
+      for (const title of ["Architecture meets code", "Clash to clarity"]) if (!savedApple.mediaRail.some((item) => item.title === title)) savedApple.mediaRail.push(DEFAULT_THEMES.apple.mediaRail.find((item) => item.title === title)!);
+      savedApple.mediaRail = savedApple.mediaRail.map((item) => ({ ...item, detail: item.detail || DEFAULT_THEMES.apple.mediaRail.find((story) => story.title === item.title)?.detail }));
       setThemes({ technical: { ...DEFAULT_THEMES.technical, ...(data.technical || {}) }, apple: savedApple });
       const saved = localStorage.getItem("ehsan-theme");
       setTheme(saved === "technical" || saved === "apple" ? saved : (data.activeTheme === "apple" ? "apple" : "technical"));
@@ -156,14 +170,20 @@ export function HomePage() {
     scrollStoryRail(next);
   }, [activeTheme.mediaRail.length, scrollStoryRail]);
   useEffect(() => {
-    if (theme !== "apple" || activeTheme.mediaRail.length < 2 || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    if (theme !== "apple" || railPaused || selectedStory || activeTheme.mediaRail.length < 2 || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     const timer = window.setInterval(() => setActiveStory((current) => {
       const next = (current + 1) % activeTheme.mediaRail.length;
       scrollStoryRail(next);
       return next;
     }), 5000);
     return () => window.clearInterval(timer);
-  }, [theme, activeTheme.mediaRail.length, scrollStoryRail]);
+  }, [theme, railPaused, selectedStory, activeTheme.mediaRail.length, scrollStoryRail]);
+  useEffect(() => {
+    if (!selectedStory) return;
+    const close = (event: KeyboardEvent) => { if (event.key === "Escape") setSelectedStory(null); };
+    window.addEventListener("keydown", close);
+    return () => window.removeEventListener("keydown", close);
+  }, [selectedStory]);
   const hobbyKeys = new Set(activeTheme.hobbies.flatMap((item) => [item.title.toLowerCase(), item.url.toLowerCase()]));
   const additionalProducts = products.filter((item) => !hobbyKeys.has((item.title || "").toLowerCase()) && !hobbyKeys.has((item.url || "").toLowerCase()));
 
@@ -173,6 +193,7 @@ export function HomePage() {
       <p>COORDINATING THE MODEL</p>
       <div className="loader-progress"><i /></div>
     </div>
+    {selectedStory && <div className="story-modal" role="dialog" aria-modal="true" aria-label={selectedStory.title} onClick={() => setSelectedStory(null)}><article onClick={(event) => event.stopPropagation()}><button className="story-modal-close" type="button" onClick={() => setSelectedStory(null)} aria-label="Close story">×</button><img src={selectedStory.image} alt={selectedStory.title} /><div><span>{selectedStory.label}</span><h2>{selectedStory.title}</h2><p>{selectedStory.detail || selectedStory.description}</p><small>{selectedStory.description}</small></div></article></div>}
     {activeTheme.showParticles && <BackgroundCanvas />}
     <button type="button" className="theme-switch" onClick={switchTheme} aria-label={`Switch to ${theme === "technical" ? "Apple TV" : "technical"} theme`}><span>{theme === "technical" ? "APPLE TV" : "TECHNICAL"}</span><i><b /></i></button>
     <div className="relative z-10 mx-auto max-w-[1500px] px-4 sm:px-7 lg:px-10">
@@ -200,10 +221,10 @@ export function HomePage() {
 
         <section className="apple-showcase" aria-label="Featured visual stories">
           <div className="apple-rail-heading"><div><span>FEATURED</span><h2>Stories in design.</h2></div><div className="apple-rail-actions"><p>Explore the person, process and projects behind the models.</p><nav aria-label="Featured story controls"><button type="button" onClick={() => showStory(activeStory - 1)} aria-label="Previous story">←</button><span>{String(activeStory + 1).padStart(2, "0")} / {String(activeTheme.mediaRail.length).padStart(2, "0")}</span><button type="button" onClick={() => showStory(activeStory + 1)} aria-label="Next story">→</button></nav></div></div>
-          <div className="apple-rail-window">
+          <div className="apple-rail-window" onMouseEnter={() => setRailPaused(true)} onMouseLeave={() => setRailPaused(false)} onFocusCapture={() => setRailPaused(true)} onBlurCapture={() => setRailPaused(false)}>
             <button className="apple-horizontal-button is-left" type="button" onClick={() => showStory(activeStory - 1)} aria-label="Scroll featured stories left">←</button>
             <div className="apple-media-rail" ref={mediaRailRef}>
-              {activeTheme.mediaRail.map((item, index) => <article className={`apple-media-card ${item.wide ? "apple-media-wide" : ""}`} key={`${item.title}-${index}`}><img src={item.image} alt={item.title} /><div><span>{item.label}</span><h3>{item.title}</h3><p>{item.description}</p></div></article>)}
+              {activeTheme.mediaRail.map((item, index) => <button type="button" onClick={() => setSelectedStory(item)} className={`apple-media-card ${item.wide ? "apple-media-wide" : ""}`} key={`${item.title}-${index}`}><img src={item.image} alt={item.title} /><div><span>{item.label}</span><h3>{item.title}</h3><p>{item.description}</p><small>EXPLORE STORY +</small></div></button>)}
             </div>
             <button className="apple-horizontal-button is-right" type="button" onClick={() => showStory(activeStory + 1)} aria-label="Scroll featured stories right">→</button>
           </div>
@@ -235,6 +256,7 @@ export function HomePage() {
           <div className="mt-14 grid gap-px bg-white/10 md:grid-cols-2">
             {projects.map((w, i) => <Reveal key={w.id || w.title} delay={(i%2)*90}><a href={w.link} target="_blank" rel="noreferrer" className="project-card group"><div className={`project-image ${w.secondaryImage ? "project-image-dual" : ""}`}><img src={w.image} alt={w.title} />{w.secondaryImage && <img className="project-image-alt" src={w.secondaryImage} alt={`${w.title} alternate view`} />}<span>{w.stat}</span>{w.secondaryImage && <em>02 VIEWS</em>}<i>VIEW PROJECT ↗</i></div><div className="project-copy"><span>{String(i+1).padStart(2,"0")}</span><div><h3>{w.title}</h3><p>{w.place} — {w.type}</p><small>{w.source}</small></div></div></a></Reveal>)}
           </div>
+          <div className="youtube-zone"><div className="youtube-heading"><div><p className="section-index">MOST WATCHED ON YOUTUBE</p><h2>Ideas in motion.</h2></div><a href={YOUTUBE} target="_blank" rel="noreferrer">VISIT CHANNEL ↗</a></div><div className="youtube-grid">{TOP_VIDEOS.map((video, index) => <a className="youtube-card" href={`https://www.youtube.com/watch?v=${video.id}`} target="_blank" rel="noreferrer" key={video.id}><div><img src={`https://i.ytimg.com/vi/${video.id}/hqdefault.jpg`} alt={video.title} loading="lazy" /><i>▶</i><span>0{index + 1}</span></div><h3>{video.title}</h3><p>{video.views}</p></a>)}</div></div>
         </section>
 
         <section id="experience" className="experience-grid border border-white/10 px-5 py-24 sm:px-10 lg:px-16 lg:py-32">
