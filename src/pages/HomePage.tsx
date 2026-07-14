@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { onAuthStateChanged, signOut } from "firebase/auth";
+import { onAuthStateChanged, signOut, type User } from "firebase/auth";
 import { collection, doc, getDocs, increment, serverTimestamp, updateDoc } from "firebase/firestore";
 import { auth, db, SUPERADMIN_EMAIL } from "@/lib/firebase";
 import type { Product } from "@/lib/types";
@@ -7,706 +7,121 @@ import { BackgroundCanvas } from "@/components/BackgroundCanvas";
 import { Header } from "@/components/Header";
 import { AuthModal } from "@/components/AuthModal";
 import { Reveal } from "@/components/Reveal";
-import type { User } from "firebase/auth";
 
 const LINKEDIN = "https://www.linkedin.com/in/ehsan-mokhtary/";
 const YOUTUBE = "https://www.youtube.com/@ehsanmokhtaryArchitect";
-const EMAIL = "Ehsan0921@gmail.com";
 const FOOD4RHINO = "https://www.food4rhino.com/en/app/rhinoplus";
-
+const EMAIL = "Ehsan0921@gmail.com";
 const yt = (id: string) => `https://www.youtube.com/watch?v=${id}`;
 const thumb = (id: string) => `https://i.ytimg.com/vi/${id}/hqdefault.jpg`;
 
-const ROLES = [
-  {
-    title: "Facade BIM Manager",
-    text: "Leading BIM delivery for facade and curtain wall systems — from design coordination and panel rationalisation to fabrication-ready documentation and production data.",
-    tags: ["Curtain Wall", "Panelisation", "Cast-ins & Backpans", "Shop Drawings"],
-  },
-  {
-    title: "Computational Designer",
-    text: "Algorithmic design with Rhino & Grasshopper — parametric facade systems, ETFE roof geometry, automated dimensioning and AR-ready BIM models.",
-    tags: ["Rhino", "Grasshopper", "Parametric", "AR / BIM"],
-  },
-  {
-    title: "Developer",
-    text: "Building the tools behind the workflow — the RhinoPlus plug-in, Grasshopper scripts, web apps and AI-driven automation for BIM teams.",
-    tags: ["C# / Python", "RhinoPlus", "Web Apps", "AI Automation"],
-  },
+const SERVICES = [
+  { no: "01", title: "Facade clash detection", text: "Federated coordination focused on curtain wall interfaces—structure, embeds, brackets, slab edges, fire-stopping and access zones.", meta: ["Model federation", "Issue ownership", "Resolution tracking"] },
+  { no: "02", title: "Metadata & LOI control", text: "Information that survives handover. I define, validate and govern parameters from design intent through procurement and fabrication.", meta: ["Parameter schemas", "IFC mapping", "QA validation"] },
+  { no: "03", title: "LOD modelling strategy", text: "The right geometry at the right milestone—clear modelling boundaries, progressive detail and dependable deliverables without model bloat.", meta: ["LOD matrices", "Model health", "Milestone gates"] },
+  { no: "04", title: "Computational production", text: "Rhino and Grasshopper workflows that rationalise panels and automate backpans, cast-ins, dimensions, schedules and production data.", meta: ["Panelisation", "Automation", "Fabrication data"] },
 ];
 
-const PROJECTS = [
-  {
-    id: "XtfDwJbAbpw",
-    title: "Atlassian Project — Sydney",
-    sub: "Computational design for the facade curtain wall system — SRG Global",
-    tag: "Facade BIM",
-  },
-  {
-    id: "FOphlK0PcCI",
-    title: "SRG Global Facade — Backpans",
-    sub: "Algorithmic extraction of facade panel backpans for production",
-    tag: "Computational Design",
-  },
-  {
-    id: "9mhKwyhyww8",
-    title: "Curtain Wall Cast-ins",
-    sub: "Generating curtain wall cast-in embeds by algorithmic design",
-    tag: "Facade BIM",
-  },
-  {
-    id: "KzDMJugAHxQ",
-    title: "ETFE Hexagon Roof",
-    sub: "Parametric geometry for a hexagonal ETFE roof system",
-    tag: "Parametric",
-  },
-  {
-    id: "Lw7ydXdN-7M",
-    title: "Facade Design Process in BIM",
-    sub: "End-to-end facade workflow in Rhino & Grasshopper",
-    tag: "Workflow",
-  },
-  {
-    id: "LRxphasTLmg",
-    title: "BIM in Augmented Reality",
-    sub: "Bringing Rhino BIM facade models into AR for site coordination",
-    tag: "AR / BIM",
-  },
+const WORK = [
+  { id: "XtfDwJbAbpw", title: "Atlassian Central", place: "Sydney, Australia", type: "Curtain wall computational delivery", stat: "LANDMARK / HIGH-RISE" },
+  { id: "FOphlK0PcCI", title: "Facade backpan extraction", place: "SRG Global", type: "Algorithmic production workflow", stat: "AUTOMATED / TRACEABLE" },
+  { id: "9mhKwyhyww8", title: "Cast-in coordination", place: "Curtain wall systems", type: "Parametric embed generation", stat: "DESIGN → SITE" },
+  { id: "KzDMJugAHxQ", title: "ETFE hexagon roof", place: "Computational design", type: "Complex geometry rationalisation", stat: "PARAMETRIC / CONTROLLED" },
 ];
 
-const EXPERIENCE = [
-  {
-    period: "Current",
-    role: "Facade BIM Manager",
-    org: "SRG Global — Melbourne, Australia",
-    points: [
-      "Leading BIM delivery for complex facade and curtain wall packages on landmark Australian projects, including the Atlassian headquarters in Sydney.",
-      "Driving computational workflows: algorithmic panel backpan extraction, cast-in embed generation and panel auto-dimensioning straight to production data.",
-      "Bridging design, engineering and fabrication with Rhino/Grasshopper, IFC data and AR model coordination.",
-    ],
-    current: true,
-  },
-  {
-    period: "2021 — Present",
-    role: "Plug-in Developer",
-    org: "RhinoPlus — published on Food4Rhino",
-    points: [
-      "Designed and shipped RhinoPlus, a Rhino plug-in with 20+ productivity commands used by designers worldwide.",
-      "Includes PanelAutoDimension with CSV export, barcode generation, key-value/IFC parameter tooling and block management.",
-    ],
-  },
-  {
-    period: "Ongoing",
-    role: "Computational Designer & Educator",
-    org: "@ehsanmokhtaryArchitect — YouTube",
-    points: [
-      "Teaching BIM, Rhino and Grasshopper to the AEC community — full Rhino 7 course, facade design tutorials and automation talks.",
-      "Topics span parametric facade systems, AI & automation in BIM, and AR for construction.",
-    ],
-  },
-];
-
-const TALKS = [
-  { id: "9eFJMBZYURM", title: "Full Rhinoceros 7 Course", sub: "Complete training course — 3.4K views", kind: "Course" },
-  { id: "QuKsV6Zm0y4", title: "AI and Automation in BIM", sub: "Where BIM delivery is heading next", kind: "Talk" },
-  { id: "1WPABFxYrs8", title: "BIM Australia", sub: "BIM practice in the Australian market", kind: "Talk" },
-];
-
-const VIDEOS = [
-  { id: "TafuodYqCHQ", title: "Auto Dimension — Rhino Grasshopper", views: "9.8K views" },
-  { id: "KzDMJugAHxQ", title: "Hexagon Roof of ETFE", views: "4K views" },
-  { id: "9eFJMBZYURM", title: "Full Rhinoceros 7 Course", views: "3.4K views" },
-  { id: "Lw7ydXdN-7M", title: "Facade design process in BIM by Rhino Grasshopper", views: "1.2K views" },
-  { id: "HddA8nMklF8", title: "BIM or Parametric design", views: "1.2K views" },
-  { id: "9mhKwyhyww8", title: "Generating CurtainWall's Cast-in by Algorithmic design", views: "970 views" },
-];
-
-const MARQUEE = [
-  "Facade BIM", "Curtain Wall Systems", "Rhino 3D", "Grasshopper", "Computational Design",
-  "Panel Auto-Dimensioning", "RhinoPlus", "Python", "C#", "IFC / VisualARQ",
-  "Augmented Reality", "AI Automation", "Web Development", "Documentation",
-];
-
-function PlayIcon() {
-  return (
-    <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
-      <path d="M8 5v14l11-7z" />
-    </svg>
-  );
-}
+const COMMANDS = ["PanelAutoDimension", "BlockManagementPlus", "ExportByKeyValue", "KeyValueToIFCParameter", "GenerateBarcode", "ImportCSV"];
 
 export function HomePage() {
   const [user, setUser] = useState<User | null>(null);
   const [authOpen, setAuthOpen] = useState(false);
   const [authMode, setAuthMode] = useState<"login" | "register">("login");
   const [products, setProducts] = useState<Product[]>([]);
-
   const isAdmin = !!user?.email && user.email.toLowerCase() === SUPERADMIN_EMAIL.toLowerCase();
 
-  useEffect(() => {
-    return onAuthStateChanged(auth, (u) => {
-      setUser(u);
-      if (u) setAuthOpen(false);
-    });
-  }, []);
-
+  useEffect(() => onAuthStateChanged(auth, (u) => { setUser(u); if (u) setAuthOpen(false); }), []);
   const loadProducts = useCallback(async () => {
     try {
       const snap = await getDocs(collection(db, "products"));
       const items: Product[] = [];
       snap.forEach((d) => items.push({ id: d.id, ...d.data() } as Product));
-      const active = items
-        .filter((x) => x.isActive !== false && (x.type === "webapp" ? x.url : (x.currentVersion?.fileUrl || x.fileUrl)))
-        .sort((a, b) => {
-          const ta = a.createdAt?.toMillis?.() ?? 0;
-          const tb = b.createdAt?.toMillis?.() ?? 0;
-          return tb - ta;
-        });
-      setProducts(active);
-    } catch {
-      setProducts([]);
-    }
+      setProducts(items.filter((x) => x.isActive !== false && (x.type === "webapp" ? x.url : x.currentVersion?.fileUrl || x.fileUrl)));
+    } catch { setProducts([]); }
   }, []);
-
-  useEffect(() => {
-    loadProducts();
-  }, [loadProducts]);
-
+  useEffect(() => { loadProducts(); }, [loadProducts]);
   const onDownload = async (item: Product) => {
-    const currentVersion = item.currentVersion;
-    const dlUrl = currentVersion?.fileUrl || item.fileUrl;
-    if (!dlUrl) return;
-    try {
-      await updateDoc(doc(db, "products", item.id), {
-        downloadCount: increment(1),
-        lastDownloadedAt: serverTimestamp(),
-      });
-    } catch {
-      /* best-effort */
-    }
-    window.open(dlUrl, "_blank", "noopener,noreferrer");
-    loadProducts();
+    const url = item.currentVersion?.fileUrl || item.fileUrl;
+    if (!url) return;
+    try { await updateDoc(doc(db, "products", item.id), { downloadCount: increment(1), lastDownloadedAt: serverTimestamp() }); } catch { /* best effort */ }
+    window.open(url, "_blank", "noopener,noreferrer");
   };
 
-  return (
-    <div className="relative min-h-screen overflow-x-hidden text-zinc-200">
-      <div className="mesh-grid pointer-events-none fixed inset-0 -z-[5] opacity-40" aria-hidden />
-      <BackgroundCanvas />
+  return <div className="site-shell min-h-screen overflow-x-hidden text-[#deddd8]">
+    <BackgroundCanvas />
+    <div className="relative z-10 mx-auto max-w-[1500px] px-4 sm:px-7 lg:px-10">
+      <Header user={user} isAdmin={isAdmin} menuProducts={products} onOpenLogin={() => { setAuthMode("login"); setAuthOpen(true); }} onOpenRegister={() => { setAuthMode("register"); setAuthOpen(true); }} onLogout={() => signOut(auth).catch(() => undefined)} />
 
-      {/* floating orbs */}
-      <div className="pointer-events-none fixed inset-0 -z-[6] overflow-hidden" aria-hidden>
-        <div className="orb left-[-10%] top-[10%] h-96 w-96 bg-cyan-500" />
-        <div className="orb orb-2 right-[-8%] top-[35%] h-80 w-80 bg-teal-500" />
-        <div className="orb orb-3 bottom-[5%] left-[30%] h-72 w-72 bg-violet-500" />
-      </div>
-
-      <div className="page-layer relative z-10 mx-auto max-w-6xl px-4 pb-20 sm:px-6 lg:px-8">
-        <Header
-          user={user}
-          isAdmin={isAdmin}
-          menuProducts={products}
-          onOpenLogin={() => {
-            setAuthMode("login");
-            setAuthOpen(true);
-          }}
-          onOpenRegister={() => {
-            setAuthMode("register");
-            setAuthOpen(true);
-          }}
-          onLogout={() => signOut(auth).catch(() => undefined)}
-        />
-
-        <main>
-          {/* ============ HERO ============ */}
-          <section className="grid items-center gap-10 pt-14 sm:pt-20 lg:grid-cols-[1.15fr_0.85fr]">
-            <div className="text-center lg:text-left">
-              <a
-                href={LINKEDIN}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 rounded-full border border-cyan-500/30 bg-cyan-500/10 px-4 py-1.5 text-xs font-semibold text-cyan-300 transition hover:bg-cyan-500/20"
-              >
-                <span className="relative flex h-2 w-2">
-                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-cyan-400 opacity-75" />
-                  <span className="relative inline-flex h-2 w-2 rounded-full bg-cyan-400" />
-                </span>
-                Facade BIM Manager at SRG Global
-              </a>
-              <p className="mt-5 text-xs font-semibold uppercase tracking-[0.3em] text-cyan-400/80">
-                Computational Designer · Developer
-              </p>
-              <h1
-                className="mt-5 text-5xl font-bold leading-[1.05] tracking-tight text-zinc-50 sm:text-6xl md:text-7xl"
-                style={{ fontFamily: "'Outfit', 'DM Sans', system-ui, sans-serif" }}
-              >
-                Ehsan
-                <br />
-                <span className="text-flow">Mokhtary</span>
-              </h1>
-              <p className="mx-auto mt-6 max-w-xl text-balance text-base text-zinc-400 sm:text-lg lg:mx-0">
-                Facade BIM Manager at SRG Global in Melbourne — shaping complex building envelopes through BIM
-                leadership, algorithmic design and custom software, from curtain wall systems in Sydney to the
-                RhinoPlus plug-in used by designers worldwide.
-              </p>
-              <div className="mt-8 flex flex-wrap items-center justify-center gap-3 lg:justify-start">
-                <a
-                  href={LINKEDIN}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="rounded-xl bg-cyan-500 px-6 py-3 text-sm font-semibold text-zinc-950 shadow-lg shadow-cyan-900/40 transition hover:bg-cyan-400"
-                >
-                  Connect on LinkedIn
-                </a>
-                <a
-                  href="#work"
-                  className="rounded-xl border border-zinc-700 bg-zinc-900/60 px-6 py-3 text-sm font-semibold text-zinc-200 transition hover:border-cyan-500/50 hover:text-white"
-                >
-                  View my work
-                </a>
-              </div>
-              <div className="mt-10 flex flex-wrap items-center justify-center gap-8 lg:justify-start">
-                {[
-                  ["15+", "BIM & design videos"],
-                  ["20+", "RhinoPlus commands"],
-                  ["3", "Disciplines, one workflow"],
-                ].map(([n, l]) => (
-                  <div key={l}>
-                    <div className="text-2xl font-bold text-zinc-50" style={{ fontFamily: "'Outfit', sans-serif" }}>
-                      {n}
-                    </div>
-                    <div className="text-xs text-zinc-500">{l}</div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="relative mx-auto w-full max-w-sm">
-              <div className="portrait-ring absolute -inset-3 rounded-[2rem] bg-gradient-to-tr from-cyan-500/40 via-teal-400/20 to-violet-500/40 blur-md" />
-              <div className="relative overflow-hidden rounded-[2rem] border border-white/10 shadow-2xl shadow-cyan-950/40">
-                <img
-                  src="/ehsan-portrait.png"
-                  alt="Ehsan Mokhtary — Facade BIM Manager"
-                  className="aspect-[2/3] w-full object-cover object-top"
-                  loading="eager"
-                />
-                <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-zinc-950/90 to-transparent p-5">
-                  <p className="text-sm font-semibold text-zinc-100">Ehsan Mokhtary</p>
-                  <p className="text-xs text-cyan-300/90">Facade BIM Manager @ SRG Global</p>
-                </div>
-              </div>
-            </div>
-          </section>
-
-          {/* ============ MARQUEE ============ */}
-          <div className="mt-16 overflow-hidden border-y border-zinc-800/80 py-3" aria-hidden>
-            <div className="marquee gap-8">
-              {[...MARQUEE, ...MARQUEE].map((s, i) => (
-                <span key={i} className="flex items-center gap-8 text-sm font-medium text-zinc-500">
-                  {s}
-                  <span className="text-cyan-500/50">◆</span>
-                </span>
-              ))}
+      <main>
+        <section className="hero-grid relative min-h-[820px] overflow-hidden border-x border-white/10 px-5 pb-16 pt-20 sm:px-10 lg:px-16 lg:pt-28">
+          <div className="hero-image absolute inset-0" aria-hidden />
+          <div className="hero-scan absolute inset-0" aria-hidden />
+          <div className="relative z-10 max-w-4xl">
+            <p className="eyebrow"><span className="status-dot" /> MELBOURNE / AUSTRALIA — AVAILABLE FOR BIM CONSULTING</p>
+            <h1 className="hero-title mt-8">I make complex<br /><span>facades buildable.</span></h1>
+            <p className="mt-8 max-w-2xl text-lg leading-relaxed text-white/65 sm:text-xl">Facade BIM leadership for projects where geometry, coordination and information cannot fail—from clash detection and LOD strategy to fabrication-ready models and metadata.</p>
+            <div className="mt-10 flex flex-wrap gap-3">
+              <a href="#services" className="button-primary">Explore BIM services <span>↘</span></a>
+              <a href={`mailto:${EMAIL}`} className="button-ghost">Discuss a project</a>
             </div>
           </div>
+          <div className="hero-data absolute bottom-7 left-5 right-5 z-10 grid grid-cols-2 border-t border-white/15 pt-5 sm:left-10 sm:right-10 lg:left-16 lg:right-16 lg:grid-cols-4">
+            {[['15+', 'YEARS IN AEC'], ['20+', 'RHINOPLUS COMMANDS'], ['LOD 100–500', 'MODEL GOVERNANCE'], ['01', 'CONNECTED WORKFLOW']].map(([a,b]) => <div key={b} className="border-l border-white/15 px-4 first:border-0 first:pl-0"><strong>{a}</strong><span>{b}</span></div>)}
+          </div>
+        </section>
 
-          {/* ============ ABOUT / ROLES ============ */}
-          <section id="about" className="mt-20">
-            <Reveal className="mx-auto max-w-3xl text-center">
-              <h2 className="text-3xl font-bold text-zinc-50 sm:text-4xl" style={{ fontFamily: "'Outfit', sans-serif" }}>
-                One career, <span className="text-gradient">three disciplines</span>
-              </h2>
-              <p className="mt-5 leading-relaxed text-zinc-400">
-                I work where architecture meets code. As a Facade BIM Manager I lead digital delivery of complex
-                building envelopes; as a computational designer I turn geometry problems into algorithms; and as a
-                developer I ship the plug-ins and apps that make it all faster.
-              </p>
-            </Reveal>
+        <section className="statement border-x border-b border-white/10 px-5 py-24 sm:px-10 lg:px-16 lg:py-36">
+          <Reveal><p className="section-index">00 / POSITION</p><h2 className="max-w-6xl">BIM is not a model.<br /><span>It is a controlled decision system.</span></h2><div className="mt-12 grid gap-8 border-t border-white/10 pt-8 md:grid-cols-3"><p className="text-white/45">EHSAN MOKHTARY<br />Facade BIM Manager<br />Computational Designer</p><p className="text-lg leading-relaxed text-white/70 md:col-span-2">I connect design intent to fabrication reality. My work brings geometry, information and project teams into one governed workflow—then uses computation to remove repetition, expose risk early and make every handover more reliable.</p></div></Reveal>
+        </section>
 
-            <div className="mt-12 grid grid-cols-1 gap-5 md:grid-cols-3">
-              {ROLES.map((r, i) => (
-                <Reveal key={r.title} delay={i * 120}>
-                  <div className="group glass-dark h-full rounded-2xl p-6 transition duration-300 hover:-translate-y-1 hover:border-cyan-500/30">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-cyan-500/10 text-lg font-bold text-cyan-300">
-                      {String(i + 1).padStart(2, "0")}
-                    </div>
-                    <h3 className="mt-5 text-xl font-semibold text-zinc-100" style={{ fontFamily: "'Outfit', sans-serif" }}>
-                      {r.title}
-                    </h3>
-                    <p className="mt-3 text-sm leading-relaxed text-zinc-400">{r.text}</p>
-                    <div className="mt-5 flex flex-wrap gap-2">
-                      {r.tags.map((t) => (
-                        <span key={t} className="rounded-full border border-zinc-800 bg-zinc-900/60 px-2.5 py-1 text-[11px] text-zinc-400">
-                          {t}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                </Reveal>
-              ))}
-            </div>
-          </section>
+        <section id="services" className="border-x border-white/10 px-5 py-24 sm:px-10 lg:px-16 lg:py-32">
+          <Reveal><div className="section-head"><div><p className="section-index">01 / CORE SERVICES</p><h2>Digital control for<br />the building envelope.</h2></div><p>Specialist BIM services built around the interfaces where façade projects carry the most risk.</p></div></Reveal>
+          <div className="mt-16 border-t border-white/15">
+            {SERVICES.map((s, i) => <Reveal key={s.no} delay={i * 70}><article className="service-row group"><span className="service-no">{s.no}</span><h3>{s.title}</h3><p>{s.text}</p><div className="service-tags">{s.meta.map(x => <span key={x}>{x}</span>)}</div><span className="service-arrow">↗</span></article></Reveal>)}
+          </div>
+        </section>
 
-          {/* ============ EXPERIENCE ============ */}
-          <section id="experience" className="mt-24">
-            <Reveal className="text-center">
-              <h2 className="text-3xl font-bold text-zinc-50 sm:text-4xl" style={{ fontFamily: "'Outfit', sans-serif" }}>
-                Experience
-              </h2>
-              <p className="mx-auto mt-3 max-w-xl text-zinc-400">
-                Where facade engineering, computational design and software development meet.
-              </p>
-            </Reveal>
+        <section className="model-zone relative overflow-hidden border border-white/10 px-5 py-24 sm:px-10 lg:px-16 lg:py-32">
+          <div className="model-lines" aria-hidden><i /><i /><i /><i /><b className="clash clash-a" /><b className="clash clash-b" /></div>
+          <Reveal className="relative z-10 max-w-xl"><p className="section-index">02 / COORDINATION LOGIC</p><h2>See the conflict.<br />Own the resolution.</h2><p className="mt-6 text-lg leading-relaxed text-white/60">Clash detection only creates value when it is filtered, assigned and closed. I structure coordination around buildable façade interfaces—not software screenshots or inflated clash counts.</p><div className="mt-10 grid grid-cols-3 gap-2 text-center">{[['A','FEDERATE'],['B','RESOLVE'],['C','VERIFY']].map(x=><div className="metric" key={x[0]}><strong>{x[0]}</strong><span>{x[1]}</span></div>)}</div></Reveal>
+        </section>
 
-            <div className="relative mt-12 space-y-6 before:absolute before:bottom-4 before:left-[19px] before:top-4 before:w-px before:bg-gradient-to-b before:from-cyan-500/60 before:via-zinc-700 before:to-transparent sm:before:left-1/2">
-              {EXPERIENCE.map((e, i) => (
-                <Reveal key={e.role} delay={i * 120}>
-                  <div className={`relative flex gap-6 sm:gap-0 ${i % 2 === 0 ? "sm:flex-row" : "sm:flex-row-reverse"}`}>
-                    <div className="absolute left-[19px] top-6 z-10 h-3 w-3 -translate-x-1/2 rounded-full border-2 border-cyan-400 bg-zinc-950 sm:left-1/2" />
-                    <div className="ml-10 w-full sm:ml-0 sm:w-1/2 sm:px-8">
-                      <div className="glass-dark rounded-2xl p-6 transition duration-300 hover:-translate-y-1 hover:border-cyan-500/30">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <span className="rounded-full bg-cyan-500/10 px-3 py-1 text-[11px] font-semibold text-cyan-300">
-                            {e.period}
-                          </span>
-                          {e.current && (
-                            <span className="rounded-full bg-cyan-500 px-3 py-1 text-[11px] font-semibold text-zinc-950">
-                              Current position
-                            </span>
-                          )}
-                        </div>
-                        <h3 className="mt-3 text-xl font-semibold text-zinc-100" style={{ fontFamily: "'Outfit', sans-serif" }}>
-                          {e.role}
-                        </h3>
-                        <p className="mt-1 text-sm font-medium text-cyan-400/90">{e.org}</p>
-                        <ul className="mt-4 space-y-2">
-                          {e.points.map((p) => (
-                            <li key={p} className="flex gap-2 text-sm leading-relaxed text-zinc-400">
-                              <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-cyan-500/70" />
-                              {p}
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    </div>
-                  </div>
-                </Reveal>
-              ))}
-            </div>
-            <Reveal className="mt-8 text-center">
-              <a
-                href={LINKEDIN}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-sm font-semibold text-cyan-400/90 transition hover:text-cyan-300"
-              >
-                See full experience on LinkedIn →
-              </a>
-            </Reveal>
-          </section>
+        <section id="work" className="border-x border-white/10 px-5 py-24 sm:px-10 lg:px-16 lg:py-32">
+          <Reveal><div className="section-head"><div><p className="section-index">03 / SELECTED WORK</p><h2>Proof in the model.</h2></div><a href={YOUTUBE} target="_blank" rel="noreferrer">VIEW ALL CASE STUDIES ↗</a></div></Reveal>
+          <div className="mt-14 grid gap-px bg-white/10 md:grid-cols-2">
+            {WORK.map((w, i) => <Reveal key={w.id} delay={(i%2)*90}><a href={yt(w.id)} target="_blank" rel="noreferrer" className="project-card group"><div className="project-image"><img src={thumb(w.id)} alt={w.title} /><span>{w.stat}</span><i>PLAY ↗</i></div><div className="project-copy"><span>0{i+1}</span><div><h3>{w.title}</h3><p>{w.place} — {w.type}</p></div></div></a></Reveal>)}
+          </div>
+        </section>
 
-          {/* ============ FEATURED WORK ============ */}
-          <section id="work" className="mt-24">
-            <Reveal className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-              <div>
-                <h2 className="text-3xl font-bold text-zinc-50 sm:text-4xl" style={{ fontFamily: "'Outfit', sans-serif" }}>
-                  Featured work
-                </h2>
-                <p className="mt-3 max-w-xl text-zinc-400">
-                  Real projects from the facade industry — designed, rationalised and documented with computational BIM.
-                </p>
-              </div>
-              <a
-                href={YOUTUBE}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-sm font-semibold text-cyan-400/90 transition hover:text-cyan-300"
-              >
-                Watch on YouTube →
-              </a>
-            </Reveal>
+        <section id="experience" className="experience-grid border border-white/10 px-5 py-24 sm:px-10 lg:px-16 lg:py-32">
+          <Reveal><p className="section-index">04 / EXPERIENCE</p><h2>15 years across<br />architecture, facades<br />and digital delivery.</h2><p className="mt-8 max-w-lg leading-relaxed text-white/55">From façade engineering and BIM modelling to computational leadership—experience shaped across Iran, Malaysia and Australia.</p><a href={LINKEDIN} target="_blank" rel="noreferrer" className="text-link mt-8 inline-block">FULL LINKEDIN PROFILE ↗</a></Reveal>
+          <Reveal delay={120}><div className="timeline">
+            <div><time>2021—NOW</time><h3>Facade BIM Manager</h3><p>SRG Global · Melbourne</p></div>
+            <div><time>2020—2021</time><h3>Facade BIM Manager & Computational Designer</h3><p>RFY Group · Malaysia</p></div>
+            <div><time>2018—2020</time><h3>BIM / Architectural Management</h3><p>VR-CAM Technologies & ADAS</p></div>
+            <div><time>2014—2018</time><h3>Facade engineering & simulation</h3><p>Alumglass Facade Consultancy</p></div>
+            <div><time>2018—2020</time><h3>Master of Architecture</h3><p>Universiti Putra Malaysia</p></div>
+          </div></Reveal>
+        </section>
 
-            <div className="mt-10 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-              {PROJECTS.map((p, i) => (
-                <Reveal key={p.id} delay={(i % 3) * 100}>
-                  <a
-                    href={yt(p.id)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="group glass-dark block overflow-hidden rounded-2xl transition duration-300 hover:-translate-y-1 hover:border-cyan-500/30"
-                  >
-                    <div className="relative aspect-video overflow-hidden">
-                      <img src={thumb(p.id)} alt={p.title} className="zoom-img h-full w-full object-cover" loading="lazy" />
-                      <div className="absolute inset-0 bg-gradient-to-t from-zinc-950/70 via-transparent to-transparent" />
-                      <span className="absolute left-3 top-3 rounded-full bg-zinc-950/70 px-3 py-1 text-[11px] font-medium text-cyan-300 backdrop-blur">
-                        {p.tag}
-                      </span>
-                      <span className="absolute bottom-3 right-3 flex h-9 w-9 items-center justify-center rounded-full bg-cyan-500 text-zinc-950 opacity-90 transition group-hover:scale-110">
-                        <PlayIcon />
-                      </span>
-                    </div>
-                    <div className="p-5">
-                      <h3 className="text-lg font-semibold text-zinc-100">{p.title}</h3>
-                      <p className="mt-1 text-sm text-zinc-400">{p.sub}</p>
-                    </div>
-                  </a>
-                </Reveal>
-              ))}
-            </div>
-          </section>
+        <section className="rhino-zone border-x border-white/10 px-5 py-24 sm:px-10 lg:px-16 lg:py-32">
+          <Reveal><p className="section-index">05 / BUILT, NOT BOUGHT</p><div className="mt-5 grid gap-12 lg:grid-cols-2"><div><h2>RhinoPlus.</h2><p className="mt-6 max-w-xl text-lg leading-relaxed text-white/60">A production toolkit I designed and shipped for Rhino—turning repeated modelling and information tasks into reliable commands.</p><a href={FOOD4RHINO} target="_blank" rel="noreferrer" className="button-primary mt-8 inline-flex">Explore the plug-in ↗</a></div><div className="command-list">{COMMANDS.map((c,i)=><div key={c}><span>CMD_{String(i+1).padStart(2,'0')}</span><code>{c}</code><b>READY</b></div>)}</div></div></Reveal>
+        </section>
 
-          {/* ============ MOST VIEWED VIDEOS ============ */}
-          <section id="videos" className="mt-24">
-            <Reveal className="text-center">
-              <h2 className="text-3xl font-bold text-zinc-50 sm:text-4xl" style={{ fontFamily: "'Outfit', sans-serif" }}>
-                Most-watched <span className="text-gradient">tutorials &amp; talks</span>
-              </h2>
-              <p className="mx-auto mt-3 max-w-xl text-zinc-400">
-                Teaching the industry — the most-viewed videos from my channel on BIM, Grasshopper and automation.
-              </p>
-            </Reveal>
+        {products.length > 0 && <section id="tools" className="border-x border-white/10 px-5 py-24 sm:px-10 lg:px-16"><p className="section-index">06 / DIGITAL PRODUCTS</p><div className="mt-10 grid gap-4 md:grid-cols-2">{products.map(item=><article className="product-card" key={item.id}><h3>{item.title}</h3><p>{item.description}</p>{item.type === 'webapp' ? <a href={item.url}>OPEN TOOL ↗</a> : <button onClick={()=>onDownload(item)}>DOWNLOAD ↘</button>}</article>)}</div></section>}
 
-            <div className="mt-10 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {VIDEOS.map((v, i) => (
-                <Reveal key={v.id} delay={(i % 3) * 100}>
-                  <a
-                    href={yt(v.id)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="group glass-dark flex h-full flex-col overflow-hidden rounded-xl transition duration-300 hover:-translate-y-1 hover:border-cyan-500/30"
-                  >
-                    <div className="relative aspect-video overflow-hidden">
-                      <img src={thumb(v.id)} alt={v.title} className="zoom-img h-full w-full object-cover" loading="lazy" />
-                      <span className="absolute bottom-2 right-2 rounded bg-zinc-950/80 px-2 py-0.5 text-[11px] font-medium text-zinc-300">
-                        {v.views}
-                      </span>
-                      <span className="absolute inset-0 flex items-center justify-center opacity-0 transition group-hover:opacity-100">
-                        <span className="flex h-12 w-12 items-center justify-center rounded-full bg-cyan-500/90 text-zinc-950">
-                          <PlayIcon />
-                        </span>
-                      </span>
-                    </div>
-                    <p className="flex-1 p-4 text-sm font-medium leading-snug text-zinc-200">{v.title}</p>
-                  </a>
-                </Reveal>
-              ))}
-            </div>
-          </section>
-
-          {/* ============ TALKS & TEACHING ============ */}
-          <section id="talks" className="mt-24">
-            <Reveal className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-              <div>
-                <h2 className="text-3xl font-bold text-zinc-50 sm:text-4xl" style={{ fontFamily: "'Outfit', sans-serif" }}>
-                  Talks, courses &amp; community
-                </h2>
-                <p className="mt-3 max-w-xl text-zinc-400">
-                  Sharing BIM and computational design knowledge with the AEC community — courses, talks and tutorials.
-                </p>
-              </div>
-            </Reveal>
-
-            <div className="mt-10 grid grid-cols-1 gap-5 md:grid-cols-3">
-              {TALKS.map((t, i) => (
-                <Reveal key={t.id} delay={i * 120}>
-                  <a
-                    href={yt(t.id)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="group glass-dark flex h-full flex-col overflow-hidden rounded-2xl transition duration-300 hover:-translate-y-1 hover:border-cyan-500/30"
-                  >
-                    <div className="relative aspect-video overflow-hidden">
-                      <img src={thumb(t.id)} alt={t.title} className="zoom-img h-full w-full object-cover" loading="lazy" />
-                      <div className="absolute inset-0 bg-gradient-to-t from-zinc-950/70 via-transparent to-transparent" />
-                      <span className="absolute left-3 top-3 rounded-full bg-cyan-500 px-3 py-1 text-[11px] font-semibold text-zinc-950">
-                        {t.kind}
-                      </span>
-                    </div>
-                    <div className="flex flex-1 flex-col p-5">
-                      <h3 className="text-lg font-semibold text-zinc-100">{t.title}</h3>
-                      <p className="mt-1 text-sm text-zinc-400">{t.sub}</p>
-                    </div>
-                  </a>
-                </Reveal>
-              ))}
-            </div>
-          </section>
-
-          {/* ============ RHINOPLUS ============ */}
-          <section className="mt-24">
-            <Reveal>
-              <div className="glass-dark relative overflow-hidden rounded-3xl p-8 sm:p-10">
-                <div className="orb right-[-5%] top-[-30%] h-64 w-64 bg-cyan-500" aria-hidden />
-                <div className="relative grid items-center gap-8 lg:grid-cols-[1.2fr_0.8fr]">
-                  <div>
-                    <p className="text-xs font-semibold uppercase tracking-[0.25em] text-cyan-400/80">Developer highlight</p>
-                    <h2 className="mt-3 text-3xl font-bold text-zinc-50 sm:text-4xl" style={{ fontFamily: "'Outfit', sans-serif" }}>
-                      RhinoPlus <span className="text-gradient">plug-in</span>
-                    </h2>
-                    <p className="mt-4 max-w-xl leading-relaxed text-zinc-400">
-                      My own Rhino plug-in with 20+ productivity commands — panel auto-dimensioning with CSV export,
-                      block management, barcode generation, key-value &amp; IFC parameter workflows and more. Available on
-                      Food4Rhino.
-                    </p>
-                    <div className="mt-6 flex flex-wrap gap-3">
-                      <a
-                        href={FOOD4RHINO}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="rounded-xl bg-cyan-500 px-5 py-2.5 text-sm font-semibold text-zinc-950 transition hover:bg-cyan-400"
-                      >
-                        Get it on Food4Rhino
-                      </a>
-                      <a
-                        href={yt("8OT5qKNbCvc")}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="rounded-xl border border-zinc-700 bg-zinc-900/60 px-5 py-2.5 text-sm font-semibold text-zinc-200 transition hover:border-cyan-500/50"
-                      >
-                        See it in action
-                      </a>
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-2 text-xs text-zinc-400">
-                    {[
-                      "PanelAutoDimension", "BlockManagementPlus", "GenerateBarcode", "ImportCSV",
-                      "KeyValueToIFC", "CurveLengthFilter", "MultipleAlignedDim", "ExportByKeyValue",
-                    ].map((c) => (
-                      <div key={c} className="rounded-lg border border-zinc-800 bg-zinc-900/50 px-3 py-2 font-mono text-[11px]">
-                        {c}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </Reveal>
-          </section>
-
-          {/* ============ TOOLS & PRODUCTS ============ */}
-          <section id="tools" className="mt-24">
-            <Reveal>
-              <div className="glass-dark rounded-2xl p-6 sm:p-8">
-                <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                  <div>
-                    <h2 className="text-2xl font-semibold text-zinc-100" style={{ fontFamily: "'Outfit', sans-serif" }}>
-                      Tools &amp; products
-                    </h2>
-                    <p className="mt-2 text-sm text-zinc-400">Downloadable tools and web apps I have built.</p>
-                  </div>
-                  <a
-                    href={LINKEDIN}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-sm font-semibold text-cyan-400/90 transition hover:text-cyan-300"
-                  >
-                    Connect on LinkedIn →
-                  </a>
-                </div>
-                <div className="mt-8 grid grid-cols-1 gap-4 md:grid-cols-2">
-                  {products.map((item) => {
-                    const isWebapp = item.type === "webapp";
-                    const currentVersion = item.currentVersion;
-                    const btnLabel = item.buttonLabel || (isWebapp ? "Open" : "Download");
-                    const dlVersion = currentVersion?.version;
-                    return (
-                      <div
-                        key={item.id}
-                        className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-5 transition hover:border-cyan-500/25"
-                      >
-                        <h3 className="text-lg font-semibold text-zinc-100">{item.title || "Product"}</h3>
-                        <p className="mt-2 line-clamp-3 text-sm text-zinc-400">
-                          {item.description || "No description"}
-                        </p>
-                        <div className="mt-4 flex flex-wrap items-center gap-3">
-                          {isWebapp ? (
-                            <a
-                              href={item.url || "#"}
-                              target={item.url?.startsWith("http") ? "_blank" : undefined}
-                              rel={item.url?.startsWith("http") ? "noopener noreferrer" : undefined}
-                              className="rounded-lg bg-cyan-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-cyan-500"
-                            >
-                              {btnLabel}
-                            </a>
-                          ) : (
-                            <button
-                              type="button"
-                              onClick={() => onDownload(item)}
-                              className="rounded-lg bg-cyan-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-cyan-500"
-                            >
-                              {btnLabel}
-                            </button>
-                          )}
-                          {dlVersion && (
-                            <span className="inline-block rounded-full bg-zinc-800 px-2.5 py-1 text-xs text-zinc-400">
-                              {dlVersion}
-                            </span>
-                          )}
-                          {isWebapp && (
-                            <span className="inline-block rounded-full bg-zinc-800 px-2.5 py-1 text-xs text-zinc-400">
-                              Web App
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    );
-                  })}
-                  {!products.length && (
-                    <p className="text-sm text-zinc-500">No products listed yet — check back soon.</p>
-                  )}
-                </div>
-              </div>
-            </Reveal>
-          </section>
-
-          {/* ============ CONNECT ============ */}
-          <section id="contact" className="mt-24">
-            <Reveal>
-              <div className="glass-dark rounded-3xl p-8 text-center sm:p-12">
-                <h2 className="text-3xl font-bold text-zinc-50 sm:text-4xl" style={{ fontFamily: "'Outfit', sans-serif" }}>
-                  Let&rsquo;s build something <span className="text-flow">extraordinary</span>
-                </h2>
-                <p className="mx-auto mt-4 max-w-xl text-zinc-400">
-                  Facade BIM, computational design or custom tooling — I&rsquo;m always open to interesting projects
-                  and conversations.
-                </p>
-                <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-                  <a
-                    href={`mailto:${EMAIL}`}
-                    className="rounded-xl bg-cyan-500 px-6 py-3 text-sm font-semibold text-zinc-950 transition hover:bg-cyan-400"
-                  >
-                    {EMAIL}
-                  </a>
-                  <a
-                    href={LINKEDIN}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="rounded-xl border border-zinc-700 bg-zinc-900/60 px-6 py-3 text-sm font-semibold text-zinc-200 transition hover:border-cyan-500/50"
-                  >
-                    LinkedIn
-                  </a>
-                  <a
-                    href={YOUTUBE}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="rounded-xl border border-zinc-700 bg-zinc-900/60 px-6 py-3 text-sm font-semibold text-zinc-200 transition hover:border-cyan-500/50"
-                  >
-                    YouTube
-                  </a>
-                </div>
-              </div>
-            </Reveal>
-          </section>
-        </main>
-
-        <footer className="mt-16 border-t border-zinc-800/80 py-8 text-center text-sm text-zinc-500">
-          © {new Date().getFullYear()} Ehsan Mokhtary · Facade BIM Manager · Computational Designer · Developer · ehsanmo.me
-        </footer>
-      </div>
-
-      <AuthModal
-        open={authOpen}
-        initialMode={authMode}
-        onClose={() => setAuthOpen(false)}
-      />
+        <section id="contact" className="contact-zone border border-white/10 px-5 py-24 text-center sm:px-10 lg:px-16 lg:py-40"><Reveal><p className="section-index">HAVE A COMPLEX FACADE?</p><h2>Let’s make it<br /><span>clear, coordinated, buildable.</span></h2><div className="mt-10 flex flex-wrap justify-center gap-3"><a className="button-primary" href={`mailto:${EMAIL}`}>Start a conversation ↗</a><a className="button-ghost" href={LINKEDIN} target="_blank" rel="noreferrer">LinkedIn</a></div></Reveal></section>
+      </main>
+      <footer className="flex flex-col gap-4 border-x border-white/10 px-6 py-8 text-[11px] tracking-[.16em] text-white/35 sm:flex-row sm:justify-between"><span>© {new Date().getFullYear()} EHSAN MOKHTARY</span><span>FACADE BIM / COMPUTATION / DELIVERY</span><span>MELBOURNE, AU</span></footer>
     </div>
-  );
+    <AuthModal open={authOpen} initialMode={authMode} onClose={() => setAuthOpen(false)} />
+  </div>;
 }

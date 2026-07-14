@@ -10,5 +10,6 @@ dist/
 # Test artifacts
 .playwright-mcp/
 *.png
+!public/bim-exploded-hero.png
 
 .tmp-scripts/

@@ -16,12 +16,12 @@ export function Header({ user, isAdmin, menuProducts, onOpenLogin, onOpenRegiste
   const loggedIn = !!user;
 
   return (
-    <header className="sticky top-0 z-20 mt-3 border-b border-zinc-800/80 bg-zinc-950/80 backdrop-blur-xl">
-      <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-6">
-        <div className="font-mono text-xs font-semibold tracking-[0.16em] text-cyan-400/90">EHSAN MOKHTARY</div>
+    <header className="sticky top-0 z-20 border border-white/10 bg-[#080908]/85 backdrop-blur-xl">
+      <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-4 sm:px-8">
+        <a href="#" className="font-mono text-xs font-semibold tracking-[0.2em] text-white">EM<span className="text-[#ff5c35]">.</span></a>
         <button
           type="button"
-          className="rounded-lg border border-zinc-700 p-2 text-zinc-300 md:hidden"
+          className="border border-white/20 p-2 text-white md:hidden"
           onClick={() => setMenuOpen((o) => !o)}
           aria-label="Menu"
         >
@@ -36,22 +36,15 @@ export function Header({ user, isAdmin, menuProducts, onOpenLogin, onOpenRegiste
         <nav
           className={
             (menuOpen ? "flex" : "hidden") +
-            " w-full flex-col gap-1 text-sm text-zinc-300 md:flex md:w-auto md:flex-row md:items-center md:gap-2"
+            " w-full flex-col gap-1 text-[10px] font-semibold uppercase tracking-[.14em] text-white/55 md:flex md:w-auto md:flex-row md:items-center md:gap-2"
           }
         >
           <a
-            href="#about"
+            href="#services"
             className="rounded-lg px-3 py-2 text-zinc-300 transition hover:bg-zinc-800/80 hover:text-white"
             onClick={() => setMenuOpen(false)}
           >
-            About
-          </a>
-          <a
-            href="#experience"
-            className="rounded-lg px-3 py-2 text-zinc-300 transition hover:bg-zinc-800/80 hover:text-white"
-            onClick={() => setMenuOpen(false)}
-          >
-            Experience
+            Services
           </a>
           <a
             href="#work"
@@ -61,11 +54,11 @@ export function Header({ user, isAdmin, menuProducts, onOpenLogin, onOpenRegiste
             Work
           </a>
           <a
-            href="#videos"
+            href="#experience"
             className="rounded-lg px-3 py-2 text-zinc-300 transition hover:bg-zinc-800/80 hover:text-white"
             onClick={() => setMenuOpen(false)}
           >
-            Videos
+            Experience
           </a>
           <a
             href="#tools"
