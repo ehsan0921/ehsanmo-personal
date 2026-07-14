@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { onAuthStateChanged, signOut, type User } from "firebase/auth";
 import { collection, doc, getDoc, getDocs, increment, serverTimestamp, updateDoc } from "firebase/firestore";
 import { auth, db, SUPERADMIN_EMAIL } from "@/lib/firebase";
@@ -24,8 +24,8 @@ const DEFAULT_HOBBIES: HobbyItem[] = [
 const DEFAULT_THEMES: Record<ThemeName, ThemeConfig> = {
   technical: { heroImageUrl: "/ehsan-banner-portrait.png", portraitImageUrl: "/ehsan-mokhtary-portrait.png", accentColor: "#ff5c35", heroLine1: "I make complex", heroLine2: "facades buildable.", heroSubtitle: "Facade BIM leadership for projects where geometry, coordination and information cannot fail—from clash detection and LOD strategy to fabrication-ready models and metadata.", showParticles: true, showFloatingPanels: true, mediaRail: [], hobbies: DEFAULT_HOBBIES },
   apple: { heroImageUrl: "/apple-tv-hero-2X.png", portraitImageUrl: "/Black and White no glass.jpg", accentColor: "#ff7a18", heroLine1: "Building the", heroLine2: "unbuildable.", heroSubtitle: "Facade BIM, computational design and digital delivery—where ambitious architecture becomes coordinated, controlled and real.", showParticles: false, showFloatingPanels: false, mediaRail: [
-    { image: "/orange background.jpg", label: "PROFILE", title: "Beyond the model", description: "Leadership, computation and a career built around complex façades.", wide: true },
-    { image: "/ehsan-mokhtary-portrait-Hotizontal.png", label: "PERSON", title: "Technical. Human.", description: "Making digital delivery clear." },
+    { image: "/apple-story-beyond-model.png", label: "PROFILE", title: "Beyond the model", description: "Leadership, computation and a career built around complex façades.", wide: true },
+    { image: "/apple-story-technical-human.png", label: "PERSON", title: "Technical. Human.", description: "Making digital delivery clear." },
     { image: "/bim-exploded-hero.png", label: "PROCESS", title: "Inside the façade", description: "Geometry, information and interfaces brought under control." },
     { image: "/ehsan-banner-portrait.png", label: "PERSPECTIVE", title: "Architecture meets code", description: "A connected approach to digital construction." },
   ], hobbies: DEFAULT_HOBBIES },
@@ -55,6 +55,8 @@ export function HomePage() {
   const [phone, setPhone] = useState<string | null>(null);
   const [theme, setTheme] = useState<ThemeName>("technical");
   const [themes, setThemes] = useState<Record<ThemeName, ThemeConfig>>(DEFAULT_THEMES);
+  const [activeStory, setActiveStory] = useState(0);
+  const mediaRailRef = useRef<HTMLDivElement>(null);
   const isAdmin = !!user?.email && user.email.toLowerCase() === SUPERADMIN_EMAIL.toLowerCase();
 
   useEffect(() => onAuthStateChanged(auth, (u) => { setUser(u); if (u) setAuthOpen(false); }), []);
@@ -73,6 +75,7 @@ export function HomePage() {
       const data = snap.data() as any;
       const savedApple = { ...DEFAULT_THEMES.apple, ...(data.apple || {}) };
       if (savedApple.heroImageUrl === "/apple-tv-hero.png") savedApple.heroImageUrl = DEFAULT_THEMES.apple.heroImageUrl;
+      savedApple.mediaRail = (savedApple.mediaRail || []).map((item) => item.title === "Beyond the model" && item.image === "/orange background.jpg" ? { ...item, image: "/apple-story-beyond-model.png" } : item.title === "Technical. Human." && item.image === "/ehsan-mokhtary-portrait-Hotizontal.png" ? { ...item, image: "/apple-story-technical-human.png" } : item);
       setThemes({ technical: { ...DEFAULT_THEMES.technical, ...(data.technical || {}) }, apple: savedApple });
       const saved = localStorage.getItem("ehsan-theme");
       setTheme(saved === "technical" || saved === "apple" ? saved : (data.activeTheme === "apple" ? "apple" : "technical"));
@@ -112,6 +115,22 @@ export function HomePage() {
     localStorage.setItem("ehsan-theme", next);
   };
   const activeTheme = themes[theme];
+  const showStory = useCallback((index: number) => {
+    const count = activeTheme.mediaRail.length;
+    if (!count) return;
+    const next = (index + count) % count;
+    setActiveStory(next);
+    mediaRailRef.current?.children[next]?.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
+  }, [activeTheme.mediaRail.length]);
+  useEffect(() => {
+    if (theme !== "apple" || activeTheme.mediaRail.length < 2 || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const timer = window.setInterval(() => setActiveStory((current) => {
+      const next = (current + 1) % activeTheme.mediaRail.length;
+      mediaRailRef.current?.children[next]?.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
+      return next;
+    }), 5000);
+    return () => window.clearInterval(timer);
+  }, [theme, activeTheme.mediaRail.length]);
   const hobbyKeys = new Set(activeTheme.hobbies.flatMap((item) => [item.title.toLowerCase(), item.url.toLowerCase()]));
   const additionalProducts = products.filter((item) => !hobbyKeys.has((item.title || "").toLowerCase()) && !hobbyKeys.has((item.url || "").toLowerCase()));
 
@@ -142,8 +161,8 @@ export function HomePage() {
         </section>
 
         <section className="apple-showcase" aria-label="Featured visual stories">
-          <div className="apple-rail-heading"><div><span>FEATURED</span><h2>Stories in design.</h2></div><p>Explore the person, process and projects behind the models.</p></div>
-          <div className="apple-media-rail">
+          <div className="apple-rail-heading"><div><span>FEATURED</span><h2>Stories in design.</h2></div><div className="apple-rail-actions"><p>Explore the person, process and projects behind the models.</p><nav aria-label="Featured story controls"><button type="button" onClick={() => showStory(activeStory - 1)} aria-label="Previous story">←</button><span>{String(activeStory + 1).padStart(2, "0")} / {String(activeTheme.mediaRail.length).padStart(2, "0")}</span><button type="button" onClick={() => showStory(activeStory + 1)} aria-label="Next story">→</button></nav></div></div>
+          <div className="apple-media-rail" ref={mediaRailRef}>
             {activeTheme.mediaRail.map((item, index) => <article className={`apple-media-card ${item.wide ? "apple-media-wide" : ""}`} key={`${item.title}-${index}`}><img src={item.image} alt={item.title} /><div><span>{item.label}</span><h3>{item.title}</h3><p>{item.description}</p></div></article>)}
           </div>
         </section>
