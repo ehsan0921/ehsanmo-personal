@@ -11,5 +11,6 @@ dist/
 .playwright-mcp/
 *.png
 !public/bim-exploded-hero.png
+!public/ehsan-mokhtary-portrait.png
 
 .tmp-scripts/

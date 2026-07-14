@@ -36,6 +36,7 @@ export function HomePage() {
   const [authOpen, setAuthOpen] = useState(false);
   const [authMode, setAuthMode] = useState<"login" | "register">("login");
   const [products, setProducts] = useState<Product[]>([]);
+  const [phone, setPhone] = useState<string | null>(null);
   const isAdmin = !!user?.email && user.email.toLowerCase() === SUPERADMIN_EMAIL.toLowerCase();
 
   useEffect(() => onAuthStateChanged(auth, (u) => { setUser(u); if (u) setAuthOpen(false); }), []);
@@ -48,6 +49,18 @@ export function HomePage() {
     } catch { setProducts([]); }
   }, []);
   useEffect(() => { loadProducts(); }, [loadProducts]);
+  useEffect(() => {
+    const move = (event: PointerEvent) => {
+      document.documentElement.style.setProperty("--mx", `${(event.clientX / window.innerWidth - 0.5) * 2}`);
+      document.documentElement.style.setProperty("--my", `${(event.clientY / window.innerHeight - 0.5) * 2}`);
+    };
+    window.addEventListener("pointermove", move, { passive: true });
+    return () => window.removeEventListener("pointermove", move);
+  }, []);
+  const revealPhone = () => {
+    const digits = [43, 54, 49, 52, 50, 48, 54, 57, 54, 54, 51, 57];
+    setPhone(String.fromCharCode(...digits));
+  };
   const onDownload = async (item: Product) => {
     const url = item.currentVersion?.fileUrl || item.fileUrl;
     if (!url) return;
@@ -64,6 +77,9 @@ export function HomePage() {
         <section className="hero-grid relative min-h-[820px] overflow-hidden border-x border-white/10 px-5 pb-16 pt-20 sm:px-10 lg:px-16 lg:pt-28">
           <div className="hero-image absolute inset-0" aria-hidden />
           <div className="hero-scan absolute inset-0" aria-hidden />
+          <div className="hero-float hero-float-a" aria-hidden><span>CLASH / 014</span><b>RESOLVED</b></div>
+          <div className="hero-float hero-float-b" aria-hidden><span>MODEL STATE</span><b>FEDERATED</b></div>
+          <div className="hero-float hero-float-c" aria-hidden><span>LOD</span><b>350</b></div>
           <div className="relative z-10 max-w-4xl">
             <p className="eyebrow"><span className="status-dot" /> MELBOURNE / AUSTRALIA — AVAILABLE FOR BIM CONSULTING</p>
             <h1 className="hero-title mt-8">I make complex<br /><span>facades buildable.</span></h1>
@@ -80,6 +96,11 @@ export function HomePage() {
 
         <section className="statement border-x border-b border-white/10 px-5 py-24 sm:px-10 lg:px-16 lg:py-36">
           <Reveal><p className="section-index">00 / POSITION</p><h2 className="max-w-6xl">BIM is not a model.<br /><span>It is a controlled decision system.</span></h2><div className="mt-12 grid gap-8 border-t border-white/10 pt-8 md:grid-cols-3"><p className="text-white/45">EHSAN MOKHTARY<br />Facade BIM Manager<br />Computational Designer</p><p className="text-lg leading-relaxed text-white/70 md:col-span-2">I connect design intent to fabrication reality. My work brings geometry, information and project teams into one governed workflow—then uses computation to remove repetition, expose risk early and make every handover more reliable.</p></div></Reveal>
+        </section>
+
+        <section className="identity-zone border-x border-b border-white/10">
+          <Reveal className="identity-photo"><img src="/ehsan-mokhtary-portrait.png" alt="Ehsan Mokhtary, Facade BIM Manager" loading="lazy" /><div className="portrait-reticle" aria-hidden /><span className="portrait-code">EM / PROFILE_01</span></Reveal>
+          <Reveal className="identity-copy" delay={120}><p className="section-index">PERSON BEHIND THE MODEL</p><h2>Technical precision.<br /><span>Human leadership.</span></h2><p>I lead teams through complex digital delivery with a practical focus: make responsibilities clear, make information dependable and make the façade buildable.</p><dl><div><dt>ROLE</dt><dd>Facade BIM Manager</dd></div><div><dt>BASE</dt><dd>Melbourne, Australia</dd></div><div><dt>FOCUS</dt><dd>Facade systems + computation</dd></div></dl></Reveal>
         </section>
 
         <section id="services" className="border-x border-white/10 px-5 py-24 sm:px-10 lg:px-16 lg:py-32">
@@ -118,7 +139,7 @@ export function HomePage() {
 
         {products.length > 0 && <section id="tools" className="border-x border-white/10 px-5 py-24 sm:px-10 lg:px-16"><p className="section-index">06 / DIGITAL PRODUCTS</p><div className="mt-10 grid gap-4 md:grid-cols-2">{products.map(item=><article className="product-card" key={item.id}><h3>{item.title}</h3><p>{item.description}</p>{item.type === 'webapp' ? <a href={item.url}>OPEN TOOL ↗</a> : <button onClick={()=>onDownload(item)}>DOWNLOAD ↘</button>}</article>)}</div></section>}
 
-        <section id="contact" className="contact-zone border border-white/10 px-5 py-24 text-center sm:px-10 lg:px-16 lg:py-40"><Reveal><p className="section-index">HAVE A COMPLEX FACADE?</p><h2>Let’s make it<br /><span>clear, coordinated, buildable.</span></h2><div className="mt-10 flex flex-wrap justify-center gap-3"><a className="button-primary" href={`mailto:${EMAIL}`}>Start a conversation ↗</a><a className="button-ghost" href={LINKEDIN} target="_blank" rel="noreferrer">LinkedIn</a></div></Reveal></section>
+        <section id="contact" className="contact-zone border border-white/10 px-5 py-24 text-center sm:px-10 lg:px-16 lg:py-40"><Reveal><p className="section-index">HAVE A COMPLEX FACADE?</p><h2>Let’s make it<br /><span>clear, coordinated, buildable.</span></h2><div className="mt-10 flex flex-wrap justify-center gap-3"><a className="button-primary" href={`mailto:${EMAIL}`}>Start a conversation ↗</a>{phone ? <a className="button-ghost phone-revealed" href={`tel:${phone}`}>{phone} <span>CALL ↗</span></a> : <button className="button-ghost" type="button" onClick={revealPhone}>Reveal phone <span>CLICK ↗</span></button>}<a className="button-ghost" href={LINKEDIN} target="_blank" rel="noreferrer">LinkedIn</a></div><p className="phone-note">Phone number is protected and only loaded after you click.</p></Reveal></section>
       </main>
       <footer className="flex flex-col gap-4 border-x border-white/10 px-6 py-8 text-[11px] tracking-[.16em] text-white/35 sm:flex-row sm:justify-between"><span>© {new Date().getFullYear()} EHSAN MOKHTARY</span><span>FACADE BIM / COMPUTATION / DELIVERY</span><span>MELBOURNE, AU</span></footer>
     </div>
