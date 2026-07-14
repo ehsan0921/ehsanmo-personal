@@ -5,7 +5,8 @@
   "description": "Personal site — Vite, React, TypeScript, Tailwind, Cloudflare Pages",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "npm run build:admin-css && vite build",
+    "build:admin-css": "tailwindcss -i admin-tailwind.css -o admin-main/admin.css --minify",
     "preview": "vite preview",
     "deploy": "npm run build && wrangler pages deploy dist --project-name=ehsanmo-project --commit-dirty=true"
   },
@@ -16,6 +17,7 @@
     "react-router-dom": "^6.28.0"
   },
   "devDependencies": {
+    "@tailwindcss/cli": "^4.3.2",
     "@tailwindcss/vite": "^4.0.0",
     "@types/node": "^22.10.0",
     "@types/react": "^18.3.12",

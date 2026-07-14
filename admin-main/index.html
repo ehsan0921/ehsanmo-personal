@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Main Admin - Personal WebsiteTools</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="/admin-main/admin.css">
     <script>
         // Apply saved admin theme before first paint to avoid flash.
         (function () {
@@ -220,9 +220,14 @@
                 <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-5"><div><h2 class="text-lg font-semibold">Per-theme Customization</h2><p class="text-sm text-slate-500">Each website theme has independent photos, headline, colour and motion settings.</p></div><div><label class="block text-xs font-semibold mb-1">Theme to edit</label><select id="siteThemeEditor" class="px-3 py-2 rounded border border-slate-300"><option value="technical">Technical BIM</option><option value="apple">Minimal 4K</option></select></div></div>
                 <div id="themeEditorStatus" class="hidden mb-4 rounded px-3 py-2 text-sm"></div>
                 <div class="grid gap-5 lg:grid-cols-[.8fr_1.2fr]">
-                    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-1"><div class="border border-slate-200 rounded-lg p-4"><p class="text-sm font-semibold mb-2">Theme hero image</p><img id="themeHeroPreview" class="h-36 w-full rounded object-cover bg-slate-100 mb-3" alt="Hero preview"><input id="themeHeroImage" type="file" accept="image/jpeg,image/png,image/webp" class="w-full text-sm"></div><div class="border border-slate-200 rounded-lg p-4"><p class="text-sm font-semibold mb-2">Theme portrait</p><img id="themePortraitPreview" class="h-36 w-full rounded object-cover bg-slate-100 mb-3" alt="Portrait preview"><input id="themePortraitImage" type="file" accept="image/jpeg,image/png,image/webp" class="w-full text-sm"></div></div>
+                    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-1"><div class="border border-slate-200 rounded-lg p-4"><p class="text-sm font-semibold mb-2">Theme hero image</p><img id="themeHeroPreview" class="h-36 w-full rounded object-cover bg-slate-100 mb-3" alt="Hero preview"><select id="themeHeroLibrary" class="mb-2 w-full px-3 py-2 rounded border border-slate-300 text-sm"><option value="">Choose from library…</option></select><input id="themeHeroImage" type="file" accept="image/jpeg,image/png,image/webp" class="w-full text-sm"></div><div class="border border-slate-200 rounded-lg p-4"><p class="text-sm font-semibold mb-2">Theme portrait</p><img id="themePortraitPreview" class="h-36 w-full rounded object-cover bg-slate-100 mb-3" alt="Portrait preview"><select id="themePortraitLibrary" class="mb-2 w-full px-3 py-2 rounded border border-slate-300 text-sm"><option value="">Choose from library…</option></select><input id="themePortraitImage" type="file" accept="image/jpeg,image/png,image/webp" class="w-full text-sm"></div></div>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4"><div><label class="block text-sm mb-1">Headline line 1</label><input id="themeHeroLine1" class="w-full px-3 py-2 rounded border border-slate-300"></div><div><label class="block text-sm mb-1">Headline line 2</label><input id="themeHeroLine2" class="w-full px-3 py-2 rounded border border-slate-300"></div><div class="md:col-span-2"><label class="block text-sm mb-1">Hero introduction</label><textarea id="themeHeroSubtitle" rows="3" class="w-full px-3 py-2 rounded border border-slate-300"></textarea></div><div><label class="block text-sm mb-1">Accent colour</label><div class="flex gap-2"><input id="themeAccentColor" type="color" class="h-10 w-14 rounded border border-slate-300"><input id="themeAccentText" class="min-w-0 flex-1 px-3 py-2 rounded border border-slate-300"></div></div><div class="space-y-3 pt-1"><label class="flex items-center gap-2"><input id="themeParticles" type="checkbox"><span class="text-sm">Background particles</span></label><label class="flex items-center gap-2"><input id="themeFloatingPanels" type="checkbox"><span class="text-sm">Floating BIM panels</span></label></div><div class="md:col-span-2 flex flex-wrap gap-2 border-t border-slate-200 pt-4"><button id="saveThemeBtn" class="px-5 py-2 rounded bg-orange-600 hover:bg-orange-500 text-white text-sm font-semibold">Save Theme</button><button id="activateThemeBtn" class="px-5 py-2 rounded bg-slate-700 hover:bg-slate-600 text-white text-sm font-semibold">Make Default Theme</button><a href="/" target="_blank" class="px-5 py-2 rounded bg-slate-200 hover:bg-slate-300 text-slate-800 text-sm font-semibold">Preview Website ↗</a></div></div>
                 </div>
+            </div>
+
+            <div class="card rounded-lg p-5 mt-6">
+                <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-5"><div><h2 class="text-lg font-semibold">Media Library</h2><p class="text-sm text-slate-500">Uploaded images stay here for reuse across projects and themes.</p></div><div class="flex flex-wrap gap-2"><select id="libraryCategory" class="px-3 py-2 rounded border border-slate-300 text-sm"><option value="general">General</option><option value="project">Project</option><option value="hero">Hero</option><option value="portrait">Portrait</option></select><input id="libraryUploadInput" type="file" accept="image/jpeg,image/png,image/webp" class="max-w-56 text-sm"><button id="libraryUploadBtn" class="px-4 py-2 rounded bg-orange-600 hover:bg-orange-500 text-white text-sm font-semibold">Upload to Library</button></div></div>
+                <div id="libraryStatus" class="hidden mb-4 rounded px-3 py-2 text-sm"></div><div id="mediaLibraryGrid" class="grid grid-cols-2 gap-3 md:grid-cols-4 lg:grid-cols-6"></div><p id="mediaLibraryEmpty" class="hidden py-8 text-center text-sm text-slate-500">No uploaded images yet.</p>
             </div>
         </div>
     </div>
@@ -365,8 +370,8 @@
                 <div class="md:col-span-2"><label class="block text-sm mb-1">Project link</label><input id="projectLink" type="url" class="w-full px-3 py-2 rounded border border-slate-300" placeholder="https://..."></div>
                 <div><label class="block text-sm mb-1">Image credit</label><input id="projectSource" class="w-full px-3 py-2 rounded border border-slate-300" placeholder="IMAGE / PROJECT ARCHIVE"></div>
                 <div><label class="block text-sm mb-1">Display order</label><input id="projectOrder" type="number" min="0" value="0" class="w-full px-3 py-2 rounded border border-slate-300"></div>
-                <div><label class="block text-sm mb-1">Primary image <span id="primaryRequired">*</span></label><input id="projectImage" type="file" accept="image/jpeg,image/png,image/webp" class="w-full px-3 py-2 rounded border border-slate-300"><img id="projectImagePreview" class="hidden mt-2 h-28 w-full rounded object-cover" alt="Primary preview"></div>
-                <div><label class="block text-sm mb-1">Second image (optional)</label><input id="projectSecondaryImage" type="file" accept="image/jpeg,image/png,image/webp" class="w-full px-3 py-2 rounded border border-slate-300"><img id="projectSecondaryPreview" class="hidden mt-2 h-28 w-full rounded object-cover" alt="Secondary preview"></div>
+                <div><label class="block text-sm mb-1">Primary image <span id="primaryRequired">*</span></label><select id="projectPrimaryLibrary" class="mb-2 w-full px-3 py-2 rounded border border-slate-300 text-sm"><option value="">Choose from library…</option></select><input id="projectImage" type="file" accept="image/jpeg,image/png,image/webp" class="w-full px-3 py-2 rounded border border-slate-300"><img id="projectImagePreview" class="hidden mt-2 h-28 w-full rounded object-cover" alt="Primary preview"></div>
+                <div><label class="block text-sm mb-1">Second image (optional)</label><select id="projectSecondaryLibrary" class="mb-2 w-full px-3 py-2 rounded border border-slate-300 text-sm"><option value="">Choose from library…</option></select><input id="projectSecondaryImage" type="file" accept="image/jpeg,image/png,image/webp" class="w-full px-3 py-2 rounded border border-slate-300"><img id="projectSecondaryPreview" class="hidden mt-2 h-28 w-full rounded object-cover" alt="Secondary preview"></div>
                 <label class="md:col-span-2 flex items-center gap-2"><input id="projectPublished" type="checkbox" checked><span class="text-sm">Published on homepage</span></label>
             </div>
             <div class="mt-5 flex items-center gap-3">
@@ -905,13 +910,52 @@
             if (file.size > 10 * 1024 * 1024) throw new Error('Each image must be smaller than 10 MB.');
         }
 
+        let mediaLibrary = [];
+        async function registerMediaAsset(file, uploaded, category) {
+            const ref = await db.collection('mediaLibrary').add({
+                name: file.name || 'image', url: uploaded.url, path: uploaded.path,
+                category: category || 'general', contentType: file.type || '', size: file.size || 0,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            return ref.id;
+        }
+
+        function refreshLibrarySelects() {
+            ['projectPrimaryLibrary','projectSecondaryLibrary','themeHeroLibrary','themePortraitLibrary'].forEach((id) => {
+                const select = document.getElementById(id); if (!select) return;
+                const current = select.value;
+                select.innerHTML = '<option value="">Choose from library…</option>' + mediaLibrary.map((asset) => `<option value="${esc(asset.id)}">${esc(asset.name)} · ${esc(asset.category)}</option>`).join('');
+                if (mediaLibrary.some((asset) => asset.id === current)) select.value = current;
+            });
+        }
+
+        async function loadMediaLibrary() {
+            const grid = document.getElementById('mediaLibraryGrid');
+            const empty = document.getElementById('mediaLibraryEmpty');
+            const snap = await db.collection('mediaLibrary').get();
+            mediaLibrary = []; snap.forEach((d) => mediaLibrary.push({id:d.id,...d.data()}));
+            mediaLibrary.sort((a,b) => ((b.createdAt&&b.createdAt.seconds)||0)-((a.createdAt&&a.createdAt.seconds)||0));
+            grid.innerHTML = ''; empty.classList.toggle('hidden', mediaLibrary.length > 0);
+            mediaLibrary.forEach((asset) => {
+                const card=document.createElement('article'); card.className='overflow-hidden rounded-lg border border-slate-200 bg-white';
+                card.innerHTML=`<img src="${esc(asset.url)}" alt="" class="h-24 w-full object-cover"><div class="p-2"><p class="truncate text-xs font-semibold" title="${esc(asset.name)}">${esc(asset.name)}</p><p class="mt-1 text-[10px] uppercase text-slate-500">${esc(asset.category)}</p><button data-id="${esc(asset.id)}" class="delete-media mt-2 text-xs font-semibold text-rose-600">Delete permanently</button></div>`;
+                grid.appendChild(card);
+            });
+            grid.querySelectorAll('.delete-media').forEach((button) => button.addEventListener('click', async () => { const asset=mediaLibrary.find((x)=>x.id===button.dataset.id); if(!asset||!confirm(`Permanently delete “${asset.name}” from the library? Any page still using it will lose the image.`))return; try{await db.collection('mediaLibrary').doc(asset.id).delete();await safeDeleteStoragePath(asset.path);showLibraryStatus('Image permanently deleted.');await loadMediaLibrary();}catch(error){showLibraryStatus('Delete failed: '+error.message,true);} }));
+            refreshLibrarySelects();
+        }
+
+        function showLibraryStatus(message,isError){const el=document.getElementById('libraryStatus');el.textContent=message;el.className='mb-4 rounded px-3 py-2 text-sm '+(isError?'bg-rose-50 text-rose-700':'bg-emerald-50 text-emerald-700');}
+
         async function uploadProjectImage(file, slug, kind) {
             validateProjectImage(file);
             const extension = (file.name.split('.').pop() || 'jpg').toLowerCase().replace(/[^a-z0-9]/g, '');
             const path = `projects/${slug}/${kind}-${Date.now()}.${extension}`;
             const ref = storage.ref().child(path);
             await ref.put(file, { contentType: file.type, cacheControl: 'public,max-age=31536000' });
-            return { url: await ref.getDownloadURL(), path };
+            const uploaded = { url: await ref.getDownloadURL(), path };
+            await registerMediaAsset(file, uploaded, 'project');
+            return uploaded;
         }
 
         function resetProjectForm() {
@@ -920,6 +964,8 @@
             document.getElementById('projectPublished').checked = true;
             document.getElementById('projectImage').value = '';
             document.getElementById('projectSecondaryImage').value = '';
+            document.getElementById('projectPrimaryLibrary').value = '';
+            document.getElementById('projectSecondaryLibrary').value = '';
             document.getElementById('projectImagePreview').classList.add('hidden');
             document.getElementById('projectSecondaryPreview').classList.add('hidden');
             document.getElementById('primaryRequired').classList.remove('hidden');
@@ -967,13 +1013,14 @@
             });
             projectsGrid.querySelectorAll('.edit-project').forEach((button) => button.addEventListener('click', () => { const item = projectCache.find((x) => x.id === button.dataset.id); if (item) { fillProjectForm(item); openModal(projectModal); } }));
             projectsGrid.querySelectorAll('.toggle-project').forEach((button) => button.addEventListener('click', async () => { const item = projectCache.find((x) => x.id === button.dataset.id); if (!item) return; await db.collection('portfolioProjects').doc(item.id).update({ isPublished: item.isPublished === false, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }); await loadProjects(); }));
-            projectsGrid.querySelectorAll('.delete-project').forEach((button) => button.addEventListener('click', async () => { const item = projectCache.find((x) => x.id === button.dataset.id); if (!item || !confirm(`Delete “${item.title}”? This cannot be undone.`)) return; await db.collection('portfolioProjects').doc(item.id).delete(); await Promise.all([safeDeleteStoragePath(item.imagePath), safeDeleteStoragePath(item.secondaryImagePath)]); showProjectStatus('Project deleted.'); await loadProjects(); }));
+            projectsGrid.querySelectorAll('.delete-project').forEach((button) => button.addEventListener('click', async () => { const item = projectCache.find((x) => x.id === button.dataset.id); if (!item || !confirm(`Delete “${item.title}”? The images will remain in Media Library.`)) return; await db.collection('portfolioProjects').doc(item.id).delete(); showProjectStatus('Project deleted. Its images remain available in Media Library.'); await loadProjects(); }));
         }
 
         document.getElementById('openProjectModalBtn').addEventListener('click', () => { resetProjectForm(); openModal(projectModal); });
         document.getElementById('closeProjectModalBtn').addEventListener('click', () => closeModal(projectModal));
         projectModal.addEventListener('click', (event) => { if (event.target === projectModal) closeModal(projectModal); });
         [['projectImage','projectImagePreview'],['projectSecondaryImage','projectSecondaryPreview']].forEach(([inputId, previewId]) => document.getElementById(inputId).addEventListener('change', (event) => { const file = event.target.files[0]; const preview = document.getElementById(previewId); if (!file) return; try { validateProjectImage(file); preview.src = URL.createObjectURL(file); preview.classList.remove('hidden'); } catch (error) { event.target.value = ''; alert(error.message); } }));
+        [['projectPrimaryLibrary','projectImagePreview'],['projectSecondaryLibrary','projectSecondaryPreview']].forEach(([selectId,previewId])=>document.getElementById(selectId).addEventListener('change',(event)=>{const asset=mediaLibrary.find((x)=>x.id===event.target.value);if(asset){const preview=document.getElementById(previewId);preview.src=asset.url;preview.classList.remove('hidden');}}));
 
         document.getElementById('saveProjectBtn').addEventListener('click', async () => {
             const saveButton = document.getElementById('saveProjectBtn');
@@ -983,7 +1030,9 @@
             const title = document.getElementById('projectTitle').value.trim();
             const primaryFile = document.getElementById('projectImage').files[0];
             const secondaryFile = document.getElementById('projectSecondaryImage').files[0];
-            if (!title || (!existing && !primaryFile)) { status.textContent = 'Title and primary image are required.'; return; }
+            const primaryAsset = mediaLibrary.find((x)=>x.id===document.getElementById('projectPrimaryLibrary').value);
+            const secondaryAsset = mediaLibrary.find((x)=>x.id===document.getElementById('projectSecondaryLibrary').value);
+            if (!title || (!existing && !primaryFile && !primaryAsset)) { status.textContent = 'Title and primary image are required.'; return; }
             saveButton.disabled = true;
             status.textContent = 'Uploading and saving…';
             let newPrimary, newSecondary;
@@ -1000,23 +1049,19 @@
                     source: document.getElementById('projectSource').value.trim() || 'PROJECT IMAGE',
                     order: Number(document.getElementById('projectOrder').value) || 0,
                     isPublished: document.getElementById('projectPublished').checked,
-                    imageUrl: newPrimary ? newPrimary.url : existing.imageUrl,
-                    imagePath: newPrimary ? newPrimary.path : (existing.imagePath || ''),
-                    secondaryImageUrl: newSecondary ? newSecondary.url : (existing ? existing.secondaryImageUrl || '' : ''),
-                    secondaryImagePath: newSecondary ? newSecondary.path : (existing ? existing.secondaryImagePath || '' : ''),
+                    imageUrl: newPrimary ? newPrimary.url : (primaryAsset ? primaryAsset.url : existing.imageUrl),
+                    imagePath: newPrimary ? newPrimary.path : (primaryAsset ? primaryAsset.path : (existing.imagePath || '')),
+                    secondaryImageUrl: newSecondary ? newSecondary.url : (secondaryAsset ? secondaryAsset.url : (existing ? existing.secondaryImageUrl || '' : '')),
+                    secondaryImagePath: newSecondary ? newSecondary.path : (secondaryAsset ? secondaryAsset.path : (existing ? existing.secondaryImagePath || '' : '')),
                     updatedAt: firebase.firestore.FieldValue.serverTimestamp()
                 };
                 if (existing) await db.collection('portfolioProjects').doc(existing.id).update(data);
                 else await db.collection('portfolioProjects').add({ ...data, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
-                if (newPrimary && existing && existing.imagePath) await safeDeleteStoragePath(existing.imagePath);
-                if (newSecondary && existing && existing.secondaryImagePath) await safeDeleteStoragePath(existing.secondaryImagePath);
                 closeModal(projectModal);
                 showProjectStatus(existing ? 'Project updated.' : 'Project added.');
                 await loadProjects();
             } catch (error) {
-                if (newPrimary) await safeDeleteStoragePath(newPrimary.path);
-                if (newSecondary) await safeDeleteStoragePath(newSecondary.path);
-                status.textContent = 'Could not save: ' + (error.message || 'Unknown error');
+                status.textContent = 'Could not save: ' + (error.message || 'Unknown error') + '. Any uploaded image is still available in Media Library.';
             } finally { saveButton.disabled = false; }
         });
 
@@ -1068,6 +1113,7 @@
                 const ref = storage.ref(`site-images/${key}-${Date.now()}.${ext}`);
                 await ref.put(file);
                 const url = await ref.getDownloadURL();
+                await registerMediaAsset(file, { url, path:ref.fullPath }, key);
                 const technical = { ...(themeSettings.technical || themeDefaults.technical), [key === 'hero' ? 'heroImageUrl' : 'portraitImageUrl']: url };
                 await db.collection('siteConfig').doc('themes').set({ technical, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
                 themeSettings.technical = technical;
@@ -1125,12 +1171,15 @@
             const path = `site-images/themes/${themeName}/${kind}-${Date.now()}.${ext}`;
             const ref = storage.ref(path);
             await ref.put(file, { contentType:file.type, cacheControl:'public,max-age=31536000' });
-            return { url:await ref.getDownloadURL(), path };
+            const uploaded={ url:await ref.getDownloadURL(), path };
+            await registerMediaAsset(file, uploaded, kind);
+            return uploaded;
         }
         siteThemeEditor.addEventListener('change', renderThemeEditor);
         document.getElementById('themeAccentColor').addEventListener('input', (event) => document.getElementById('themeAccentText').value = event.target.value);
         document.getElementById('themeAccentText').addEventListener('input', (event) => { if (/^#[0-9a-f]{6}$/i.test(event.target.value)) document.getElementById('themeAccentColor').value = event.target.value; });
         [['themeHeroImage','themeHeroPreview'],['themePortraitImage','themePortraitPreview']].forEach(([inputId, previewId]) => document.getElementById(inputId).addEventListener('change', (event) => { const file=event.target.files[0]; if (!file) return; try { validateProjectImage(file); document.getElementById(previewId).src=URL.createObjectURL(file); } catch(error) { event.target.value=''; showThemeStatus(error.message,true); } }));
+        [['themeHeroLibrary','themeHeroPreview'],['themePortraitLibrary','themePortraitPreview']].forEach(([selectId,previewId])=>document.getElementById(selectId).addEventListener('change',(event)=>{const asset=mediaLibrary.find((x)=>x.id===event.target.value);if(asset)document.getElementById(previewId).src=asset.url;}));
         document.getElementById('saveThemeBtn').addEventListener('click', async () => {
             const button=document.getElementById('saveThemeBtn'); const name=siteThemeEditor.value; const old=themeSettings[name]; let heroUpload,portraitUpload;
             button.disabled=true; button.textContent='Saving…';
@@ -1139,13 +1188,24 @@
                 portraitUpload=await uploadThemeAsset(document.getElementById('themePortraitImage').files[0],name,'portrait');
                 const accent=document.getElementById('themeAccentText').value.trim();
                 if (!/^#[0-9a-f]{6}$/i.test(accent)) throw new Error('Accent colour must be a six-digit hex colour.');
-                const config={ heroImageUrl:heroUpload?heroUpload.url:old.heroImageUrl, heroImagePath:heroUpload?heroUpload.path:(old.heroImagePath||''), portraitImageUrl:portraitUpload?portraitUpload.url:old.portraitImageUrl, portraitImagePath:portraitUpload?portraitUpload.path:(old.portraitImagePath||''), accentColor:accent, heroLine1:document.getElementById('themeHeroLine1').value.trim(), heroLine2:document.getElementById('themeHeroLine2').value.trim(), heroSubtitle:document.getElementById('themeHeroSubtitle').value.trim(), showParticles:document.getElementById('themeParticles').checked, showFloatingPanels:document.getElementById('themeFloatingPanels').checked };
+                const heroAsset=mediaLibrary.find((x)=>x.id===document.getElementById('themeHeroLibrary').value); const portraitAsset=mediaLibrary.find((x)=>x.id===document.getElementById('themePortraitLibrary').value);
+                const config={ heroImageUrl:heroUpload?heroUpload.url:(heroAsset?heroAsset.url:old.heroImageUrl), heroImagePath:heroUpload?heroUpload.path:(heroAsset?heroAsset.path:(old.heroImagePath||'')), portraitImageUrl:portraitUpload?portraitUpload.url:(portraitAsset?portraitAsset.url:old.portraitImageUrl), portraitImagePath:portraitUpload?portraitUpload.path:(portraitAsset?portraitAsset.path:(old.portraitImagePath||'')), accentColor:accent, heroLine1:document.getElementById('themeHeroLine1').value.trim(), heroLine2:document.getElementById('themeHeroLine2').value.trim(), heroSubtitle:document.getElementById('themeHeroSubtitle').value.trim(), showParticles:document.getElementById('themeParticles').checked, showFloatingPanels:document.getElementById('themeFloatingPanels').checked };
                 await db.collection('siteConfig').doc('themes').set({ [name]:config, updatedAt:firebase.firestore.FieldValue.serverTimestamp() },{merge:true});
-                if(heroUpload&&old.heroImagePath) await safeDeleteStoragePath(old.heroImagePath); if(portraitUpload&&old.portraitImagePath) await safeDeleteStoragePath(old.portraitImagePath);
-                themeSettings[name]=config; document.getElementById('themeHeroImage').value=''; document.getElementById('themePortraitImage').value=''; renderThemeEditor(); showThemeStatus((name==='apple'?'Minimal 4K':'Technical BIM')+' theme saved.');
-            } catch(error) { if(heroUpload)await safeDeleteStoragePath(heroUpload.path);if(portraitUpload)await safeDeleteStoragePath(portraitUpload.path);showThemeStatus('Save failed: '+error.message,true); } finally {button.disabled=false;button.textContent='Save Theme';}
+                themeSettings[name]=config; document.getElementById('themeHeroImage').value=''; document.getElementById('themePortraitImage').value=''; document.getElementById('themeHeroLibrary').value=''; document.getElementById('themePortraitLibrary').value=''; renderThemeEditor(); showThemeStatus((name==='apple'?'Minimal 4K':'Technical BIM')+' theme saved. Images remain in Media Library.');
+            } catch(error) { showThemeStatus('Save failed: '+error.message+'. Uploaded images remain in Media Library.',true); } finally {button.disabled=false;button.textContent='Save Theme';}
         });
         document.getElementById('activateThemeBtn').addEventListener('click', async () => { try { const name=siteThemeEditor.value; await db.collection('siteConfig').doc('themes').set({activeTheme:name,updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});themeSettings.activeTheme=name;renderThemeEditor();showThemeStatus((name==='apple'?'Minimal 4K':'Technical BIM')+' is now the default website theme.'); } catch(error){showThemeStatus('Could not activate theme: '+error.message,true);} });
+
+        // Populate controls and local fallback previews immediately. Firebase may be
+        // slow, unavailable, or awaiting rule deployment; the editor must still work.
+        renderThemeEditor();
+
+        document.getElementById('libraryUploadBtn').addEventListener('click', async () => {
+            const input=document.getElementById('libraryUploadInput');const file=input.files[0];const button=document.getElementById('libraryUploadBtn');
+            if(!file){showLibraryStatus('Choose an image first.',true);return;}try{validateProjectImage(file);}catch(error){showLibraryStatus(error.message,true);return;}
+            button.disabled=true;button.textContent='Uploading…';
+            try{const ext=(file.name.split('.').pop()||'jpg').toLowerCase().replace(/[^a-z0-9]/g,'')||'jpg';const path=`site-images/library/${Date.now()}-${projectSlug(file.name)}.${ext}`;const ref=storage.ref(path);await ref.put(file,{contentType:file.type,cacheControl:'public,max-age=31536000'});const uploaded={url:await ref.getDownloadURL(),path};await registerMediaAsset(file,uploaded,document.getElementById('libraryCategory').value);input.value='';showLibraryStatus('Image saved to Media Library.');await loadMediaLibrary();}catch(error){showLibraryStatus('Upload failed: '+error.message,true);}finally{button.disabled=false;button.textContent='Upload to Library';}
+        });
 
         document.getElementById('logoutBtn').addEventListener('click', async () => {
             try { await auth.signOut(); } catch(e) {}
@@ -1160,10 +1220,17 @@
             }
             notAuthorized.classList.add('hidden');
             adminContent.classList.remove('hidden');
-            await loadProducts();
-            await loadProjects();
-            await loadSiteImages();
-            await loadThemeSettings();
+            const results = await Promise.allSettled([
+                loadProducts(),
+                loadProjects(),
+                loadSiteImages(),
+                loadThemeSettings(),
+                loadMediaLibrary()
+            ]);
+            const failed = results.filter((result) => result.status === 'rejected');
+            if (failed.length) {
+                console.error('Some admin modules failed to load:', failed.map((result) => result.reason));
+            }
         });
     })();
     </script>

@@ -59,6 +59,11 @@ service cloud.firestore {
       allow create, update, delete: if isAdmin();
     }
 
+    // Reusable uploaded image catalogue, visible and manageable only in admin.
+    match /mediaLibrary/{assetId} {
+      allow read, create, update, delete: if isAdmin();
+    }
+
     // Share documents are intentionally public read-only by link ID
     match /gymShares/{shareId} {
       allow read: if true;
