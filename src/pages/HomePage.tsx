@@ -53,9 +53,16 @@ export function HomePage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [projects, setProjects] = useState<PortfolioProject[]>(WORK);
   const [phone, setPhone] = useState<string | null>(null);
-  const [theme, setTheme] = useState<ThemeName>("technical");
+  const [theme, setTheme] = useState<ThemeName>(() => {
+    const saved = localStorage.getItem("ehsan-theme");
+    return saved === "apple" || saved === "technical" ? saved : "technical";
+  });
   const [themes, setThemes] = useState<Record<ThemeName, ThemeConfig>>(DEFAULT_THEMES);
   const [activeStory, setActiveStory] = useState(0);
+  const [themeResolved, setThemeResolved] = useState(false);
+  const [pageLoaded, setPageLoaded] = useState(document.readyState === "complete");
+  const [introComplete, setIntroComplete] = useState(false);
+  const [themeChanging, setThemeChanging] = useState(false);
   const mediaRailRef = useRef<HTMLDivElement>(null);
   const isAdmin = !!user?.email && user.email.toLowerCase() === SUPERADMIN_EMAIL.toLowerCase();
 
@@ -79,8 +86,24 @@ export function HomePage() {
       setThemes({ technical: { ...DEFAULT_THEMES.technical, ...(data.technical || {}) }, apple: savedApple });
       const saved = localStorage.getItem("ehsan-theme");
       setTheme(saved === "technical" || saved === "apple" ? saved : (data.activeTheme === "apple" ? "apple" : "technical"));
-    }).catch(() => undefined);
+    }).catch(() => undefined).finally(() => setThemeResolved(true));
   }, []);
+  useEffect(() => {
+    if (pageLoaded) return;
+    const loaded = () => setPageLoaded(true);
+    window.addEventListener("load", loaded, { once: true });
+    const fallback = window.setTimeout(loaded, 4000);
+    return () => { window.removeEventListener("load", loaded); window.clearTimeout(fallback); };
+  }, [pageLoaded]);
+  useEffect(() => {
+    const fallback = window.setTimeout(() => setThemeResolved(true), 4000);
+    return () => window.clearTimeout(fallback);
+  }, []);
+  useEffect(() => {
+    if (!themeResolved || !pageLoaded) return;
+    const reveal = window.setTimeout(() => setIntroComplete(true), 650);
+    return () => window.clearTimeout(reveal);
+  }, [themeResolved, pageLoaded]);
   useEffect(() => {
     getDocs(collection(db, "portfolioProjects")).then((snap) => {
       const remote = snap.docs
@@ -111,8 +134,12 @@ export function HomePage() {
   };
   const switchTheme = () => {
     const next: ThemeName = theme === "technical" ? "apple" : "technical";
-    setTheme(next);
-    localStorage.setItem("ehsan-theme", next);
+    setThemeChanging(true);
+    window.setTimeout(() => {
+      setTheme(next);
+      localStorage.setItem("ehsan-theme", next);
+      window.setTimeout(() => setThemeChanging(false), 450);
+    }, 220);
   };
   const activeTheme = themes[theme];
   const showStory = useCallback((index: number) => {
@@ -134,7 +161,12 @@ export function HomePage() {
   const hobbyKeys = new Set(activeTheme.hobbies.flatMap((item) => [item.title.toLowerCase(), item.url.toLowerCase()]));
   const additionalProducts = products.filter((item) => !hobbyKeys.has((item.title || "").toLowerCase()) && !hobbyKeys.has((item.url || "").toLowerCase()));
 
-  return <div className={`site-shell theme-${theme} min-h-screen overflow-x-hidden text-[#deddd8]`} data-theme={theme} style={{ "--accent": activeTheme.accentColor, "--theme-hero": `url("${activeTheme.heroImageUrl}")` } as React.CSSProperties}>
+  return <div className={`site-shell theme-${theme} ${introComplete ? "page-ready" : "page-loading"} ${themeChanging ? "theme-changing" : ""} min-h-screen overflow-x-hidden text-[#deddd8]`} data-theme={theme} style={{ "--accent": activeTheme.accentColor, "--theme-hero": `url("${activeTheme.heroImageUrl}")` } as React.CSSProperties}>
+    <div className="site-loader" role="status" aria-label="Loading portfolio" aria-hidden={introComplete}>
+      <div className="loader-orbit"><i /><i /><i /><span>EM</span></div>
+      <p>COORDINATING THE MODEL</p>
+      <div className="loader-progress"><i /></div>
+    </div>
     {activeTheme.showParticles && <BackgroundCanvas />}
     <button type="button" className="theme-switch" onClick={switchTheme} aria-label={`Switch to ${theme === "technical" ? "Apple TV" : "technical"} theme`}><span>{theme === "technical" ? "APPLE TV" : "TECHNICAL"}</span><i><b /></i></button>
     <div className="relative z-10 mx-auto max-w-[1500px] px-4 sm:px-7 lg:px-10">
