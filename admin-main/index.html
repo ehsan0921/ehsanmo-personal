@@ -798,15 +798,6 @@
                         url: '/Image-Panel-perforated-designer/',
                         isActive: true,
                         downloadCount: 0
-                    },
-                    {
-                        title: 'Gym Records Tracker',
-                        description: 'Log sets, reps, and weight, session time, goals, body weight, reports, and share links.',
-                        buttonLabel: 'Open',
-                        type: 'webapp',
-                        url: '/gym-records/',
-                        isActive: true,
-                        downloadCount: 0
                     }
                 ];
                 let created = 0;
@@ -1146,6 +1137,8 @@
             technical: { heroImageUrl:'/ehsan-banner-portrait.png', portraitImageUrl:'/ehsan-mokhtary-portrait.png', accentColor:'#ff5c35', heroLine1:'I make complex', heroLine2:'facades buildable.', heroSubtitle:'Facade BIM leadership for projects where geometry, coordination and information cannot fail—from clash detection and LOD strategy to fabrication-ready models and metadata.', showParticles:true, showFloatingPanels:true, mediaRail:[], hobbies:[{title:'Perforated Panel Designer',description:'A browser-based generative tool for exploring image-driven perforation patterns and fabrication geometry.',url:'/Image-Panel-perforated-designer/',label:'COMPUTATIONAL DESIGN'},{title:'Gym Records',description:'A personal training and progress tracker built as a practical experiment in product design and data ownership.',url:'/gym-records/',label:'PERSONAL BUILD'}] },
             apple: { heroImageUrl:'/apple-tv-hero-2X.png', portraitImageUrl:'/Black and White no glass.jpg', accentColor:'#ff7a18', heroLine1:'Building the', heroLine2:'unbuildable.', heroSubtitle:'Facade BIM, computational design and digital delivery—where ambitious architecture becomes coordinated, controlled and real.', showParticles:false, showFloatingPanels:false, mediaRail:[{image:'/apple-story-beyond-model.png',label:'PROFILE',title:'Beyond the model',description:'Leadership, computation and a career built around complex façades.',wide:true},{image:'/apple-story-technical-human.png',label:'PERSON',title:'Technical. Human.',description:'Making digital delivery clear.'},{image:'/bim-exploded-hero.png',label:'PROCESS',title:'Inside the façade',description:'Geometry, information and interfaces brought under control.'},{image:'/apple-story-architecture-code.png',label:'COMPUTATIONAL DESIGN',title:'Architecture meets code',description:'Grasshopper logic translated into buildable façade geometry.',detail:'Parametric workflows connect design intent to panelisation, rationalisation and fabrication data. The result is a façade system that can respond to change without losing coordination, constructability or information quality.'},{image:'/apple-story-clash-clarity.png',label:'COORDINATION',title:'Clash to clarity',description:'Resolving interfaces before they reach site.',detail:'Federated clash detection focuses on the high-risk junctions between façade, structure, embeds, fire-stopping and access zones—assigning ownership and tracking every issue through to a coordinated outcome.',wide:true}], hobbies:[{title:'Perforated Panel Designer',description:'A browser-based generative tool for exploring image-driven perforation patterns and fabrication geometry.',url:'/Image-Panel-perforated-designer/',label:'COMPUTATIONAL DESIGN'},{title:'Gym Records',description:'A personal training and progress tracker built as a practical experiment in product design and data ownership.',url:'/gym-records/',label:'PERSONAL BUILD'}] }
         };
+        themeDefaults.apple.heroImageUrl = '/Ehsan-Banner-Orange-Glass-side-2X.png';
+        Object.values(themeDefaults).forEach((config) => { config.hobbies = (config.hobbies || []).filter((item) => item.title !== 'Gym Records'); });
         let themeSettings = { activeTheme:'technical', technical:{...themeDefaults.technical}, apple:{...themeDefaults.apple} };
         const siteThemeEditor = document.getElementById('siteThemeEditor');
         const themeEditorStatus = document.getElementById('themeEditorStatus');
@@ -1188,11 +1181,13 @@
                 const snap = await db.collection('siteConfig').doc('themes').get();
                 const data = snap.exists ? snap.data() : {};
                 const savedApple={...themeDefaults.apple,...(data.apple || {})};
-                if(savedApple.heroImageUrl==='/apple-tv-hero.png') savedApple.heroImageUrl=themeDefaults.apple.heroImageUrl;
+                if(['/apple-tv-hero.png','/apple-tv-hero-2X.png'].includes(savedApple.heroImageUrl)) savedApple.heroImageUrl=themeDefaults.apple.heroImageUrl;
                 savedApple.mediaRail=(savedApple.mediaRail||[]).map((item)=>item.title==='Beyond the model'&&item.image==='/orange background.jpg'?{...item,image:'/apple-story-beyond-model.png'}:item.title==='Technical. Human.'&&item.image==='/ehsan-mokhtary-portrait-Hotizontal.png'?{...item,image:'/apple-story-technical-human.png'}:item);
                 savedApple.mediaRail=savedApple.mediaRail.map((item)=>item.title==='Architecture meets code'&&item.image==='/ehsan-banner-portrait.png'?themeDefaults.apple.mediaRail.find((story)=>story.title===item.title):item);
                 ['Architecture meets code','Clash to clarity'].forEach((title)=>{if(!savedApple.mediaRail.some((item)=>item.title===title))savedApple.mediaRail.push(themeDefaults.apple.mediaRail.find((item)=>item.title===title));});
-                themeSettings = { activeTheme:data.activeTheme === 'apple' ? 'apple' : 'technical', technical:{...themeDefaults.technical,...(data.technical || {})}, apple:savedApple };
+                themeSettings = { activeTheme:data.activeTheme === 'technical' ? 'technical' : 'apple', technical:{...themeDefaults.technical,...(data.technical || {})}, apple:savedApple };
+                themeSettings.technical.hobbies=(themeSettings.technical.hobbies||[]).filter((item)=>item.title!=='Gym Records');
+                themeSettings.apple.hobbies=(themeSettings.apple.hobbies||[]).filter((item)=>item.title!=='Gym Records');
                 renderThemeEditor();
             } catch (error) { showThemeStatus('Could not load theme settings: ' + error.message, true); }
         }

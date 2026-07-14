@@ -19,11 +19,10 @@ type HobbyItem = { title: string; description: string; url: string; label: strin
 type ThemeConfig = { heroImageUrl: string; portraitImageUrl: string; accentColor: string; heroLine1: string; heroLine2: string; heroSubtitle: string; showParticles: boolean; showFloatingPanels: boolean; mediaRail: MediaStory[]; hobbies: HobbyItem[] };
 const DEFAULT_HOBBIES: HobbyItem[] = [
   { title: "Perforated Panel Designer", description: "A browser-based generative tool for exploring image-driven perforation patterns and fabrication geometry.", url: "/Image-Panel-perforated-designer/", label: "COMPUTATIONAL DESIGN" },
-  { title: "Gym Records", description: "A personal training and progress tracker built as a practical experiment in product design and data ownership.", url: "/gym-records/", label: "PERSONAL BUILD" },
 ];
 const DEFAULT_THEMES: Record<ThemeName, ThemeConfig> = {
   technical: { heroImageUrl: "/ehsan-banner-portrait.png", portraitImageUrl: "/ehsan-mokhtary-portrait.png", accentColor: "#ff5c35", heroLine1: "I make complex", heroLine2: "facades buildable.", heroSubtitle: "Facade BIM leadership for projects where geometry, coordination and information cannot fail—from clash detection and LOD strategy to fabrication-ready models and metadata.", showParticles: true, showFloatingPanels: true, mediaRail: [], hobbies: DEFAULT_HOBBIES },
-  apple: { heroImageUrl: "/apple-tv-hero-2X.png", portraitImageUrl: "/Black and White no glass.jpg", accentColor: "#ff7a18", heroLine1: "Building the", heroLine2: "unbuildable.", heroSubtitle: "Facade BIM, computational design and digital delivery—where ambitious architecture becomes coordinated, controlled and real.", showParticles: false, showFloatingPanels: false, mediaRail: [
+  apple: { heroImageUrl: "/Ehsan-Banner-Orange-Glass-side-2X.png", portraitImageUrl: "/Black and White no glass.jpg", accentColor: "#ff7a18", heroLine1: "Building the", heroLine2: "unbuildable.", heroSubtitle: "Facade BIM, computational design and digital delivery—where ambitious architecture becomes coordinated, controlled and real.", showParticles: false, showFloatingPanels: false, mediaRail: [
     { image: "/apple-story-beyond-model.png", label: "PROFILE", title: "Beyond the model", description: "Leadership, computation and a career built around complex façades.", detail: "Complex façade delivery depends on more than model production. It requires clear leadership, controlled information, computational thinking and the confidence to connect designers, engineers, fabricators and site teams around one reliable digital workflow.", wide: true },
     { image: "/apple-story-technical-human.png", label: "PERSON", title: "Technical. Human.", description: "Making digital delivery clear.", detail: "The strongest BIM systems support people rather than overwhelm them. I translate technical complexity into clear responsibilities, practical reviews and dependable decisions so every discipline understands what must happen next." },
     { image: "/bim-exploded-hero.png", label: "PROCESS", title: "Inside the façade", description: "Geometry, information and interfaces brought under control.", detail: "A façade model becomes valuable when geometry, metadata, interfaces and sequencing are coordinated together. This approach exposes risk early and carries design intelligence forward into procurement, fabrication and installation." },
@@ -62,16 +61,12 @@ export function HomePage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [projects, setProjects] = useState<PortfolioProject[]>(WORK);
   const [phone, setPhone] = useState<string | null>(null);
-  const [theme, setTheme] = useState<ThemeName>(() => {
-    const saved = localStorage.getItem("ehsan-theme");
-    return saved === "apple" || saved === "technical" ? saved : "technical";
-  });
+  const [theme, setTheme] = useState<ThemeName>("apple");
   const [themes, setThemes] = useState<Record<ThemeName, ThemeConfig>>(DEFAULT_THEMES);
   const [activeStory, setActiveStory] = useState(0);
   const [themeResolved, setThemeResolved] = useState(false);
   const [pageLoaded, setPageLoaded] = useState(document.readyState === "complete");
   const [introComplete, setIntroComplete] = useState(false);
-  const [themeChanging, setThemeChanging] = useState(false);
   const [railPaused, setRailPaused] = useState(false);
   const [selectedStory, setSelectedStory] = useState<MediaStory | null>(null);
   const mediaRailRef = useRef<HTMLDivElement>(null);
@@ -83,7 +78,7 @@ export function HomePage() {
       const snap = await getDocs(collection(db, "products"));
       const items: Product[] = [];
       snap.forEach((d) => items.push({ id: d.id, ...d.data() } as Product));
-      setProducts(items.filter((x) => x.isActive !== false && (x.type === "webapp" ? x.url : x.currentVersion?.fileUrl || x.fileUrl)));
+      setProducts(items.filter((x) => x.isActive !== false && x.url !== "/gym-records/" && !/^gym records/i.test(x.title || "") && (x.type === "webapp" ? x.url : x.currentVersion?.fileUrl || x.fileUrl)));
     } catch { setProducts([]); }
   }, []);
   useEffect(() => { loadProducts(); }, [loadProducts]);
@@ -92,14 +87,16 @@ export function HomePage() {
       if (!snap.exists()) return;
       const data = snap.data() as any;
       const savedApple = { ...DEFAULT_THEMES.apple, ...(data.apple || {}) };
-      if (savedApple.heroImageUrl === "/apple-tv-hero.png") savedApple.heroImageUrl = DEFAULT_THEMES.apple.heroImageUrl;
+      if (["/apple-tv-hero.png", "/apple-tv-hero-2X.png"].includes(savedApple.heroImageUrl)) savedApple.heroImageUrl = DEFAULT_THEMES.apple.heroImageUrl;
       savedApple.mediaRail = (savedApple.mediaRail || []).map((item) => item.title === "Beyond the model" && item.image === "/orange background.jpg" ? { ...item, image: "/apple-story-beyond-model.png" } : item.title === "Technical. Human." && item.image === "/ehsan-mokhtary-portrait-Hotizontal.png" ? { ...item, image: "/apple-story-technical-human.png" } : item);
       savedApple.mediaRail = savedApple.mediaRail.map((item) => item.title === "Architecture meets code" && item.image === "/ehsan-banner-portrait.png" ? DEFAULT_THEMES.apple.mediaRail.find((story) => story.title === item.title)! : item);
       for (const title of ["Architecture meets code", "Clash to clarity"]) if (!savedApple.mediaRail.some((item) => item.title === title)) savedApple.mediaRail.push(DEFAULT_THEMES.apple.mediaRail.find((item) => item.title === title)!);
       savedApple.mediaRail = savedApple.mediaRail.map((item) => ({ ...item, detail: item.detail || DEFAULT_THEMES.apple.mediaRail.find((story) => story.title === item.title)?.detail }));
-      setThemes({ technical: { ...DEFAULT_THEMES.technical, ...(data.technical || {}) }, apple: savedApple });
-      const saved = localStorage.getItem("ehsan-theme");
-      setTheme(saved === "technical" || saved === "apple" ? saved : (data.activeTheme === "apple" ? "apple" : "technical"));
+      const savedTechnical = { ...DEFAULT_THEMES.technical, ...(data.technical || {}) };
+      savedTechnical.hobbies = (savedTechnical.hobbies || []).filter((item) => item.title !== "Gym Records");
+      savedApple.hobbies = (savedApple.hobbies || []).filter((item) => item.title !== "Gym Records");
+      setThemes({ technical: savedTechnical, apple: savedApple });
+      setTheme(data.activeTheme === "technical" ? "technical" : "apple");
     }).catch(() => undefined).finally(() => setThemeResolved(true));
   }, []);
   useEffect(() => {
@@ -146,15 +143,6 @@ export function HomePage() {
     try { await updateDoc(doc(db, "products", item.id), { downloadCount: increment(1), lastDownloadedAt: serverTimestamp() }); } catch { /* best effort */ }
     window.open(url, "_blank", "noopener,noreferrer");
   };
-  const switchTheme = () => {
-    const next: ThemeName = theme === "technical" ? "apple" : "technical";
-    setThemeChanging(true);
-    window.setTimeout(() => {
-      setTheme(next);
-      localStorage.setItem("ehsan-theme", next);
-      window.setTimeout(() => setThemeChanging(false), 450);
-    }, 220);
-  };
   const activeTheme = themes[theme];
   const scrollStoryRail = useCallback((index: number) => {
     const rail = mediaRailRef.current;
@@ -197,7 +185,7 @@ export function HomePage() {
   const hobbyKeys = new Set(activeTheme.hobbies.flatMap((item) => [item.title.toLowerCase(), item.url.toLowerCase()]));
   const additionalProducts = products.filter((item) => !hobbyKeys.has((item.title || "").toLowerCase()) && !hobbyKeys.has((item.url || "").toLowerCase()));
 
-  return <div className={`site-shell theme-${theme} ${introComplete ? "page-ready" : "page-loading"} ${themeChanging ? "theme-changing" : ""} min-h-screen overflow-x-hidden text-[#deddd8]`} data-theme={theme} style={{ "--accent": activeTheme.accentColor, "--theme-hero": `url("${activeTheme.heroImageUrl}")` } as React.CSSProperties}>
+  return <div className={`site-shell theme-${theme} ${introComplete ? "page-ready" : "page-loading"} min-h-screen overflow-x-hidden text-[#deddd8]`} data-theme={theme} style={{ "--accent": activeTheme.accentColor, "--theme-hero": `url("${activeTheme.heroImageUrl}")` } as React.CSSProperties}>
     <div className="site-loader" role="status" aria-label="Loading portfolio" aria-hidden={introComplete}>
       <div className="loader-orbit"><i /><i /><i /><span>EM</span></div>
       <p>COORDINATING THE MODEL</p>
@@ -205,7 +193,6 @@ export function HomePage() {
     </div>
     {selectedStory && <div className="story-modal" role="dialog" aria-modal="true" aria-label={selectedStory.title} onClick={() => setSelectedStory(null)}><article onClick={(event) => event.stopPropagation()}><button className="story-modal-close" type="button" onClick={() => setSelectedStory(null)} aria-label="Close story">×</button><img src={selectedStory.image} alt={selectedStory.title} /><div><span>{selectedStory.label}</span><h2>{selectedStory.title}</h2><p>{selectedStory.detail || selectedStory.description}</p><small>{selectedStory.description}</small></div></article></div>}
     {activeTheme.showParticles && <BackgroundCanvas />}
-    <button type="button" className="theme-switch" onClick={switchTheme} aria-label={`Switch to ${theme === "technical" ? "Apple TV" : "technical"} theme`}><span>{theme === "technical" ? "APPLE TV" : "TECHNICAL"}</span><i><b /></i></button>
     <div className="relative z-10 mx-auto max-w-[1500px] px-4 sm:px-7 lg:px-10">
       <Header user={user} isAdmin={isAdmin} menuProducts={products} onOpenLogin={() => { setAuthMode("login"); setAuthOpen(true); }} onOpenRegister={() => { setAuthMode("register"); setAuthOpen(true); }} onLogout={() => signOut(auth).catch(() => undefined)} />
 
