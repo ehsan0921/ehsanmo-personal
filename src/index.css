@@ -6,7 +6,7 @@ body { margin:0; min-height:100vh; font-family:var(--font-sans); background:#080
 ::selection { color:#080908; background:#ff5c35; }
 .site-shell { background:radial-gradient(circle at 70% 10%,#152326 0,transparent 25%),#080908; }
 .hero-grid { background:#0a0b0b; }
-.hero-image { background:linear-gradient(90deg,rgba(8,9,8,.18),rgba(8,9,8,.02)),url('/ehsan-banner-portrait.png') center/cover no-repeat; opacity:.96; transform:scale(1.015);animation:hero-breathe 12s ease-in-out infinite alternate; }
+.hero-image { background:linear-gradient(90deg,rgba(8,9,8,.18),rgba(8,9,8,.02)),var(--hero-image,url('/ehsan-banner-portrait.png')) center/cover no-repeat; opacity:.96; transform:scale(1.015);animation:hero-breathe 12s ease-in-out infinite alternate; }
 .hero-scan { opacity:.3; background-image:linear-gradient(rgba(255,255,255,.035) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.035) 1px,transparent 1px); background-size:48px 48px; mask-image:linear-gradient(to bottom,black,transparent); }
 .hero-float { position:absolute;z-index:2;display:none;min-width:125px;border:1px solid rgba(93,221,213,.25);background:rgba(7,12,12,.7);padding:10px 12px;backdrop-filter:blur(10px);transform:translate(calc(var(--mx,0) * 8px),calc(var(--my,0) * 8px));animation:drift 5s ease-in-out infinite; }
 .hero-float span,.hero-float b { display:block;font:600 7px/1.5 var(--font-sans);letter-spacing:.16em; }.hero-float span{color:#fff5}.hero-float b{color:#70dcd5}.hero-float-a{right:7%;top:25%}.hero-float-b{right:31%;top:49%;animation-delay:-1.6s}.hero-float-c{right:13%;bottom:20%;min-width:75px;animation-delay:-3s}.hero-float-c b{font-size:18px;color:#ff6b45}

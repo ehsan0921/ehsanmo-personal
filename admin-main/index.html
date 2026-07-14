@@ -5,6 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Main Admin - Personal WebsiteTools</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        // Apply saved admin theme before first paint to avoid flash.
+        (function () {
+            var t = 'classic';
+            try { t = localStorage.getItem('adminTheme') || 'classic'; } catch (e) {}
+            document.documentElement.setAttribute('data-theme', t);
+        })();
+    </script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
@@ -29,13 +37,104 @@
             max-height: calc(100vh - 2rem);
             overflow: auto;
         }
+
+        /* ================= THEMES ================= */
+        /* 'classic' = original design (default, no overrides). */
+        /* 'appletv' = Apple TV style: dark glass UI, SF font, orange accent. */
+
+        html[data-theme="appletv"] { color-scheme: dark; }
+        html[data-theme="appletv"] body {
+            background: radial-gradient(1100px 650px at 82% -12%, rgba(255,106,0,.25), transparent 55%), #0b0b0f;
+            color: #f5f5f7;
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", system-ui, sans-serif;
+        }
+        html[data-theme="appletv"] h1 { letter-spacing: -0.025em; }
+        html[data-theme="appletv"] .card {
+            background: rgba(255,255,255,.06);
+            border: 1px solid rgba(255,255,255,.10);
+            box-shadow: 0 18px 45px rgba(0,0,0,.45);
+            backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
+        }
+        html[data-theme="appletv"] .overlay { background: rgba(0,0,0,.6); backdrop-filter: blur(6px); }
+        html[data-theme="appletv"] .rounded-lg { border-radius: 18px; }
+        html[data-theme="appletv"] .rounded { border-radius: 12px; }
+        /* neutral surfaces & text */
+        html[data-theme="appletv"] .bg-slate-50 { background: transparent; }
+        html[data-theme="appletv"] .bg-slate-200,
+        html[data-theme="appletv"] .bg-slate-100 { background: rgba(255,255,255,.08); }
+        html[data-theme="appletv"] .bg-slate-700,
+        html[data-theme="appletv"] .bg-slate-800 { background: rgba(255,255,255,.12); }
+        html[data-theme="appletv"] .hover\:bg-slate-300:hover,
+        html[data-theme="appletv"] .hover\:bg-slate-200:hover { background: rgba(255,255,255,.16); }
+        html[data-theme="appletv"] .hover\:bg-slate-600:hover { background: rgba(255,255,255,.22); }
+        html[data-theme="appletv"] .text-slate-900,
+        html[data-theme="appletv"] .text-slate-800 { color: #f5f5f7; }
+        html[data-theme="appletv"] .text-slate-600,
+        html[data-theme="appletv"] .text-slate-500 { color: rgba(245,245,247,.55); }
+        html[data-theme="appletv"] .border-slate-300,
+        html[data-theme="appletv"] .border-slate-200 { border-color: rgba(255,255,255,.14); }
+        /* form controls */
+        html[data-theme="appletv"] input,
+        html[data-theme="appletv"] select,
+        html[data-theme="appletv"] textarea {
+            background: rgba(255,255,255,.08);
+            color: #f5f5f7;
+        }
+        html[data-theme="appletv"] input:focus,
+        html[data-theme="appletv"] select:focus,
+        html[data-theme="appletv"] textarea:focus {
+            outline: 2px solid rgba(255,122,26,.65);
+            border-color: transparent;
+        }
+        html[data-theme="appletv"] select option { background: #16161d; color: #f5f5f7; }
+        html[data-theme="appletv"] input[type="checkbox"] { accent-color: #ff7a1a; }
+        /* action buttons -> Apple-style orange */
+        html[data-theme="appletv"] .bg-cyan-600,
+        html[data-theme="appletv"] .bg-indigo-600,
+        html[data-theme="appletv"] .bg-amber-600,
+        html[data-theme="appletv"] .bg-emerald-600,
+        html[data-theme="appletv"] .bg-orange-600 {
+            background: linear-gradient(180deg, #ff8a33, #ff6a00);
+            color: #1a0e04;
+            box-shadow: 0 6px 18px rgba(255,106,0,.35);
+        }
+        html[data-theme="appletv"] .hover\:bg-cyan-500:hover,
+        html[data-theme="appletv"] .hover\:bg-indigo-500:hover,
+        html[data-theme="appletv"] .hover\:bg-amber-500:hover,
+        html[data-theme="appletv"] .hover\:bg-emerald-500:hover,
+        html[data-theme="appletv"] .hover\:bg-orange-500:hover {
+            background: linear-gradient(180deg, #ff9d52, #ff7410);
+        }
+        /* danger stays red, Apple-tinted */
+        html[data-theme="appletv"] .bg-red-600,
+        html[data-theme="appletv"] .bg-red-700,
+        html[data-theme="appletv"] .bg-rose-600 { background: #ff453a; color: #fff; }
+        html[data-theme="appletv"] .hover\:bg-red-500:hover { background: #ff5e54; }
+        /* status badges */
+        html[data-theme="appletv"] .bg-rose-50 { background: rgba(255,69,58,.15); }
+        html[data-theme="appletv"] .text-rose-700 { color: #ff8a80; }
+        html[data-theme="appletv"] .bg-emerald-50 { background: rgba(48,209,88,.15); }
+        html[data-theme="appletv"] .text-emerald-700 { color: #63e6a2; }
+        html[data-theme="appletv"] .bg-amber-100 { background: rgba(255,159,10,.15); }
+        html[data-theme="appletv"] .text-amber-700 { color: #ffb84d; }
+        html[data-theme="appletv"] .bg-blue-100 { background: rgba(64,156,255,.15); }
+        html[data-theme="appletv"] .text-blue-700 { color: #7cc0ff; }
+        /* table dividers */
+        html[data-theme="appletv"] table { border-color: rgba(255,255,255,.12); }
+        html[data-theme="appletv"] thead tr,
+        html[data-theme="appletv"] tbody tr { border-color: rgba(255,255,255,.10) !important; }
     </style>
 </head>
 <body class="min-h-screen bg-slate-50 text-slate-900">
     <div class="max-w-6xl mx-auto p-6">
         <div class="flex items-center justify-between mb-6">
             <h1 class="text-2xl font-bold">Main Website Admin</h1>
-            <div class="flex gap-2">
+            <div class="flex gap-2 items-center">
+                <select id="themeSelect" class="px-3 py-2 rounded bg-slate-200 text-sm text-slate-800 border border-slate-300" title="Admin panel theme">
+                    <option value="classic">Classic (Light)</option>
+                    <option value="appletv">Apple TV (Orange)</option>
+                </select>
                 <a href="/" class="px-3 py-2 rounded bg-slate-200 hover:bg-slate-300 text-sm text-slate-800">Back Home</a>
                 <button id="logoutBtn" class="px-3 py-2 rounded bg-red-600 hover:bg-red-500 text-sm">Logout</button>
             </div>
@@ -91,6 +190,30 @@
                 <div id="projectStatus" class="hidden mb-4 rounded px-3 py-2 text-sm"></div>
                 <div id="projectsGrid" class="grid gap-4 md:grid-cols-2"></div>
                 <p id="projectsEmpty" class="hidden py-10 text-center text-sm text-slate-500">No managed projects yet. Import the current portfolio or add your first project.</p>
+            </div>
+
+            <div class="card rounded-lg p-5 mt-6">
+                <div class="mb-5">
+                    <h2 class="text-lg font-semibold">Theme Settings — Site Images</h2>
+                    <p class="text-sm text-slate-500">Change the homepage pictures. Uploads are stored in Firebase and apply instantly, in every theme.</p>
+                </div>
+                <div id="siteImagesStatus" class="hidden mb-4 rounded px-3 py-2 text-sm"></div>
+                <div class="grid gap-4 md:grid-cols-2">
+                    <div class="border border-slate-200 rounded-lg p-4">
+                        <p class="text-sm font-semibold mb-1">Hero banner</p>
+                        <p class="text-xs text-slate-500 mb-3">Large background image behind the homepage headline.</p>
+                        <img id="heroPreview" class="h-32 w-full rounded object-cover bg-slate-100 mb-3" alt="Hero banner preview">
+                        <input id="heroImageInput" type="file" accept="image/jpeg,image/png,image/webp" class="w-full px-3 py-2 rounded border border-slate-300 text-sm">
+                        <button id="uploadHeroBtn" class="mt-3 w-full px-4 py-2 rounded bg-orange-600 hover:bg-orange-500 text-white text-sm font-semibold">Upload Hero Image</button>
+                    </div>
+                    <div class="border border-slate-200 rounded-lg p-4">
+                        <p class="text-sm font-semibold mb-1">Portrait</p>
+                        <p class="text-xs text-slate-500 mb-3">Photo shown in the "Person behind the model" section.</p>
+                        <img id="portraitPreview" class="h-32 w-full rounded object-cover bg-slate-100 mb-3" alt="Portrait preview">
+                        <input id="portraitImageInput" type="file" accept="image/jpeg,image/png,image/webp" class="w-full px-3 py-2 rounded border border-slate-300 text-sm">
+                        <button id="uploadPortraitBtn" class="mt-3 w-full px-4 py-2 rounded bg-orange-600 hover:bg-orange-500 text-white text-sm font-semibold">Upload Portrait</button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -256,6 +379,17 @@
             appId: "1:287723741565:web:4be1f44d27dbe60f48ac14",
             measurementId: "G-347B8XCFLX"
         };
+
+        // ---- Theme switcher (persists in localStorage, default: classic) ----
+        const themeSelect = document.getElementById('themeSelect');
+        if (themeSelect) {
+            themeSelect.value = document.documentElement.getAttribute('data-theme') || 'classic';
+            themeSelect.addEventListener('change', function () {
+                var t = themeSelect.value;
+                document.documentElement.setAttribute('data-theme', t);
+                try { localStorage.setItem('adminTheme', t); } catch (e) {}
+            });
+        }
 
         if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
@@ -888,6 +1022,58 @@
             try { for (const item of defaults) await db.collection('portfolioProjects').doc(item.id).set({ ...item, isPublished:true, imagePath:'', secondaryImagePath:'', updatedAt:firebase.firestore.FieldValue.serverTimestamp() }, { merge:true }); showProjectStatus('Current projects imported. You can now edit or replace their images.'); await loadProjects(); } catch (error) { showProjectStatus('Import failed: ' + error.message, true); }
         });
 
+        // ---- Theme Settings: homepage site images ----
+        const siteImagesStatus = document.getElementById('siteImagesStatus');
+        const heroPreview = document.getElementById('heroPreview');
+        const portraitPreview = document.getElementById('portraitPreview');
+        const heroImageInput = document.getElementById('heroImageInput');
+        const portraitImageInput = document.getElementById('portraitImageInput');
+        const uploadHeroBtn = document.getElementById('uploadHeroBtn');
+        const uploadPortraitBtn = document.getElementById('uploadPortraitBtn');
+
+        function showSiteImagesStatus(message, isError) {
+            siteImagesStatus.textContent = message;
+            siteImagesStatus.className = 'mb-4 rounded px-3 py-2 text-sm ' + (isError ? 'bg-rose-50 text-rose-700' : 'bg-emerald-50 text-emerald-700');
+        }
+
+        async function loadSiteImages() {
+            try {
+                const snap = await db.collection('siteConfig').doc('images').get();
+                const data = snap.exists ? snap.data() : {};
+                heroPreview.src = data.hero || '/ehsan-banner-portrait.png';
+                portraitPreview.src = data.portrait || '/ehsan-mokhtary-portrait.png';
+            } catch (error) {
+                showSiteImagesStatus('Could not load site images: ' + error.message, true);
+            }
+        }
+
+        async function uploadSiteImage(key, input, button) {
+            const file = input.files && input.files[0];
+            if (!file) { showSiteImagesStatus('Choose an image file first.', true); return; }
+            try { validateProjectImage(file); } catch (error) { showSiteImagesStatus(error.message, true); return; }
+            const label = button.textContent;
+            button.disabled = true;
+            button.textContent = 'Uploading...';
+            try {
+                const ext = (file.name.split('.').pop() || 'jpg').toLowerCase().replace(/[^a-z0-9]/g, '') || 'jpg';
+                const ref = storage.ref(`site-images/${key}-${Date.now()}.${ext}`);
+                await ref.put(file);
+                const url = await ref.getDownloadURL();
+                await db.collection('siteConfig').doc('images').set({ [key]: url, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
+                input.value = '';
+                await loadSiteImages();
+                showSiteImagesStatus('Image updated. The homepage now uses the new picture in every theme.');
+            } catch (error) {
+                showSiteImagesStatus('Upload failed: ' + error.message, true);
+            } finally {
+                button.disabled = false;
+                button.textContent = label;
+            }
+        }
+
+        uploadHeroBtn.addEventListener('click', () => uploadSiteImage('hero', heroImageInput, uploadHeroBtn));
+        uploadPortraitBtn.addEventListener('click', () => uploadSiteImage('portrait', portraitImageInput, uploadPortraitBtn));
+
         document.getElementById('logoutBtn').addEventListener('click', async () => {
             try { await auth.signOut(); } catch(e) {}
             location.href = '/';
@@ -903,6 +1089,7 @@
             adminContent.classList.remove('hidden');
             await loadProducts();
             await loadProjects();
+            await loadSiteImages();
         });
     })();
     </script>

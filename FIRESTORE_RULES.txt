@@ -53,6 +53,12 @@ service cloud.firestore {
       allow create, update, delete: if isAdmin();
     }
 
+    // Site-wide settings (homepage images, theme settings): public read, admin write.
+    match /siteConfig/{docId} {
+      allow read: if true;
+      allow create, update, delete: if isAdmin();
+    }
+
     // Share documents are intentionally public read-only by link ID
     match /gymShares/{shareId} {
       allow read: if true;

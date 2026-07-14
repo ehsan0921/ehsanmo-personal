@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { onAuthStateChanged, signOut, type User } from "firebase/auth";
-import { collection, doc, getDocs, increment, serverTimestamp, updateDoc } from "firebase/firestore";
+import { collection, doc, getDoc, getDocs, increment, serverTimestamp, updateDoc } from "firebase/firestore";
 import { auth, db, SUPERADMIN_EMAIL } from "@/lib/firebase";
 import type { Product } from "@/lib/types";
 import { BackgroundCanvas } from "@/components/BackgroundCanvas";
@@ -35,6 +35,7 @@ export function HomePage() {
   const [authMode, setAuthMode] = useState<"login" | "register">("login");
   const [products, setProducts] = useState<Product[]>([]);
   const [projects, setProjects] = useState<PortfolioProject[]>(WORK);
+  const [portraitImage, setPortraitImage] = useState("/ehsan-mokhtary-portrait.png");
   const [phone, setPhone] = useState<string | null>(null);
   const isAdmin = !!user?.email && user.email.toLowerCase() === SUPERADMIN_EMAIL.toLowerCase();
 
@@ -48,6 +49,14 @@ export function HomePage() {
     } catch { setProducts([]); }
   }, []);
   useEffect(() => { loadProducts(); }, [loadProducts]);
+  useEffect(() => {
+    getDoc(doc(db, "siteConfig", "images")).then((snap) => {
+      if (!snap.exists()) return;
+      const data = snap.data();
+      if (data.hero) document.documentElement.style.setProperty("--hero-image", `url("${data.hero}")`);
+      if (data.portrait) setPortraitImage(data.portrait);
+    }).catch(() => undefined);
+  }, []);
   useEffect(() => {
     getDocs(collection(db, "portfolioProjects")).then((snap) => {
       const remote = snap.docs
@@ -109,7 +118,7 @@ export function HomePage() {
         </section>
 
         <section className="identity-zone border-x border-b border-white/10">
-          <Reveal className="identity-photo"><img src="/ehsan-mokhtary-portrait.png" alt="Ehsan Mokhtary, Facade BIM Manager" loading="lazy" /><div className="portrait-reticle" aria-hidden /><span className="portrait-code">EM / PROFILE_01</span></Reveal>
+          <Reveal className="identity-photo"><img src={portraitImage} alt="Ehsan Mokhtary, Facade BIM Manager" loading="lazy" /><div className="portrait-reticle" aria-hidden /><span className="portrait-code">EM / PROFILE_01</span></Reveal>
           <Reveal className="identity-copy" delay={120}><p className="section-index">PERSON BEHIND THE MODEL</p><h2>Technical precision.<br /><span>Human leadership.</span></h2><p>I lead teams through complex digital delivery with a practical focus: make responsibilities clear, make information dependable and make the façade buildable.</p><dl><div><dt>ROLE</dt><dd>Facade BIM Manager</dd></div><div><dt>BASE</dt><dd>Melbourne, Australia</dd></div><div><dt>FOCUS</dt><dd>Facade systems + computation</dd></div></dl></Reveal>
         </section>
 
