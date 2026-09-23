@@ -14,6 +14,8 @@ import { BracketLab } from "@/components/BracketLab";
 const LINKEDIN = "https://www.linkedin.com/in/ehsan-mokhtary/";
 const YOUTUBE = "https://www.youtube.com/@ehsanmokhtaryArchitect";
 const FOOD4RHINO = "https://www.food4rhino.com/en/app/rhinoplus";
+const COORDINA = "https://coordina.ehsanmo.me/";
+const COORDINA_FOOD4RHINO = "https://www.food4rhino.com/en/app/coordina";
 const EMAIL = "Ehsan0921@gmail.com";
 type PortfolioProject = { id?: string; image: string; secondaryImage?: string; title: string; place: string; type: string; stat: string; link: string; source: string; order?: number };
 type ThemeName = "technical" | "apple" | "cinematic";
@@ -239,6 +241,7 @@ export function HomePage() {
             <a className="current-company" href="https://srgglobal.com.au/" target="_blank" rel="noreferrer"><span>CURRENTLY AT</span><span className="company-logo-wrap"><img src="/srg-global-logo.svg" alt="SRG Global" /></span><b>FACADE BIM MANAGER</b></a>
             <div className="mt-10 flex flex-wrap gap-3">
               <a href="#services" className="button-primary">Explore BIM services <span>↘</span></a>
+              <a href="#coordina" className="button-ghost">Discover Coordina</a>
               <a href={`mailto:${EMAIL}`} className="button-ghost">Discuss a project</a>
             </div>
           </div>
@@ -294,6 +297,36 @@ export function HomePage() {
           <Reveal className="relative z-10 max-w-xl"><p className="section-index">02 / COORDINATION LOGIC</p><h2>See the conflict.<br />Own the resolution.</h2><p className="mt-6 text-lg leading-relaxed text-white/60">Clash detection only creates value when it is filtered, assigned and closed. I structure coordination around buildable façade interfaces—not software screenshots or inflated clash counts.</p><div className="mt-10 grid grid-cols-3 gap-2 text-center">{[['A','FEDERATE'],['B','RESOLVE'],['C','VERIFY']].map(x=><div className="metric" key={x[0]}><strong>{x[0]}</strong><span>{x[1]}</span></div>)}</div></Reveal>
         </section>
 
+        <section id="coordina" className="coordina-zone border-x border-white/10 px-5 py-24 sm:px-10 lg:px-16 lg:py-32" aria-labelledby="coordina-title">
+          <Reveal className="coordina-copy">
+            <p className="section-index">FEATURED SOFTWARE / COORDINA</p>
+            <div className="coordina-wordmark"><span>CO</span>ORDINA<i>1.2</i></div>
+            <h2 id="coordina-title">Version control,<br /><span>built for Rhino.</span></h2>
+            <p className="coordina-lead">Coordina brings dependable model history and optional team collaboration into a compact Rhino 8 sidebar. Commit your active 3DM, browse the project timeline and restore an earlier model without breaking your flow.</p>
+            <p className="coordina-author">Designed and developed by <strong>Ehsan Mokhtary</strong>, also published as <strong>Ehsan Mokhtari</strong>.</p>
+            <div className="coordina-actions">
+              <a href={COORDINA} target="_blank" rel="noopener noreferrer" className="button-primary">Visit Coordina website <span>↗</span></a>
+              <a href={COORDINA_FOOD4RHINO} target="_blank" rel="noopener noreferrer" className="button-ghost">View on Food4Rhino <span>↗</span></a>
+            </div>
+          </Reveal>
+          <Reveal className="coordina-product" delay={120}>
+            <div className="coordina-art"><img src="/coordina-box-art.png" alt="Coordina model version control plug-in for Rhino 8" loading="lazy" /></div>
+            <div className="coordina-status"><span className="status-dot" /> RHINO MODEL / VERSION CONTROL</div>
+            <div className="coordina-commit-list" aria-label="Example Coordina version history">
+              <div><i>01</i><span><b>Facade geometry coordinated</b><small>LOCAL COMMIT · AVAILABLE OFFLINE</small></span><em>✓</em></div>
+              <div><i>02</i><span><b>Issue review and screenshots</b><small>CLOUD PROJECT · TEAM VISIBLE</small></span><em>↗</em></div>
+              <div><i>03</i><span><b>Restore a trusted model</b><small>BACKUP CREATED AUTOMATICALLY</small></span><em>↺</em></div>
+            </div>
+          </Reveal>
+          <div className="coordina-features">
+            <article><span>01</span><h3>Local-first</h3><p>Free offline commits, history and model restoration. No account or subscription required.</p></article>
+            <article><span>02</span><h3>Cloud when needed</h3><p>Push selected versions to shared projects and browse commits from the wider team.</p></article>
+            <article><span>03</span><h3>Coordinate together</h3><p>Track issues, discuss decisions, invite collaborators and share Rhino viewport screenshots.</p></article>
+            <article><span>04</span><h3>Made for Rhino 8</h3><p>A focused, adjustable sidebar for Windows using Rhino’s default .NET 7 runtime.</p></article>
+          </div>
+          <p className="coordina-requirements">REQUIRES RHINO 8.26+ FOR WINDOWS · LOCAL MODE IS FREE · BASIC CLOUD INCLUDES 500 MB</p>
+        </section>
+
         <section id="work" className="border-x border-white/10 px-5 py-24 sm:px-10 lg:px-16 lg:py-32">
           <Reveal><div className="section-head"><div><p className="section-index">03 / SELECTED WORK</p><h2>Proof in the model.</h2></div><a href={YOUTUBE} target="_blank" rel="noreferrer">VIEW ALL CASE STUDIES ↗</a></div></Reveal>
           <div className="mt-14 grid gap-px bg-white/10 md:grid-cols-2">
@@ -310,7 +343,7 @@ export function HomePage() {
 
         <section id="contact" className="contact-zone border border-white/10 px-5 py-24 text-center sm:px-10 lg:px-16 lg:py-40"><Reveal><p className="section-index">HAVE A COMPLEX FACADE?</p><h2>Let’s make it<br /><span>clear, coordinated, buildable.</span></h2><div className="mt-10 flex flex-wrap justify-center gap-3"><a className="button-primary" href={`mailto:${EMAIL}`}>Start a conversation ↗</a>{phone ? <a className="button-ghost phone-revealed" href={`tel:${phone}`}>{phone} <span>CALL ↗</span></a> : <button className="button-ghost" type="button" onClick={revealPhone}>Reveal phone <span>CLICK ↗</span></button>}<a className="button-ghost" href={LINKEDIN} target="_blank" rel="noreferrer">LinkedIn</a></div><p className="phone-note">Phone number is protected and only loaded after you click.</p></Reveal></section>
       </main>
-      <footer className="flex flex-col gap-4 border-x border-white/10 px-6 py-8 text-[11px] tracking-[.16em] text-white/35 sm:flex-row sm:justify-between"><span>© {new Date().getFullYear()} EHSAN MOKHTARY</span><span>FACADE BIM / COMPUTATION / DELIVERY</span><span>MELBOURNE, AU</span></footer>
+      <footer className="flex flex-col gap-4 border-x border-white/10 px-6 py-8 text-[11px] tracking-[.16em] text-white/35 sm:flex-row sm:justify-between"><span>© {new Date().getFullYear()} EHSAN MOKHTARY / EHSAN MOKHTARI</span><span>FACADE BIM / COMPUTATION / DELIVERY</span><span>MELBOURNE, AU</span></footer>
     </div>
     <AuthModal open={authOpen} initialMode={authMode} onClose={() => setAuthOpen(false)} />
   </div>;

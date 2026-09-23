@@ -40,6 +40,13 @@ export function Header({ user, isAdmin, menuProducts, onOpenLogin, onOpenRegiste
           }
         >
           <a
+            href="#coordina"
+            className="rounded-lg px-3 py-2 text-zinc-300 transition hover:bg-zinc-800/80 hover:text-white"
+            onClick={() => setMenuOpen(false)}
+          >
+            Coordina
+          </a>
+          <a
             href="#services"
             className="rounded-lg px-3 py-2 text-zinc-300 transition hover:bg-zinc-800/80 hover:text-white"
             onClick={() => setMenuOpen(false)}
